@@ -1,0 +1,1043 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UniPassport — Единый цифровой паспорт абитуриента</title>
+    
+    <!-- Google Fonts: Inter & Cormorant Garamond -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Main Style Sheet -->
+    <link rel="stylesheet" href="/frontend/style.css">
+</head>
+<body>
+
+    <!-- 0. ONBOARDING INTRO OVERLAY -->
+    <div id="onboarding-overlay" class="onboarding-overlay" style="display: none;">
+        
+        <!-- Global top-right Action Button (absolute viewport positioning) -->
+        <button class="btn-link" id="onboard-login-trigger" style="position: absolute; top: 2.5rem; right: 2.5rem; font-size: 1.25rem; color: var(--text-secondary); text-decoration: none; border: none; background: none; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; transition: var(--transition); z-index: 10000;">
+            <i data-lucide="log-in" style="width: 20px; height: 20px;"></i> Войти в аккаунт
+        </button>
+
+        <!-- Onboarding Container (content-only, no frame border) -->
+        <div class="onboarding-card">
+            
+            <!-- Stepper Indicator Row (React Bits style) -->
+            <div class="step-indicator-row" id="onboard-stepper-row" style="max-width: 480px; margin: 0 auto 3.5rem auto; width: 100%;">
+                <!-- Step 1 Indicator -->
+                <div class="step-indicator active" id="step-ind-1">
+                    <div class="step-indicator-inner">
+                        <span class="step-number">1</span>
+                        <div class="active-dot"></div>
+                        <i data-lucide="check" class="check-icon"></i>
+                    </div>
+                </div>
+                
+                <!-- Connector 1-2 -->
+                <div class="step-connector" id="step-conn-1">
+                    <div class="step-connector-inner" id="step-conn-inner-1"></div>
+                </div>
+                
+                <!-- Step 2 Indicator -->
+                <div class="step-indicator inactive" id="step-ind-2">
+                    <div class="step-indicator-inner">
+                        <span class="step-number">2</span>
+                        <div class="active-dot" style="display: none;"></div>
+                        <i data-lucide="check" class="check-icon"></i>
+                    </div>
+                </div>
+                
+                <!-- Connector 2-3 -->
+                <div class="step-connector" id="step-conn-2">
+                    <div class="step-connector-inner" id="step-conn-inner-2"></div>
+                </div>
+                
+                <!-- Step 3 Indicator -->
+                <div class="step-indicator inactive" id="step-ind-3">
+                    <div class="step-indicator-inner">
+                        <span class="step-number">3</span>
+                        <div class="active-dot" style="display: none;"></div>
+                        <i data-lucide="check" class="check-icon"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- STEP 1: Welcome Screen -->
+            <div id="onboard-step-1" class="onboard-step active">
+                <h1 class="onboard-title">UniPassport</h1>
+                <p class="onboard-subtitle">Единая международная платформа для абитуриентов. Подавайте документы в ведущие университеты мира без бюрократии в один клик.</p>
+                
+                <div class="onboard-actions-col">
+                    <button class="btn btn-primary btn-lg" id="onboard-start-btn">Начать заполнение профиля</button>
+                    <button class="btn-link onboard-skip-link" id="onboard-skip-1-btn">Пропустить и перейти на сайт</button>
+                </div>
+            </div>
+
+            <!-- STEP LOGIN: Login Screen -->
+            <div id="onboard-step-login" class="onboard-step">
+                <h2 class="onboard-step-title" style="text-align: center;">Войти в аккаунт</h2>
+                <p class="onboard-step-desc" style="text-align: center; max-width: 600px; margin-left: auto; margin-right: auto;">Введите номер телефона, который вы использовали при создании профиля</p>
+                
+                <div class="form-group" style="margin-bottom: 2.5rem; max-width: 500px; margin-left: auto; margin-right: auto; width: 100%;">
+                    <label for="onboard-login-phone" style="text-align: left; display: block; margin-bottom: 0.75rem;">Номер телефона</label>
+                    <input type="tel" id="onboard-login-phone" placeholder="+7 (999) 123-45-67" style="width: 100%;">
+                </div>
+
+                <div class="onboard-step-footer" style="display: flex; gap: 1.25rem; width: 100%; max-width: 500px; margin-left: auto; margin-right: auto;">
+                    <button class="btn btn-outline" id="onboard-login-back-btn" style="flex: 1; height: 48px; display: inline-flex; align-items: center; justify-content: center;">
+                        <i data-lucide="arrow-left" class="btn-icon"></i> Назад
+                    </button>
+                    <button class="btn btn-primary" id="onboard-login-submit-btn" style="flex: 2; height: 48px; display: inline-flex; align-items: center; justify-content: center;">
+                        <i data-lucide="log-in" class="btn-icon"></i> Войти
+                    </button>
+                </div>
+            </div>
+
+            <!-- STEP 2: Academic Statistics (IELTS, SAT, GPA) -->
+            <div id="onboard-step-2" class="onboard-step">
+                <h2 class="onboard-step-title">Академические достижения</h2>
+                <p class="onboard-step-desc">Укажите ваши текущие баллы (эти поля не обязательны, их можно заполнить позже)</p>
+                
+                <div class="onboard-stats-inputs">
+                    <div class="form-group">
+                        <label for="onboard-val-ielts">Балл IELTS</label>
+                        <input type="number" id="onboard-val-ielts" min="0" max="9" step="0.5" placeholder="например, 6.5">
+                    </div>
+                    <div class="form-group">
+                        <label for="onboard-val-sat">Балл SAT</label>
+                        <input type="number" id="onboard-val-sat" min="400" max="1600" placeholder="например, 1350">
+                    </div>
+                    <div class="form-group">
+                        <label for="onboard-val-gpa">Средний балл (GPA)</label>
+                        <input type="number" id="onboard-val-gpa" min="0" max="5" step="0.1" placeholder="например, 4.8">
+                    </div>
+                </div>
+
+                <div class="onboard-step-footer">
+                    <button class="btn btn-outline" id="onboard-prev-2-btn" style="margin-right: 1rem;">
+                        <i data-lucide="arrow-left" class="btn-icon"></i> Назад
+                    </button>
+                    <button class="btn btn-primary" id="onboard-next-2-btn">
+                        Далее <i data-lucide="arrow-right" class="btn-icon-right"></i>
+                    </button>
+                    <button class="btn-link onboard-skip-link" id="onboard-skip-2-btn" style="margin-left: auto;">Пропустить этот шаг</button>
+                </div>
+            </div>
+
+            <!-- STEP 3: Personal Information (Name, Birthday, Phone) -->
+            <div id="onboard-step-3" class="onboard-step">
+                <h2 class="onboard-step-title">Основная информация</h2>
+                <p class="onboard-step-desc">Заполните обязательные поля для создания вашего профиля</p>
+                
+                <form id="onboard-final-form" class="custom-form" onsubmit="return false;">
+                    <div class="form-group">
+                        <label for="onboard-val-name">ФИО полностью <span class="required">*</span></label>
+                        <input type="text" id="onboard-val-name" placeholder="Иванов Иван Иванович" required>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="onboard-val-birthday">Дата рождения <span class="required">*</span></label>
+                            <input type="date" id="onboard-val-birthday" required style="padding: 0.75rem;">
+                        </div>
+                        <div class="form-group">
+                            <label for="onboard-val-phone">Номер телефона <span class="required">*</span></label>
+                            <input type="tel" id="onboard-val-phone" placeholder="+7 (999) 123-45-67" required>
+                        </div>
+                    </div>
+                    
+                    <div class="onboard-step-footer" style="margin-top: 1.5rem; display: flex; gap: 1.25rem; width: 100%;">
+                        <button class="btn btn-outline" id="onboard-prev-3-btn" style="flex: 1; display: inline-flex; align-items: center; justify-content: center; height: 48px;">
+                            <i data-lucide="arrow-left" class="btn-icon"></i> Назад
+                        </button>
+                        <button type="submit" class="btn btn-primary" id="onboard-finish-btn" style="flex: 2; height: 48px;">
+                            <i data-lucide="check-circle" class="btn-icon"></i>Создать профиль
+                        </button>
+                    </div>
+                </form>
+            </div>
+            
+        </div>
+    </div>
+
+    <!-- Animated Mesh Gradient Background with Noise -->
+    <div class="bg-glow-container"></div>
+
+    <!-- Notification Toast System -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- Header Navigation -->
+    <header class="app-header">
+        <div class="header-container">
+            <a href="#" class="logo" id="logo-btn">
+                UniPassport<span class="logo-dot"></span>
+            </a>
+            
+            <div class="header-actions" style="display: flex; align-items: center; gap: 0.75rem;">
+                <a href="#home" class="nav-link active" data-page="home" style="margin-right: 0.5rem; font-weight: 500; text-decoration: none; font-size: 0.95rem;">Главная</a>
+                <button class="btn btn-outline" id="header-profile-btn">
+                    <i data-lucide="user" class="btn-icon"></i>Профиль
+                </button>
+                <button class="btn btn-outline" id="global-logout-btn" style="display: none; border-color: rgba(220, 53, 69, 0.25); color: #dc3545;">
+                    <i data-lucide="log-out" class="btn-icon"></i>Выйти из аккаунта
+                </button>
+                <button class="btn btn-outline" id="theme-toggle" title="Переключить тему" style="padding: 0.75rem; width: 42px; height: 42px; display: inline-flex; align-items: center; justify-content: center;">
+                    <i data-lucide="moon" style="width: 18px; height: 18px;"></i>
+                </button>
+            </div>
+
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="app-content">
+
+        <!-- 1. HOME PAGE -->
+        <section id="page-home" class="page-section active">
+            <div class="hero-section">
+                <h1 class="hero-title">Будущее образования.<br><span class="gradient-text">В один клик.</span></h1>
+                <p class="hero-subtitle">Универсальный цифровой паспорт абитуриента для мгновенной подачи документов в международные вузы без бюрократии.</p>
+            </div>
+
+            <!-- Search Area -->
+            <div class="search-container">
+                <div class="search-bar">
+                    <div class="search-input-wrapper">
+                        <i data-lucide="search" class="search-icon"></i>
+                        <input type="text" placeholder="Поиск университетов, специальностей, стран..." id="search-input">
+                    </div>
+                    <div class="filter-dropdown-wrapper">
+                        <button class="btn btn-filter" id="filter-btn">
+                            <i data-lucide="sliders-horizontal" class="btn-icon"></i>Фильтры
+                        </button>
+                        <div class="filter-dropdown" id="filter-menu">
+                            <div class="filter-group">
+                                <label>Направление</label>
+                                <select id="filter-direction">
+                                    <option value="all">Все направления</option>
+                                    <option value="it">IT и AI</option>
+                                    <option value="engineering">Инженерия</option>
+                                    <option value="finance">Финансы</option>
+                                </select>
+                            </div>
+                            <div class="filter-group">
+                                <label>Формат обучения</label>
+                                <select id="filter-format">
+                                    <option value="all">Любой</option>
+                                    <option value="offline">Офлайн</option>
+                                    <option value="online">Дистанционно</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary" id="search-btn">Найти</button>
+                </div>
+            </div>
+
+            <!-- Universities Grid (Contain 1 main card) -->
+            <div class="section-container">
+                <div class="section-header">
+                    <h2 class="section-title">Рекомендованные ВУЗы</h2>
+                    <p class="section-desc">Подобранные на основе вашего профиля</p>
+                </div>
+                
+                <div class="uni-grid" id="uni-list-container">
+                    <!-- Loaded dynamically via JS, template fallback below -->
+                    <div class="uni-card glass-card" id="default-uni-card">
+                        <div class="uni-card-img-placeholder">
+                            <div class="glow-overlay"></div>
+                            <div class="uni-card-tag">ТОП ВУЗ</div>
+                            <span class="uni-card-alias">AGU</span>
+                        </div>
+                        <div class="uni-card-body">
+                            <h3 class="uni-card-title">Aetheris Global University</h3>
+                            <p class="uni-card-location"><i data-lucide="map-pin"></i> Женева, Швейцария (Международный кампус)</p>
+                            <p class="uni-card-description">Инновационный технологический университет, сфокусированный на ИИ, квантовых технологиях и системном проектировании.</p>
+                            
+                            <div class="uni-specialties-tags">
+                                <span class="spec-tag">Искусственный интеллект</span>
+                                <span class="spec-tag">Робототехника</span>
+                                <span class="spec-tag">Биотехнологии</span>
+                            </div>
+                            
+                            <div class="uni-card-footer">
+                                <span class="uni-stat"><i data-lucide="users"></i> >150k заявок</span>
+                                <div class="uni-card-actions">
+                                    <button class="btn btn-outline btn-sm view-details-btn">Подробнее</button>
+                                    <button class="btn btn-primary btn-sm apply-now-btn">Подать заявку</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. UNIVERSITY DETAIL PAGE -->
+        <section id="page-university" class="page-section">
+            <button class="btn btn-back" id="back-to-home-btn">
+                <i data-lucide="arrow-left"></i> Назад к списку
+            </button>
+
+            <!-- E-commerce Layout Grid -->
+            <div class="wb-product-container">
+                
+                <!-- Left Column: Gallery, Price Card, Specs -->
+                <div class="wb-product-gallery-side">
+                    <!-- Academic Style Banner / Cover -->
+                    <div class="wb-product-banner academic-banner-style">
+                        <div class="banner-overlay"></div>
+                        <div class="banner-content">
+                            <span class="banner-tag">OFFICIAL PROFILE</span>
+                            <span class="banner-alias" id="det-uni-alias">UNI</span>
+                        </div>
+                    </div>
+
+                    <!-- Price Card ("Buy" Box) -->
+                    <div class="wb-price-card glass-card">
+                        <div class="wb-price-row">
+                            <span class="price-label">Стоимость обучения</span>
+                            <h2 class="price-value" id="det-uni-price">от $3,000 / год</h2>
+                        </div>
+                        
+                        <div class="wb-fast-apply-badge">
+                            <i data-lucide="zap" style="color: var(--primary);"></i>
+                            <span>Мгновенная подача через Digital ID</span>
+                        </div>
+
+                        <button class="btn btn-primary btn-full apply-now-btn" style="padding: 1rem; font-size: 1.1rem; font-weight: 600; margin-top: 1.25rem;">
+                            Подать документы
+                        </button>
+                    </div>
+
+                    <!-- Specifications Table -->
+                    <div class="wb-specs-card glass-card">
+                        <h3>Характеристики ВУЗа</h3>
+                        <div class="wb-specs-list">
+                            <div class="wb-spec-item">
+                                <span class="wb-spec-name">Страна</span>
+                                <span class="wb-spec-value" id="det-spec-country">Швейцария</span>
+                            </div>
+                            <div class="wb-spec-item">
+                                <span class="wb-spec-name">Город</span>
+                                <span class="wb-spec-value" id="det-spec-city">Женева</span>
+                            </div>
+                            <div class="wb-spec-item">
+                                <span class="wb-spec-name">Сайт</span>
+                                <a href="#" target="_blank" class="wb-spec-value link" id="det-spec-website">website.edu</a>
+                            </div>
+                            <div class="wb-spec-item">
+                                <span class="wb-spec-name">IELTS (мин.)</span>
+                                <span class="wb-spec-value" id="det-spec-ielts">6.5</span>
+                            </div>
+                            <div class="wb-spec-item">
+                                <span class="wb-spec-name">SAT (мин.)</span>
+                                <span class="wb-spec-value" id="det-spec-sat">1200</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column: Slogan, Description, Advantages, Specialties Selection -->
+                <div class="wb-product-info-side">
+                    <!-- Title & Slogan Section -->
+                    <div class="wb-title-card glass-card">
+                        <span class="badge badge-success">Верифицирован приемной комиссией</span>
+                        <h1 id="det-uni-name" style="font-family: var(--font-heading); font-size: 2.5rem; margin-top: 0.5rem; margin-bottom: 0.5rem; line-height: 1.2;">Aetheris Global University</h1>
+                        <p class="wb-slogan" id="det-uni-slogan">Создаем будущее, объединяя таланты со всего мира</p>
+                    </div>
+
+                    <!-- Description Card -->
+                    <div class="wb-desc-card glass-card">
+                        <h3>Описание университета</h3>
+                        <p id="det-uni-desc">Aetheris Global University объединяет передовую научную инфраструктуру и лучших преподавателей планеты. Мы стремимся создать экосистему, где таланты со всего мира могут создавать прорывные продукты и проводить фундаментальные исследования. Учебный план строится на проектной работе и гибких траекториях обучения.</p>
+                    </div>
+
+                    <!-- Advantages Grid (3 Cards) -->
+                    <div class="wb-advantages-section" style="margin-top: 2rem;">
+                        <h3>Ключевые преимущества</h3>
+                        <div class="wb-advantages-grid" id="det-advantages-container">
+                            <!-- Populated dynamically by JS -->
+                        </div>
+                    </div>
+
+                    <!-- Specialties Selection Grid (Options/Sizes selector) -->
+                    <div class="wb-specialties-selection glass-card">
+                        <h3>Выберите направление обучения</h3>
+                        <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1.25rem;">Ознакомьтесь с доступными программами обучения и стоимостью за академический год:</p>
+                        
+                        <div class="wb-spec-grid" id="det-specialties-grid">
+                            <!-- Specialties options loaded dynamically here -->
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- 3. STUDENT PROFILE / PASSPORT PAGE -->
+        <section id="page-profile" class="page-section">
+            <button class="btn btn-back back-to-home-btn" style="margin-bottom: 2rem;">
+                <i data-lucide="arrow-left"></i> Вернуться на главную
+            </button>
+            <div class="hero-section text-left" style="margin-top: 0.5rem;">
+                <h1 class="page-title">Профиль абитуриента</h1>
+                <p class="hero-subtitle">Ваши личные данные, академические достижения и поданные заявки в едином защищенном профиле.</p>
+            </div>
+
+            <!-- Login Check Area (hidden to prevent JS breaking, but removed from UI layout) -->
+            <div class="auth-bar glass-card" style="display: none;">
+                <div class="auth-bar-inputs">
+                    <i data-lucide="smartphone" class="input-icon"></i>
+                    <input type="text" placeholder="Введите номер телефона для входа..." id="auth-phone-input" value="+7 (911) 222-33-44">
+                    <button class="btn btn-outline" id="load-profile-btn">Войти в профиль</button>
+                    <button class="btn btn-primary" id="relaunch-onboarding-btn" style="margin-left: auto;">
+                        <i data-lucide="plus-circle" class="btn-icon"></i>Создать новый профиль
+                    </button>
+                </div>
+                <div class="auth-status-info">
+                    <p class="info-text"><i data-lucide="info"></i> Введите телефон для загрузки ранее созданного профиля. Если вы на сайте впервые, нажмите «Создать новый профиль» для прохождения онбординга.</p>
+                </div>
+            </div>
+
+            <div class="profile-grid">
+                <!-- Left: Digital Passport Info -->
+                <div class="profile-info-column">
+                    <div class="glass-card passport-card">
+                        <div class="passport-header">
+                            <div class="avatar-wrapper">
+                                <div class="avatar-placeholder" id="pass-avatar-letter">Д</div>
+                            </div>
+                            <div class="passport-name-wrapper" style="position: relative; width: 100%;">
+                                <h3 id="pass-fullname">Новый абитуриент</h3>
+                                <p class="passport-phone" id="pass-phone">+7 (999) 000-00-00</p>
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.5rem; width: 100%;">
+                                    <span class="passport-badge">Профиль абитуриента</span>
+                                    <button class="btn btn-outline btn-sm" id="student-logout-btn" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; border-color: rgba(102, 2, 60, 0.2); color: var(--primary);">Выйти</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="passport-details">
+                            <div class="detail-item">
+                                <span class="detail-label">Языковой сертификат (IELTS)</span>
+                                <span class="detail-value" id="pass-ielts">—</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Академический тест (SAT)</span>
+                                <span class="detail-value" id="pass-sat">—</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Средний балл (GPA)</span>
+                                <span class="detail-value" id="pass-gpa">—</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Дата рождения</span>
+                                <span class="detail-value" id="pass-birthday">—</span>
+                            </div>
+                            <div class="detail-item bio-item">
+                                <span class="detail-label">О себе</span>
+                                <p class="detail-value-text" id="pass-bio">Информация не заполнена.</p>
+                            </div>
+                            <div class="detail-item achievements-item">
+                                <span class="detail-label">Дополнительные достижения</span>
+                                <p class="detail-value-text" id="pass-achievements">Нет данных.</p>
+                            </div>
+                        </div>
+
+                        <div class="passport-footer">
+                            <i data-lucide="shield-check" class="success-icon"></i>
+                            <span>Защищено стандартом шифрования UniSafe</span>
+                        </div>
+                    </div>
+
+                    <!-- Active Applications List -->
+                    <div class="glass-card profile-applications-card">
+                        <h3>Ваши заявки</h3>
+                        <div class="applications-timeline" id="profile-applications-list">
+                            <div class="no-applications">
+                                <i data-lucide="folder-open"></i>
+                                <p>У вас пока нет активных заявок. Заполните форму справа, чтобы подать первую заявку.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Logout button at the bottom of the left column -->
+                    <div style="margin-top: 1.5rem; width: 100%;">
+                        <button class="btn btn-outline" id="profile-logout-btn" style="border-color: rgba(220, 53, 69, 0.25); color: #dc3545; width: 100%; height: 48px; display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; font-weight: 500;">
+                            <i data-lucide="log-out" style="width: 18px; height: 18px;"></i> Выйти из аккаунта
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Right: Application Form -->
+                <div class="profile-form-column">
+                    <div class="glass-card form-card">
+                        <h3>Редактирование профиля</h3>
+                        <p class="form-sub" id="profile-form-subtitle">Заполните поля ниже, чтобы обновить ваши данные.</p>
+                        
+                        <div id="target-university-banner" class="glass-card" style="display: none; padding: 1rem; border-color: rgba(102, 2, 60, 0.15); margin-bottom: 1.5rem; background: rgba(102, 2, 60, 0.03);">
+                            <p style="margin: 0; font-weight: 500; font-size: 0.95rem; color: var(--primary);">
+                                <i data-lucide="graduation-cap" style="width:16px; height:16px; display:inline-block; vertical-align:middle; margin-right:6px;"></i>
+                                Вы подаете документы в: <span id="banner-uni-name" style="font-weight: 600;">—</span>
+                            </p>
+                            <p style="margin: 0.25rem 0 0 0; font-size: 0.85rem; color: var(--text-secondary);">
+                                Специальность: <span id="banner-spec-name">—</span>
+                            </p>
+                        </div>
+                        
+                        <form id="apply-form" class="custom-form" enctype="multipart/form-data">
+                            <div class="form-group">
+                                <label for="form-fullname">ФИО полностью <span class="required">*</span></label>
+                                <input type="text" id="form-fullname" placeholder="Иванов Иван Иванович" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="form-phone">Телефон для связи <span class="required">*</span></label>
+                                <input type="tel" id="form-phone" placeholder="+7 (999) 123-45-67" required>
+                            </div>
+
+                            <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem;">
+                                <div class="form-group">
+                                    <label for="form-ielts">Балл IELTS (если есть)</label>
+                                    <input type="number" id="form-ielts" step="0.5" min="0" max="9" placeholder="6.5">
+                                </div>
+                                <div class="form-group">
+                                    <label for="form-sat">Балл SAT (если есть)</label>
+                                    <input type="number" id="form-sat" min="400" max="1600" placeholder="1250">
+                                </div>
+                                <div class="form-group">
+                                    <label for="form-gpa">Балл GPA (если есть)</label>
+                                    <input type="number" id="form-gpa" step="0.01" min="0" max="5" placeholder="4.8">
+                                </div>
+                            </div>
+
+                            <!-- Hidden university select inputs -->
+                            <div class="form-group" style="display: none;">
+                                <label for="form-university">Выбор университета</label>
+                                <select id="form-university">
+                                    <option value="" disabled selected>Выберите университет...</option>
+                                    <!-- Populated by JS -->
+                                </select>
+                            </div>
+
+                            <div class="form-group" style="display: none;">
+                                <label for="form-specialty">Выбор специальности</label>
+                                <select id="form-specialty" disabled>
+                                    <option value="" disabled selected>Сначала выберите университет...</option>
+                                    <!-- Populated by JS dynamically based on selected university -->
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="form-bio">Расскажите о себе</label>
+                                <textarea id="form-bio" rows="3" placeholder="Ваши академические интересы, увлечения..."></textarea>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="form-achievements">Особые достижения / Олимпиады</label>
+                                <textarea id="form-achievements" rows="2" placeholder="Призер олимпиады по математике, публикации..."></textarea>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="form-file">Сертификат / Аттестат (PDF или Картинка) <span class="required">*</span></label>
+                                <div class="file-upload-wrapper">
+                                    <input type="file" id="form-file" class="file-upload-input" accept=".pdf,image/*" required>
+                                    <div class="file-upload-design">
+                                        <i data-lucide="cloud-upload" class="upload-icon"></i>
+                                        <span class="upload-text">Нажмите для выбора файла или перетащите сюда</span>
+                                        <span class="file-selected-name" id="file-name-preview">Файл не выбран</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary btn-full" id="submit-application-btn">
+                                <i data-lucide="send" class="btn-icon"></i>Подать заявку в университет
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 4. PARTNERS (UNIVERSITY CABINET & ONBOARDING WIZARD) PAGE -->
+        <section id="page-partner" class="page-section">
+            <button class="btn btn-back back-to-home-btn" style="margin-bottom: 2rem;">
+                <i data-lucide="arrow-left"></i> Вернуться на главную
+            </button>
+            
+            <!-- 4.1 AUTHENTICATION BLOCK (Login / Sign Up) -->
+            <div id="partner-auth-block">
+                <div class="hero-section" style="margin-top: 0.5rem;">
+                    <span class="badge badge-success">Для партнеров</span>
+                    <h1 class="page-title">Кабинет университета</h1>
+                    <p class="hero-subtitle">Войдите в личный кабинет для управления заявками или отправьте заявку на создание нового аккаунта.</p>
+                </div>
+
+                <div class="partner-form-container">
+                    <!-- Auth Tabs -->
+                    <div class="auth-tabs" style="display: flex; gap: 1rem; margin-bottom: 2rem; border-bottom: 1px solid rgba(102, 2, 60, 0.08); padding-bottom: 1rem;">
+                        <button class="btn btn-outline" id="tab-login-btn" style="flex: 1; border-color: var(--primary); background: rgba(102, 2, 60, 0.03);">Вход для партнеров</button>
+                        <button class="btn btn-outline" id="tab-signup-btn" style="flex: 1;">Регистрация представителя</button>
+                    </div>
+
+                    <!-- Login Form -->
+                    <div id="partner-login-view" class="glass-card form-card">
+                        <h3>Авторизация партнера</h3>
+                        <p class="form-sub">Введите данные вашей учетной записи</p>
+                        
+                        <form id="partner-login-form" class="custom-form">
+                            <div class="form-group">
+                                <label for="login-email">Электронная почта <span class="required">*</span></label>
+                                <input type="email" id="login-email" placeholder="director@aetheris-global.edu" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="login-password">Пароль <span class="required">*</span></label>
+                                <input type="password" id="login-password" placeholder="••••••••" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-full">
+                                <i data-lucide="log-in" class="btn-icon"></i>Войти в кабинет
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Signup Form -->
+                    <div id="partner-signup-view" class="glass-card form-card" style="display: none;">
+                        <h3>Регистрация представителя ВУЗа</h3>
+                        <p class="form-sub">Создайте аккаунт для последующего заполнения профиля университета</p>
+
+
+                        <form id="partner-signup-form" class="custom-form">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="part-personal-email">Личный Email представителя <span class="required">*</span></label>
+                                    <input type="email" id="part-personal-email" placeholder="director@university.edu" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="part-password">Пароль аккаунта <span class="required">*</span></label>
+                                    <input type="password" id="part-password" placeholder="••••••••" required>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="part-uni-email">Официальный Email ВУЗа <span class="required">*</span></label>
+                                <input type="email" id="part-uni-email" placeholder="admissions@university.edu" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="part-uni-name">Название ВУЗа <span class="required">*</span></label>
+                                <input type="text" id="part-uni-name" placeholder="Aetheris Global University" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="part-contact-name">Имя контактного лица <span class="required">*</span></label>
+                                <input type="text" id="part-contact-name" placeholder="Елена Дмитриевна" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="part-contact-info">Контакты для оперативной связи <span class="required">*</span></label>
+                                <input type="text" id="part-contact-info" placeholder="+7 (999) 123-45-67, @elena_admissions" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="part-website">Ссылка на сайт</label>
+                                <input type="url" id="part-website" placeholder="https://university.edu">
+                            </div>
+
+                            <button type="submit" class="btn btn-primary btn-full">
+                                <i data-lucide="check-circle2" class="btn-icon"></i>Создать аккаунт партнера
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4.2 PARTNER LOGGED CABINET BLOCK -->
+            <div id="partner-cabinet-block" style="display: none;">
+                <div class="cabinet-navbar" style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-accent); padding: 1rem 1.5rem; border-radius: 12px; margin-bottom: 2.5rem; border: 1px solid rgba(102, 2, 60, 0.05);">
+                    <div style="display: flex; align-items: center; gap: 0.75rem;">
+                        <i data-lucide="building-2" style="color: var(--primary);"></i>
+                        <span style="font-weight: 600;" id="cabinet-user-email">email@university.edu</span>
+                        <span class="badge" id="cabinet-user-status" style="margin: 0; font-size: 0.7rem;">Активен</span>
+                    </div>
+                    <button class="btn btn-outline btn-sm" id="partner-logout-btn">
+                        <i data-lucide="log-out" class="btn-icon"></i>Выйти
+                    </button>
+                </div>
+
+                <!-- 4.2.1 PENDING PROFILE MODERATION NOTICE -->
+                <div id="partner-pending-profile-notice" class="alert-info-box" style="display: none; background: rgba(217, 119, 6, 0.06); border: 1px solid rgba(217, 119, 6, 0.2); border-radius: 12px; padding: 1.5rem; margin-bottom: 2.5rem; color: #2D1E2F; font-size: 0.95rem; line-height: 1.5;">
+                    <div style="display: flex; gap: 0.75rem; align-items: flex-start;">
+                        <i data-lucide="clock" style="color: var(--warning); flex-shrink: 0; width: 22px; height: 22px;"></i>
+                        <div>
+                            <strong>⏳ Профиль ВУЗа на модерации:</strong> Карточка вашего университета отправлена администратору в Telegram-бот на согласование. Вы можете отредактировать данные ниже, но публичные изменения появятся на сайте только после одобрения.
+                        </div>
+                    </div>
+                </div>
+
+
+                <!-- 4.2.2 NO PROFILE WELCOME PAGE -->
+                <div id="partner-no-profile-view" class="glass-card text-center" style="padding: 4rem 2rem; margin-bottom: 2rem;">
+                    <i data-lucide="file-plus-2" style="width: 48px; height: 48px; color: var(--primary); margin-bottom: 1.5rem;"></i>
+                    <h2 style="font-family: var(--font-heading); font-size: 2.2rem; margin-bottom: 1rem; color: var(--primary);">Добро пожаловать, партнер!</h2>
+                    <p style="color: var(--text-secondary); max-width: 500px; margin: 0 auto 2rem auto; font-size: 1rem;">Аккаунт успешно подтвержден администратором. Теперь заполните публичный профиль вашего ВУЗа, чтобы абитуриенты могли подавать к вам заявки.</p>
+                    <button class="btn btn-primary" id="start-wizard-btn">
+                        <i data-lucide="plus-circle" class="btn-icon"></i>Заполнить профиль университета
+                    </button>
+                </div>
+
+                <!-- 4.2.3 WIZARD PROFILE BUILDER -->
+                <div id="partner-wizard-view" class="glass-card" style="display: none; margin-bottom: 2.5rem; max-width: 1400px; width: 100%;">
+                    <div class="wizard-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--card-border); padding-bottom: 1.5rem; margin-bottom: 2.5rem;">
+                        <div style="display: flex; align-items: center; gap: 1.5rem;">
+                            <button type="button" class="btn-link wizard-cancel-btn" style="color: var(--text-secondary); text-decoration: none; border: none; background: none; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; font-size: 0.95rem; font-weight: 500; padding: 0;">
+                                <i data-lucide="arrow-left" style="width: 18px; height: 18px;"></i> Вернуться назад
+                            </button>
+                            <h3 style="font-family: var(--font-heading); font-size: 1.6rem; color: var(--primary); margin: 0;">Конструктор профиля ВУЗа</h3>
+                        </div>
+                        <div class="wizard-steps-indicator" style="display: flex; gap: 1.5rem; font-size: 0.85rem; font-weight: 600; color: var(--text-muted);">
+                            <span id="partner-step-ind-1" style="color: var(--primary);">1. О ВУЗе</span>
+                            <span id="partner-step-ind-2">2. Специальности</span>
+                        </div>
+                    </div>
+
+                    <!-- Split container: Left = Live Preview, Right = Input fields -->
+                    <div class="wizard-split-container" style="display: flex; gap: 3rem; flex-wrap: wrap;">
+                        
+                        <!-- LEFT COLUMN: Live Preview (Student View style) -->
+                        <div class="wizard-preview-column" style="flex: 1; min-width: 320px; border-right: 1px solid var(--card-border); padding-right: 2.5rem;">
+                            <h4 style="margin-bottom: 1.5rem; font-weight: 600; color: var(--primary);">Живой предпросмотр (как видят студенты)</h4>
+                            
+                            <div class="wb-product-container" style="display: grid; grid-template-columns: 1fr; gap: 1.5rem; margin: 0;">
+                                <!-- Left side (Gallery & specs style) -->
+                                <div class="wb-product-gallery-side" style="width: 100%;">
+                                    <div class="wb-product-banner academic-banner-style" id="preview-banner-bg" style="height: 180px;">
+                                        <div class="banner-overlay"></div>
+                                        <div class="banner-content">
+                                            <span class="banner-tag">OFFICIAL PROFILE</span>
+                                            <span class="banner-alias" id="preview-det-uni-alias">UNI</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="wb-price-card glass-card" style="margin-top: 1rem; padding: 1.25rem;">
+                                        <div class="wb-price-row">
+                                            <span class="price-label">Стоимость обучения</span>
+                                            <h2 class="price-value" id="preview-det-uni-price">от $— / год</h2>
+                                        </div>
+                                        <button type="button" class="btn btn-primary btn-full" style="margin-top: 1rem; pointer-events: none; opacity: 0.8;">Подать документы</button>
+                                    </div>
+
+                                    <div class="wb-specs-card glass-card" style="margin-top: 1rem; padding: 1.25rem;">
+                                        <h3 style="font-size: 1.15rem; margin-bottom: 1rem;">Характеристики ВУЗа</h3>
+                                        <div class="wb-specs-list">
+                                            <div class="wb-spec-item">
+                                                <span class="wb-spec-name">Страна</span>
+                                                <span class="wb-spec-value" id="preview-det-spec-country">—</span>
+                                            </div>
+                                            <div class="wb-spec-item">
+                                                <span class="wb-spec-name">Город</span>
+                                                <span class="wb-spec-value" id="preview-det-spec-city">—</span>
+                                            </div>
+                                            <div class="wb-spec-item">
+                                                <span class="wb-spec-name">Сайт</span>
+                                                <span class="wb-spec-value" id="preview-det-spec-website">не указан</span>
+                                            </div>
+                                            <div class="wb-spec-item">
+                                                <span class="wb-spec-name">IELTS (мин.)</span>
+                                                <span class="wb-spec-value" id="preview-det-spec-ielts">—</span>
+                                            </div>
+                                            <div class="wb-spec-item">
+                                                <span class="wb-spec-name">SAT (мин.)</span>
+                                                <span class="wb-spec-value" id="preview-det-spec-sat">—</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Right side (Title & slogan style) -->
+                                <div class="wb-product-info-side" style="width: 100%;">
+                                    <div class="wb-title-card glass-card" style="padding: 1.25rem;">
+                                        <span class="badge badge-success">Верифицирован приемной комиссией</span>
+                                        <h1 id="preview-det-uni-name" style="font-family: var(--font-heading); font-size: 2.2rem; margin-top: 0.5rem; margin-bottom: 0.5rem; line-height: 1.2;">Название ВУЗа</h1>
+                                        <p class="wb-slogan" id="preview-det-uni-slogan">Слоган университета</p>
+                                    </div>
+
+                                    <div class="wb-desc-card glass-card" style="margin-top: 1rem; padding: 1.25rem;">
+                                        <h3 style="font-size: 1.15rem; margin-bottom: 0.75rem;">Описание университета</h3>
+                                        <p id="preview-det-uni-desc" style="font-size: 0.95rem; line-height: 1.5;">Заполните описание университета...</p>
+                                    </div>
+
+                                    <div class="wb-advantages-section" style="margin-top: 1rem;">
+                                        <h3 style="font-size: 1.15rem; margin-bottom: 1rem;">Ключевые преимущества</h3>
+                                        <div class="wb-advantages-grid" id="preview-advantages-container" style="grid-template-columns: 1fr; gap: 0.75rem;">
+                                            <!-- Dynamic preview cards will be generated here -->
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- RIGHT COLUMN: Input fields (Form) -->
+                        <div class="wizard-form-column" style="flex: 1.2; min-width: 350px;">
+                            <form id="wizard-form" class="custom-form">
+                                
+                                <!-- WIZARD STEP 1: Main details -->
+                                <div id="wizard-step-1">
+                                    <div class="form-group" style="position: relative;">
+                                        <label for="wizard-name">Официальное название ВУЗа <span class="required">*</span></label>
+                                        <input type="text" id="wizard-name" placeholder="Начните вводить название (например, Harvard)..." required autocomplete="off">
+                                        <div class="autocomplete-dropdown" id="wizard-name-dropdown" style="position: absolute; top: 100%; left: 0; right: 0; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.06); z-index: 50; display: none; max-height: 200px; overflow-y: auto; margin-top: 2px;">
+                                            <!-- Items bound dynamically -->
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group" style="margin-bottom: 2rem;">
+                                        <label for="wizard-photo">Фотография / Логотип университета</label>
+                                        <input type="file" id="wizard-photo" accept="image/*" style="padding: 0.5rem 0; width: 100%;">
+                                        <p style="font-size: 0.9rem; color: var(--text-secondary); margin-top: 0.25rem;">Это изображение будет отображаться на главной странице в карточке вашего университета.</p>
+                                        <div id="wizard-photo-preview-container" style="margin-top: 1rem; display: none; align-items: center; gap: 1.25rem;">
+                                            <img id="wizard-photo-preview" src="" style="width: 100px; height: 100px; object-fit: cover; border-radius: 12px; border: 1px solid var(--card-border);">
+                                            <button type="button" class="btn btn-outline btn-sm" id="wizard-photo-remove-btn" style="color: #dc3545; border-color: rgba(220, 53, 69, 0.25); height: 42px;">Удалить фото</button>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-row">
+                                        <div class="form-group" style="position: relative;">
+                                            <label for="wizard-country">Страна <span class="required">*</span></label>
+                                            <input type="text" id="wizard-country" placeholder="Начните вводить страну..." required autocomplete="off">
+                                            <div class="autocomplete-dropdown" id="wizard-country-dropdown" style="position: absolute; top: 100%; left: 0; right: 0; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.06); z-index: 50; display: none; max-height: 180px; overflow-y: auto; margin-top: 2px;">
+                                                <!-- Items bound dynamically -->
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="wizard-city">Город <span class="required">*</span></label>
+                                            <input type="text" id="wizard-city" placeholder="Женева" required>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="wizard-website">Официальный сайт</label>
+                                        <input type="url" id="wizard-website" placeholder="https://university.edu">
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="wizard-description">Описание университета <span class="required">*</span></label>
+                                        <textarea id="wizard-description" rows="4" placeholder="Краткое описание миссии, кампуса, достижений..." required></textarea>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="wizard-slogan">Слоган ВУЗа (Главное сообщение для абитуриентов)</label>
+                                        <input type="text" id="wizard-slogan" placeholder="Формируем будущее IT-индустрии вместе">
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label style="font-weight: 600; color: var(--primary); margin-top: 1.5rem; display: block; border-bottom: 1px solid var(--card-border); padding-bottom: 0.5rem; margin-bottom: 1.25rem;">Ключевые преимущества ВУЗа (до 3 штук)</label>
+                                        
+                                        <div id="wizard-advantages-container" style="display: flex; flex-direction: column; gap: 1rem;">
+                                            <!-- Dynamic advantage rows loaded here -->
+                                        </div>
+
+                                        <button type="button" class="btn btn-outline btn-sm" id="wizard-add-adv-btn" style="margin-top: 1rem; align-self: flex-start; display: inline-flex; align-items: center; gap: 0.5rem; height: 38px;">
+                                            <i data-lucide="plus" style="width: 16px; height: 16px;"></i>Добавить преимущество
+                                        </button>
+                                    </div>
+
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label for="wizard-ielts">Минимальный балл IELTS</label>
+                                            <input type="number" id="wizard-ielts" step="0.5" min="0" max="9" placeholder="6.5">
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="wizard-sat">Минимальный балл SAT</label>
+                                            <input type="number" id="wizard-sat" min="400" max="1600" placeholder="1200">
+                                        </div>
+                                    </div>
+
+                                    <div style="display: flex; justify-content: flex-end; margin-top: 2rem;">
+                                        <button type="button" class="btn btn-primary" id="wizard-next-btn" style="height: 48px;">
+                                            Далее к специальностям <i data-lucide="arrow-right" class="btn-icon" style="margin-left: 8px; margin-right: 0;"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- WIZARD STEP 2: Specialties Constructor -->
+                                <div id="wizard-step-2" style="display: none;">
+                                    <h4 style="font-weight: 600; margin-bottom: 0.5rem; color: var(--primary);">Направления и специальности (Факультеты)</h4>
+                                    <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1.5rem;">Добавьте специальности, на которые абитуриенты смогут отправлять документы.</p>
+                                    
+                                    <div id="wizard-specialties-container" style="display: flex; flex-direction: column; gap: 1rem;">
+                                        <!-- Dynamic rows added here -->
+                                    </div>
+
+                                    <button type="button" class="btn btn-outline btn-sm" id="wizard-add-spec-btn" style="margin-top: 1rem; align-self: flex-start;">
+                                        <i data-lucide="plus" class="btn-icon"></i>Добавить специальность
+                                    </button>
+
+                                    <div style="display: flex; justify-content: space-between; border-top: 1px solid var(--card-border); padding-top: 2rem; margin-top: 3rem;">
+                                        <button type="button" class="btn btn-outline" id="wizard-prev-btn" style="height: 48px;">
+                                            <i data-lucide="arrow-left" class="btn-icon"></i>Назад
+                                        </button>
+                                        <button type="button" class="btn btn-primary" id="wizard-submit-btn" style="height: 48px;">
+                                            <i data-lucide="send" class="btn-icon"></i>Отправить профиль на модерацию
+                                        </button>
+                                    </div>
+                                </div>
+
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 4.2.4 UNIVERSITY ACTIVE STATISTICS & LEADS DASHBOARD -->
+                <div id="partner-dashboard-view" style="display: none;">
+                    <div class="admin-header-bar">
+                        <div>
+                            <h2 style="font-family: var(--font-heading); font-size: 2.2rem; color: var(--primary);" id="dash-uni-name">Название ВУЗа</h2>
+                            <p class="subtitle">Дашборд директора университета (Аналитика и Лиды)</p>
+                        </div>
+                        <div class="admin-actions" style="display: flex; gap: 0.75rem;">
+                            <button class="btn btn-outline" id="dash-preview-profile-btn" style="border-color: var(--primary);">
+                                <i data-lucide="eye" class="btn-icon"></i>Как видят студенты
+                            </button>
+                            <button class="btn btn-outline" id="dash-edit-profile-btn">
+                                <i data-lucide="edit-3" class="btn-icon"></i>Редактировать ВУЗ
+                            </button>
+                            <button class="btn btn-primary" id="refresh-dash-data-btn">
+                                <i data-lucide="rotate-cw" class="btn-icon"></i>Обновить
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- KPI Cards Row -->
+                    <div class="kpi-row">
+                        <div class="kpi-card glass-card">
+                            <div class="kpi-icon-wrapper"><i data-lucide="eye"></i></div>
+                            <div class="kpi-data">
+                                <span class="kpi-value" id="kpi-views">0</span>
+                                <span class="kpi-label">Просмотры профиля ВУЗа</span>
+                            </div>
+                        </div>
+                        <div class="kpi-card glass-card highlighted-border">
+                            <div class="kpi-icon-wrapper success-theme"><i data-lucide="file-text"></i></div>
+                            <div class="kpi-data">
+                                <span class="kpi-value" id="kpi-applications">0</span>
+                                <span class="kpi-label">Получено заявок (Лиды)</span>
+                            </div>
+                        </div>
+                        <div class="kpi-card glass-card">
+                            <div class="kpi-icon-wrapper"><i data-lucide="percent"></i></div>
+                            <div class="kpi-data">
+                                <span class="kpi-value" id="kpi-conversion">0.00%</span>
+                                <span class="kpi-label">Конверсия в заявку</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Chart & Analytics -->
+                    <div class="admin-analytics-grid">
+                        <div class="glass-card chart-card">
+                            <div class="card-header">
+                                <h3>Динамика трафика и конверсий</h3>
+                                <span class="timeframe-tag">Последние 7 дней</span>
+                            </div>
+                            <div class="chart-container">
+                                <canvas id="dashboard-chart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Leads Management Table -->
+                    <div class="glass-card leads-card">
+                        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                            <h3>Заявки абитуриентов</h3>
+                            <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+                                <div class="table-search" style="margin: 0;">
+                                    <i data-lucide="search"></i>
+                                    <input type="text" placeholder="Поиск по имени, специальности..." id="table-search-input">
+                                </div>
+                                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                                    <span style="font-size: 0.85rem; color: var(--text-secondary); white-space: nowrap;">Сортировка:</span>
+                                    <select id="leads-sort-select" style="background: var(--bg-accent); border: 1px solid var(--card-border); color: var(--text-primary); border-radius: 6px; padding: 0.4rem 0.8rem; font-size: 0.85rem; cursor: pointer; outline: none; height: 38px;">
+                                        <option value="date-desc">Сначала новые</option>
+                                        <option value="date-asc">Сначала старые</option>
+                                        <option value="best-scores">Все самое высокое (SAT / IELTS)</option>
+                                        <option value="sat-desc">SAT (по убыванию)</option>
+                                        <option value="sat-asc">SAT (по возрастанию)</option>
+                                        <option value="ielts-desc">IELTS (по убыванию)</option>
+                                        <option value="ielts-asc">IELTS (по возрастанию)</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="leads-table">
+                                <thead>
+                                    <tr>
+                                        <th>ФИО студента</th>
+                                        <th>Контакты</th>
+                                        <th>Специальность</th>
+                                        <th>Показатели (IELTS / SAT)</th>
+                                        <th>Файл</th>
+                                        <th>Статус</th>
+                                        <th>Дата подачи</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="leads-table-body">
+                                    <!-- Populated dynamically by JS -->
+                                    <tr>
+                                        <td colspan="7" class="table-empty-row">
+                                            <i data-lucide="inbox"></i>
+                                            <p>Заявок пока нет или данные загружаются...</p>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </section>
+
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+        <div class="footer-container" style="justify-content: center;">
+            <div class="footer-links">
+                <a href="#partner" class="footer-link" id="footer-partner-link">Для университетов</a>
+                <span class="footer-sep">|</span>
+                <a href="#" class="footer-link" onclick="return false;">Политика конфиденциальности</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Live Preview Modal for University Profile -->
+    <div id="wb-preview-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content glass-card" style="max-width: 1100px; width: 90%; max-height: 90vh; overflow-y: auto; padding: 2.5rem; position: relative;">
+            <button class="modal-close-btn" id="close-wb-preview-btn">&times;</button>
+            <h3 style="margin-bottom: 1.5rem; color: var(--primary); border-bottom: 1px solid rgba(102,2,60,0.08); padding-bottom: 0.75rem; font-family: var(--font-heading); font-size: 1.4rem;">Предпросмотр карточки (Глазами студента)</h3>
+            <div id="modal-preview-container"></div>
+        </div>
+    </div>
+
+    <!-- Grainient WebGL Background Script -->
+    <script src="/frontend/grainient.js"></script>
+    
+    <!-- App Logic Script -->
+    <script src="/frontend/app.js"></script>
+</body>
+</html>
