@@ -8,13 +8,13 @@ const crypto = require('crypto');
 
 // --- 1. LOAD ENV CONFIG ---
 let config = {
-    DATABASE_URL: 'sqlite:///./uni_passport.db',
-    TELEGRAM_BOT_TOKEN: '',
-    TELEGRAM_ADMIN_CHAT_ID: '',
-    WEBHOOK_MODE: 'false',
-    UPLOAD_DIR: './uploads',
-    SUPABASE_URL: '',
-    SUPABASE_KEY: ''
+    DATABASE_URL: process.env.DATABASE_URL || 'sqlite:///./uni_passport.db',
+    TELEGRAM_BOT_TOKEN: process.env.TELEGRAM_BOT_TOKEN || '',
+    TELEGRAM_ADMIN_CHAT_ID: process.env.TELEGRAM_ADMIN_CHAT_ID || '',
+    WEBHOOK_MODE: process.env.WEBHOOK_MODE || 'false',
+    UPLOAD_DIR: process.env.UPLOAD_DIR || './uploads',
+    SUPABASE_URL: process.env.SUPABASE_URL || '',
+    SUPABASE_KEY: process.env.SUPABASE_KEY || ''
 };
 
 if (fs.existsSync('.env')) {
