@@ -551,7 +551,7 @@ function sendUniversityProfileAlert(uni) {
 }
 
 // Send main admin menu with inline keyboard
-function sendAdminMainMenu(messageText = 'Главное меню управления UniPassport:') {
+function sendAdminMainMenu(messageText = 'Главное меню управления THOTH:') {
     const replyMarkup = {
         inline_keyboard: [
             [
@@ -637,14 +637,17 @@ function processTelegramUpdate(update) {
         const text = msg.text.trim();
         const chatId = msg.chat.id;
 
+        console.log(`[Telegram Bot] Message from Chat ID: ${chatId} (${msg.from ? msg.from.username || msg.from.first_name : 'unknown'}): "${text}"`);
+
         // Skip non-admin chats
         if (String(chatId) !== String(config.TELEGRAM_ADMIN_CHAT_ID)) {
+            console.log(`[Telegram Bot] Ignored message from non-admin chat. (Configured Admin ID is: ${config.TELEGRAM_ADMIN_CHAT_ID})`);
             return;
         }
 
         if (text === '/start' || text === '/menu') {
             adminState.step = 'idle';
-            sendAdminMainMenu('Добро пожаловать в админ-панель управления UniPassport! Пожалуйста, используйте кнопки меню ниже:');
+            sendAdminMainMenu('Добро пожаловать в админ-панель управления THOTH! Пожалуйста, используйте кнопки меню ниже:');
             return;
         }
 
@@ -698,6 +701,8 @@ function processTelegramUpdate(update) {
 
         if (!chatId) return;
 
+        console.log(`[Telegram Bot] Callback query from Chat ID: ${chatId}, Data: "${data}"`);
+
         let action = data;
         let id = '';
         if (data.includes(':')) {
@@ -709,7 +714,7 @@ function processTelegramUpdate(update) {
         // Inline Navigation Actions
         if (action === 'menu_main') {
             adminState.step = 'idle';
-            sendAdminMainMenu('Главное меню управления UniPassport:');
+            sendAdminMainMenu('Главное меню управления THOTH:');
             answerCallbackQuery(queryId, 'Главное меню');
         }
         
@@ -944,11 +949,11 @@ function startTelegramPolling() {
                         });
                     }
                 } catch (e) {
-                    // Fail silently
+                    console.error("[Telegram Bot] Parse error:", e.message);
                 }
             });
-        }).on('error', () => {
-            // Silence networking errors
+        }).on('error', (err) => {
+            console.error("[Telegram Bot] Network error:", err.message);
         });
     }, 2500);
 }
@@ -1450,7 +1455,7 @@ async function startApp() {
     await restoreFromCloud();
     loadDB(); // Initialize DB file and seed if missing
     app.listen(PORT, () => {
-        console.log(`UniPassport server is running at http://localhost:${PORT}`);
+        console.log(`THOTH server is running at http://localhost:${PORT}`);
         startTelegramPolling();
     });
 }
