@@ -2509,5 +2509,88 @@ body.dark-theme .step-connector {
     .leads-table td:nth-child(5) {
         display: none !important;
     }
+
+    /* General responsive improvements */
+    .glass-card {
+        padding: 1.25rem !important;
+        border-radius: 14px !important;
+    }
+
+    .profile-grid, .uni-detail-grid {
+        gap: 1.5rem !important;
+    }
+
+    .detail-item {
+        font-size: 0.85rem !important;
+        padding-bottom: 0.4rem !important;
+    }
+
+    /* Onboarding (Intro) Mobile Overrides */
+    .onboarding-overlay {
+        position: fixed;
+        width: 100%;
+        height: 100%;
+        overflow-y: auto;
+        display: block;
+        padding: 1.5rem 1rem;
+    }
+    
+    .onboarding-card {
+        padding: 1rem 0;
+        max-width: 100%;
+    }
+    
+    .onboard-title {
+        font-size: 2.8rem;
+        margin-bottom: 1.5rem;
+        word-break: break-word;
+    }
+    
+    .onboard-subtitle {
+        font-size: 1.15rem;
+        line-height: 1.45;
+        margin-bottom: 2.5rem;
+    }
+    
+    #onboard-start-btn {
+        font-size: 1.1rem;
+        padding: 0.9rem 2rem;
+        width: 100%;
+        text-align: center;
+        display: inline-flex;
+        justify-content: center;
+    }
+    
+    .onboard-step-title {
+        font-size: 1.8rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .onboard-step-desc {
+        font-size: 1rem;
+        line-height: 1.4;
+        margin-bottom: 1.5rem;
+    }
+    
+    .onboard-step .form-group label {
+        font-size: 1rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .onboard-step .form-group input {
+        font-size: 1.1rem;
+        padding: 0.9rem 1.1rem;
+    }
+    
+    .step-indicator-row {
+        margin-bottom: 1.5rem !important;
+        gap: 0.25rem !important;
+    }
+
+    .step-indicator-inner {
+        width: 2.2rem !important;
+        height: 2.2rem !important;
+        font-size: 0.9rem !important;
+    }
 }
 

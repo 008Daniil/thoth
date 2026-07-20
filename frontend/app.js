@@ -772,7 +772,7 @@ async function loadUniversities() {
                 <div class="uni-card-body">
                     <h3 class="uni-card-title">${uni.name}</h3>
                     <p class="uni-card-location"><i data-lucide="map-pin"></i> ${uni.city || 'Кампус'}, ${uni.country || 'Страна'}</p>
-                    <p class="uni-card-description">${uni.description || 'Официальный партнер UniPassport.'}</p>
+                    <p class="uni-card-description">${uni.description || 'Официальный партнер THOTH.'}</p>
                     
                     <div class="uni-card-footer">
                         <span class="uni-stat"><i data-lucide="globe"></i> ${uni.website || 'Нет сайта'}</span>
@@ -1212,6 +1212,13 @@ async function handleApplicationSubmit(e) {
     }
 
     // Existing university application submit flow
+    if (!specId) {
+        showToast("Пожалуйста, выберите специальность", "danger");
+        submitBtn.disabled = false;
+        updateProfileFormUI();
+        return;
+    }
+
     submitBtn.innerHTML = `<i data-lucide="loader" class="btn-icon animate-spin"></i> Передача документов...`;
     lucide.createIcons();
 
@@ -2225,9 +2232,12 @@ function updateProfileFormUI() {
         globalLogoutBtn.style.display = savedPhone ? "inline-flex" : "none";
     }
 
+    const specGroup = document.getElementById("form-specialty-group");
+
     if (uniSelect.value) {
         // We are applying to a university
         banner.style.display = "block";
+        if (specGroup) specGroup.style.display = "block";
         
         const selectedUniOpt = uniSelect.options[uniSelect.selectedIndex];
         uniNameSpan.textContent = selectedUniOpt ? selectedUniOpt.textContent : "Выбранный университет";
@@ -2238,12 +2248,15 @@ function updateProfileFormUI() {
         subtitle.textContent = "Заполните документы для отправки в выбранный университет.";
         submitBtn.innerHTML = `<i data-lucide="send" class="btn-icon"></i>Подать заявку в университет`;
         fileInput.required = true;
+        specSelect.required = true;
     } else {
         // We are just editing profile
         banner.style.display = "none";
+        if (specGroup) specGroup.style.display = "none";
         subtitle.textContent = "Заполните поля ниже, чтобы обновить ваши данные.";
         submitBtn.innerHTML = `<i data-lucide="save" class="btn-icon"></i>Сохранить профиль`;
         fileInput.required = false;
+        specSelect.required = false;
     }
     lucide.createIcons();
 }

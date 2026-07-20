@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UniPassport — Единый цифровой паспорт абитуриента</title>
+    <title>THOTH — Единый цифровой паспорт абитуриента</title>
     
     <!-- Google Fonts: Inter & Cormorant Garamond -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -74,7 +74,7 @@
 
             <!-- STEP 1: Welcome Screen -->
             <div id="onboard-step-1" class="onboard-step active">
-                <h1 class="onboard-title">UniPassport</h1>
+                <h1 class="onboard-title">THOTH</h1>
                 <p class="onboard-subtitle">Единая международная платформа для абитуриентов. Подавайте документы в ведущие университеты мира без бюрократии в один клик.</p>
                 
                 <div class="onboard-actions-col">
@@ -180,7 +180,7 @@
     <header class="app-header">
         <div class="header-container">
             <a href="#" class="logo" id="logo-btn">
-                UniPassport<span class="logo-dot"></span>
+                THOTH<span class="logo-dot"></span>
             </a>
             
             <div class="header-actions" style="display: flex; align-items: center; gap: 0.75rem;">
@@ -531,8 +531,8 @@
                                 </select>
                             </div>
 
-                            <div class="form-group" style="display: none;">
-                                <label for="form-specialty">Выбор специальности</label>
+                            <div class="form-group" id="form-specialty-group" style="display: none;">
+                                <label for="form-specialty">Выбор специальности <span class="required">*</span></label>
                                 <select id="form-specialty" disabled>
                                     <option value="" disabled selected>Сначала выберите университет...</option>
                                     <!-- Populated by JS dynamically based on selected university -->
