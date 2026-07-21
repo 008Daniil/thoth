@@ -233,16 +233,68 @@ function setupEventListeners() {
         }
     });
 
-    // Search input (Visual mockup indicator)
+    // Live Search and Filters Binding
     const searchBtn = document.getElementById("search-btn");
-    searchBtn.addEventListener("click", () => {
-        const query = document.getElementById("search-input").value;
-        if (query.trim()) {
-            showToast(`Поиск по запросу "${query}"... (Демо-фильтрация)`, "success");
-        } else {
-            showToast("Введите ключевое слово для поиска", "danger");
-        }
-    });
+    const searchInput = document.getElementById("search-input");
+    const priceSlider = document.getElementById("filter-price-slider");
+    const priceMaxDisplay = document.getElementById("price-max-val");
+    const resetFilterBtn = document.getElementById("filter-reset-btn");
+
+    const grantToggle = document.getElementById("filter-grant-toggle");
+    const scholarshipToggle = document.getElementById("filter-scholarship-toggle");
+    const directionSelect = document.getElementById("filter-direction");
+    const uniTypeSelect = document.getElementById("filter-uni-type");
+    const formatSelect = document.getElementById("filter-format");
+    const langSelect = document.getElementById("filter-language");
+
+    if (searchBtn) searchBtn.addEventListener("click", applyUniversityFilters);
+    if (searchInput) {
+        searchInput.addEventListener("input", applyUniversityFilters);
+        searchInput.addEventListener("keypress", (e) => {
+            if (e.key === "Enter") {
+                e.preventDefault();
+                applyUniversityFilters();
+            }
+        });
+    }
+
+    if (priceSlider && priceMaxDisplay) {
+        priceSlider.addEventListener("input", () => {
+            const formatted = Number(priceSlider.value).toLocaleString("ru-RU") + " сум";
+            priceMaxDisplay.textContent = formatted;
+            applyUniversityFilters();
+        });
+    }
+
+    if (grantToggle) grantToggle.addEventListener("change", applyUniversityFilters);
+    const sortSelect = document.getElementById("filter-sort");
+    if (sortSelect) sortSelect.addEventListener("change", applyUniversityFilters);
+    if (grantToggle) grantToggle.addEventListener("change", applyUniversityFilters);
+    if (scholarshipToggle) scholarshipToggle.addEventListener("change", applyUniversityFilters);
+    if (directionSelect) directionSelect.addEventListener("change", applyUniversityFilters);
+    if (uniTypeSelect) uniTypeSelect.addEventListener("change", applyUniversityFilters);
+    if (formatSelect) formatSelect.addEventListener("change", applyUniversityFilters);
+    if (langSelect) langSelect.addEventListener("change", applyUniversityFilters);
+
+    if (resetFilterBtn) {
+        resetFilterBtn.addEventListener("click", () => {
+            if (priceSlider) {
+                priceSlider.value = 135000000;
+                priceMaxDisplay.textContent = "135 000 000 сум";
+            }
+            if (searchInput) searchInput.value = "";
+            if (grantToggle) grantToggle.checked = false;
+            if (scholarshipToggle) scholarshipToggle.checked = false;
+            if (sortSelect) sortSelect.value = "default";
+            if (directionSelect) directionSelect.value = "all";
+            if (uniTypeSelect) uniTypeSelect.value = "all";
+            if (formatSelect) formatSelect.value = "all";
+            if (langSelect) langSelect.value = "all";
+
+            applyUniversityFilters();
+            showToast("Параметры фильтра сброшены", "info");
+        });
+    }
 
     // Search filter dropdown toggle
     const filterBtn = document.getElementById("filter-btn");
@@ -259,6 +311,114 @@ function setupEventListeners() {
     filterMenu.addEventListener("click", (e) => {
         e.stopPropagation();
     });
+
+    // Quick Apply Modal Close Listeners
+    const closeApplyModalBtn = document.getElementById("close-apply-modal-btn");
+    if (closeApplyModalBtn) {
+        closeApplyModalBtn.addEventListener("click", closeQuickApplyModal);
+    }
+
+    const quickModalOverlay = document.getElementById("quick-apply-modal");
+    if (quickModalOverlay) {
+        quickModalOverlay.addEventListener("click", (e) => {
+            if (e.target === quickModalOverlay) {
+                closeQuickApplyModal();
+            }
+        });
+    }
+
+    // Quick Apply File Name Preview
+    const quickFileInput = document.getElementById("quick-apply-file");
+    const quickFilePreview = document.getElementById("quick-file-name-preview");
+    if (quickFileInput && quickFilePreview) {
+        quickFileInput.addEventListener("change", () => {
+            const file = quickFileInput.files[0];
+            if (file) {
+                quickFilePreview.textContent = `✓ Выбран: ${file.name}`;
+                quickFilePreview.style.color = "var(--primary)";
+            } else {
+                quickFilePreview.textContent = "Файл не выбран";
+                quickFilePreview.style.color = "";
+            }
+        });
+    }
+
+    // Quick Apply Form Submit Handler
+    const quickApplyForm = document.getElementById("quick-apply-form");
+    if (quickApplyForm) {
+        quickApplyForm.addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            const uniId = document.getElementById("quick-apply-uni-id").value;
+            const specId = document.getElementById("quick-apply-spec").value;
+            const fullName = document.getElementById("quick-apply-name").value;
+            const phone = document.getElementById("quick-apply-phone").value;
+            const ielts = document.getElementById("quick-apply-ielts").value;
+            const gpa = document.getElementById("quick-apply-gpa").value;
+            const file = document.getElementById("quick-apply-file").files[0];
+            const uniName = document.getElementById("apply-modal-uni-name").textContent;
+
+            const submitBtn = document.getElementById("quick-apply-submit-btn");
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = `<i data-lucide="loader" class="btn-icon animate-spin"></i> Передача документов...`;
+            lucide.createIcons();
+
+            if (!specId) {
+                showToast("Пожалуйста, выберите направление из списка", "danger");
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = `<i data-lucide="send" class="btn-icon"></i>Отправить документы в ВУЗ`;
+                return;
+            }
+
+            if (!file) {
+                showToast("Пожалуйста, прикрепите скан аттестата или паспорта", "danger");
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = `<i data-lucide="send" class="btn-icon"></i>Отправить документы в ВУЗ`;
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append("university_id", uniId);
+            formData.append("specialty_id", specId);
+            formData.append("full_name", fullName);
+            formData.append("phone", phone);
+            if (ielts) formData.append("ielts_score", ielts);
+            if (gpa) formData.append("gpa", gpa);
+            formData.append("file", file);
+
+            try {
+                const res = await fetch(`${API_BASE}/api/v1/applications/apply`, {
+                    method: "POST",
+                    body: formData
+                });
+
+                const data = await res.json();
+
+                if (!res.ok) {
+                    throw new Error(data.detail || "Ошибка при отправке документов");
+                }
+
+                localStorage.setItem("currentStudentName", fullName);
+                localStorage.setItem("currentStudentPhone", phone);
+
+                showToast(`🎉 Заявка успешно отправлена в ${uniName}!`, "success");
+                closeQuickApplyModal();
+
+                const profilePage = document.getElementById("page-profile");
+                if (profilePage && profilePage.classList.contains("active")) {
+                    loadStudentProfile(phone);
+                }
+
+            } catch (err) {
+                console.error("Error quick applying:", err);
+                showToast(err.message || "Не удалось отправить документы", "danger");
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = `<i data-lucide="send" class="btn-icon"></i>Отправить документы в ВУЗ`;
+                lucide.createIcons();
+            }
+        });
+    }
 
     // Authorization in passport view
     document.getElementById("load-profile-btn").addEventListener("click", () => {
@@ -387,27 +547,36 @@ function setupEventListeners() {
         });
     }
 
-    // Onboarding Step 2 Event Listeners
+    // Onboarding Step 2 Event Listeners (Personal Info - Mandatory)
     const onboardNext2Btn = document.getElementById("onboard-next-2-btn");
     if (onboardNext2Btn) {
         onboardNext2Btn.addEventListener("click", () => {
+            const name = document.getElementById("onboard-val-name").value.trim();
+            const birthday = document.getElementById("onboard-val-birthday").value;
+            const phone = document.getElementById("onboard-val-phone").value.trim();
+
+            if (!name || !birthday || !phone) {
+                showToast("Пожалуйста, укажите ваши ФИО, дату рождения и номер телефона", "danger");
+                return;
+            }
+
             document.getElementById("onboard-step-2").classList.remove("active");
             document.getElementById("onboard-step-3").classList.add("active");
             updateStepper(3);
         });
     }
 
-    const onboardSkip2Btn = document.getElementById("onboard-skip-2-btn");
-    if (onboardSkip2Btn) {
-        onboardSkip2Btn.addEventListener("click", () => {
-            // Clear Step 2 inputs since they skipped
+    const onboardSkip3Btn = document.getElementById("onboard-skip-3-btn");
+    if (onboardSkip3Btn) {
+        onboardSkip3Btn.addEventListener("click", () => {
             document.getElementById("onboard-val-ielts").value = "";
             document.getElementById("onboard-val-sat").value = "";
             document.getElementById("onboard-val-gpa").value = "";
             
-            document.getElementById("onboard-step-2").classList.remove("active");
-            document.getElementById("onboard-step-3").classList.add("active");
-            updateStepper(3);
+            const finalForm = document.getElementById("onboard-final-form");
+            if (finalForm) {
+                finalForm.requestSubmit();
+            }
         });
     }
 
@@ -729,101 +898,165 @@ function setupEventListeners() {
 // --- DATA LOADING & INTERACTION FUNCTIONS ---
 
 // 1. Load approved universities for student feed
+// 1. Load approved universities for student feed
 async function loadUniversities() {
     try {
         const res = await fetch(`${API_BASE}/api/v1/universities`);
         if (!res.ok) throw new Error("Failed to load");
         
         const list = await res.json();
-        const container = document.getElementById("uni-list-container");
-        
-        if (list.length === 0) {
-            container.innerHTML = `
-                <div class="glass-card" style="text-align: center; padding: 3rem; color: var(--text-secondary);">
-                    <i data-lucide="alert-circle" style="width:40px; height:40px; color: var(--primary); margin-bottom:1rem;"></i>
-                    <p>Список вузов временно пуст. Вы можете зарегистрировать новый университет в футере.</p>
-                </div>
-            `;
-            // Clear form select too
-            populateUniversityDropdowns([]);
-            return;
-        }
-
-        // Render card
-        container.innerHTML = "";
-        list.forEach(uni => {
-            const card = document.createElement("div");
-            card.className = "uni-card glass-card";
-            
-            // Random styling tag for aesthetics
-            const isDefault = uni.id === DEFAULT_UNI_ID;
-            const alias = uni.name.split(" ").map(w => w[0]).join("").substring(0, 4);
-
-            const hasPhoto = uni.photo && uni.photo.startsWith("data:image/");
-            const placeholderStyle = hasPhoto 
-                ? `background-image: url('${uni.photo}'); background-size: cover; background-position: center; border-bottom: 1px solid var(--card-border);`
-                : `background: var(--bg-accent); border-bottom: 1px solid var(--card-border);`;
-
-            card.innerHTML = `
-                <div class="uni-card-img-placeholder" style="${placeholderStyle}">
-                    <div class="uni-card-tag" style="background: var(--primary); color: var(--bg);">${isDefault ? 'ТОП ВУЗ' : 'ПАРТНЕР'}</div>
-                    ${hasPhoto ? '' : `<span class="uni-card-alias" style="color: var(--text-muted);">${alias}</span>`}
-                </div>
-                <div class="uni-card-body">
-                    <h3 class="uni-card-title">${uni.name}</h3>
-                    <p class="uni-card-location"><i data-lucide="map-pin"></i> ${uni.city || 'Кампус'}, ${uni.country || 'Страна'}</p>
-                    <p class="uni-card-description">${uni.description || 'Официальный партнер THOTH.'}</p>
-                    
-                    <div class="uni-card-footer">
-                        <span class="uni-stat"><i data-lucide="globe"></i> ${uni.website || 'Нет сайта'}</span>
-                        <div class="uni-card-actions">
-                            <button class="btn btn-outline btn-sm" id="view-${uni.id}">Подробнее</button>
-                            <button class="btn btn-primary btn-sm" id="apply-${uni.id}">Подать заявку</button>
-                        </div>
-                    </div>
-                </div>
-            `;
-
-            // Card navigation clicks
-            card.querySelector(`#view-${uni.id}`).addEventListener("click", (e) => {
-                e.stopPropagation();
-                window.location.hash = `university/${uni.id}`;
-            });
-
-            card.querySelector(`#apply-${uni.id}`).addEventListener("click", (e) => {
-                e.stopPropagation();
-                
-                // Select university in form
-                const select = document.getElementById("form-university");
-                select.value = uni.id;
-                
-                // Trigger specialty load
-                loadSpecialtiesForForm(uni.id);
-                
-                // Route to profile page
-                window.location.hash = "profile";
-                
-                // Focus form
-                setTimeout(() => {
-                    document.getElementById("apply-form").scrollIntoView({ behavior: "smooth" });
-                }, 200);
-            });
-
-            // Card body clicks open detail
-            card.addEventListener("click", () => {
-                window.location.hash = `university/${uni.id}`;
-            });
-
-            container.appendChild(card);
-        });
-
-        // Bind dropdowns in student form
+        window.rawUniversitiesList = list;
         populateUniversityDropdowns(list);
-        lucide.createIcons();
+        applyUniversityFilters();
 
     } catch (err) {
         console.error("Error loading universities:", err);
     }
+}
+
+// 1b. Apply Live Filters & Search
+function applyUniversityFilters() {
+    if (!window.rawUniversitiesList) return;
+
+    const queryInput = document.getElementById("search-input");
+    const query = queryInput ? queryInput.value.toLowerCase().trim() : "";
+
+    const priceSlider = document.getElementById("filter-price-slider");
+    const maxPrice = priceSlider ? Number(priceSlider.value) : Infinity;
+
+    const grantToggle = document.getElementById("filter-grant-toggle");
+    const requireGrant = grantToggle ? grantToggle.checked : false;
+
+    const scholarshipToggle = document.getElementById("filter-scholarship-toggle");
+    const requireScholarship = scholarshipToggle ? scholarshipToggle.checked : false;
+
+    const directionSelect = document.getElementById("filter-direction");
+    const direction = directionSelect ? directionSelect.value : "all";
+
+    const uniTypeSelect = document.getElementById("filter-uni-type");
+    const uniType = uniTypeSelect ? uniTypeSelect.value : "all";
+
+    const formatSelect = document.getElementById("filter-format");
+    const format = formatSelect ? formatSelect.value : "all";
+
+    const langSelect = document.getElementById("filter-language");
+    const lang = langSelect ? langSelect.value : "all";
+
+    const filtered = window.rawUniversitiesList.filter(uni => {
+        // Search query filter (matches name, city, country, description)
+        if (query) {
+            const nameMatch = uni.name && uni.name.toLowerCase().includes(query);
+            const cityMatch = uni.city && uni.city.toLowerCase().includes(query);
+            const countryMatch = uni.country && uni.country.toLowerCase().includes(query);
+            const descMatch = uni.description && uni.description.toLowerCase().includes(query);
+            if (!nameMatch && !cityMatch && !countryMatch && !descMatch) {
+                return false;
+            }
+        }
+
+        // Grant filter
+        if (requireGrant && !uni.has_grant && uni.status !== "approved") {
+            return false;
+        }
+
+        // Scholarship filter
+        if (requireScholarship && !uni.has_scholarship) {
+            return false;
+        }
+
+        // University Type filter
+        if (uniType !== "all" && uni.type && uni.type !== uniType) {
+            return false;
+        }
+
+        // Contract price slider filter
+        if (uni.contract_price && Number(uni.contract_price) > maxPrice) {
+            return false;
+        }
+
+        return true;
+    });
+
+    const sortSelect = document.getElementById("filter-sort");
+    const sortMode = sortSelect ? sortSelect.value : "default";
+
+    if (sortMode === "price_asc") {
+        filtered.sort((a, b) => (Number(a.contract_price) || 0) - (Number(b.contract_price) || 0));
+    } else if (sortMode === "price_desc") {
+        filtered.sort((a, b) => (Number(b.contract_price) || 0) - (Number(a.contract_price) || 0));
+    }
+
+    renderUniversityCards(filtered);
+}
+
+// 1c. Render Cards Grid
+function renderUniversityCards(list) {
+    const container = document.getElementById("uni-list-container");
+    if (!container) return;
+
+    if (list.length === 0) {
+        container.innerHTML = `
+            <div class="glass-card" style="text-align: center; padding: 3rem; color: var(--text-secondary); width: 100%; grid-column: 1 / -1;">
+                <i data-lucide="search-x" style="width:44px; height:44px; color: var(--primary); margin-bottom: 1rem;"></i>
+                <h3 style="font-family: var(--font-heading); font-size: 1.4rem; color: var(--primary); margin-bottom: 0.5rem;">Ничего не найдено</h3>
+                <p style="font-size: 0.95rem;">По вашему запросу и выбранным фильтрам не найдено совпадений. Попробуйте сбросить фильтры.</p>
+            </div>
+        `;
+        lucide.createIcons();
+        return;
+    }
+
+    container.innerHTML = "";
+    list.forEach(uni => {
+        const card = document.createElement("div");
+        card.className = "uni-card glass-card";
+        
+        const isDefault = uni.id === DEFAULT_UNI_ID;
+        const alias = uni.name.split(" ").map(w => w[0]).join("").substring(0, 4);
+
+        const hasPhoto = uni.photo && uni.photo.startsWith("data:image/");
+        const placeholderStyle = hasPhoto 
+            ? `background-image: url('${uni.photo}'); background-size: cover; background-position: center; border-bottom: 1px solid var(--card-border);`
+            : `background: var(--bg-accent); border-bottom: 1px solid var(--card-border);`;
+
+        card.innerHTML = `
+            <div class="uni-card-img-placeholder" style="${placeholderStyle}">
+                <div class="uni-card-tag" style="background: var(--primary); color: var(--bg);">${isDefault ? 'ТОП ВУЗ' : 'ПАРТНЕР'}</div>
+                ${hasPhoto ? '' : `<span class="uni-card-alias" style="color: var(--text-muted);">${alias}</span>`}
+            </div>
+            <div class="uni-card-body">
+                <h3 class="uni-card-title">${uni.name}</h3>
+                <p class="uni-card-location"><i data-lucide="map-pin"></i> ${uni.city || 'Кампус'}, ${uni.country || 'Страна'}</p>
+                <p class="uni-card-description">${uni.description || 'Официальный партнер THOTH.'}</p>
+                
+                <div class="uni-card-footer">
+                    <span class="uni-stat"><i data-lucide="globe"></i> ${uni.website || 'Нет сайта'}</span>
+                    <div class="uni-card-actions">
+                        <button class="btn btn-outline btn-sm" id="view-${uni.id}">Подробнее</button>
+                        <button class="btn btn-primary btn-sm" id="apply-${uni.id}">Подать документы</button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        card.querySelector(`#view-${uni.id}`).addEventListener("click", (e) => {
+            e.stopPropagation();
+            window.location.hash = `university/${uni.id}`;
+        });
+
+        card.querySelector(`#apply-${uni.id}`).addEventListener("click", (e) => {
+            e.stopPropagation();
+            openQuickApplyModal(uni.id, uni.name);
+        });
+
+        card.addEventListener("click", () => {
+            window.location.hash = `university/${uni.id}`;
+        });
+
+        container.appendChild(card);
+    });
+
+    lucide.createIcons();
 }
 
 // Populate university dropdown selection in form
@@ -837,6 +1070,80 @@ function populateUniversityDropdowns(list) {
         opt.textContent = uni.name;
         select.appendChild(opt);
     });
+}
+
+// --- QUICK APPLY MODAL FUNCTIONS ---
+async function openQuickApplyModal(uniId, uniName, preselectedSpecId = null) {
+    const modal = document.getElementById("quick-apply-modal");
+    if (!modal) return;
+
+    document.getElementById("quick-apply-uni-id").value = uniId;
+    document.getElementById("apply-modal-uni-name").textContent = uniName;
+
+    const savedName = localStorage.getItem("currentStudentName") || (window.currentStudentProfile ? window.currentStudentProfile.full_name : "");
+    const savedPhone = localStorage.getItem("currentStudentPhone") || (window.currentStudentProfile ? window.currentStudentProfile.phone : "");
+    
+    if (savedName) document.getElementById("quick-apply-name").value = savedName;
+    if (savedPhone) document.getElementById("quick-apply-phone").value = savedPhone;
+
+    if (window.currentStudentProfile) {
+        if (window.currentStudentProfile.ielts_score) document.getElementById("quick-apply-ielts").value = window.currentStudentProfile.ielts_score;
+        if (window.currentStudentProfile.gpa) document.getElementById("quick-apply-gpa").value = window.currentStudentProfile.gpa;
+    }
+
+    const filePreview = document.getElementById("quick-file-name-preview");
+    if (filePreview) {
+        filePreview.textContent = "Файл не выбран";
+        filePreview.style.color = "";
+    }
+    const fileInput = document.getElementById("quick-apply-file");
+    if (fileInput) fileInput.value = "";
+
+    const specSelect = document.getElementById("quick-apply-spec");
+    specSelect.disabled = true;
+    specSelect.innerHTML = `<option value="" disabled selected>Загрузка специальностей...</option>`;
+
+    try {
+        const res = await fetch(`${API_BASE}/api/v1/universities/${uniId}`);
+        if (res.ok) {
+            const data = await res.json();
+            specSelect.innerHTML = `<option value="" disabled selected>Выберите специальность...</option>`;
+            let specs = (data.specialties && data.specialties.length > 0) ? data.specialties : [
+                { id: `gen-${uniId}-1`, name: "Общий прием / Бакалавриат", tuition_fee: data.contract_price || 12000000 },
+                { id: `gen-${uniId}-2`, name: "Информационные технологии и ИИ", tuition_fee: data.contract_price || 14000000 },
+                { id: `gen-${uniId}-3`, name: "Бизнес, Менеджмент и Маркетинг", tuition_fee: data.contract_price || 15000000 }
+            ];
+
+            specs.forEach(spec => {
+                const opt = document.createElement("option");
+                opt.value = spec.id;
+                const feeStr = spec.tuition_fee ? ` — ${Number(spec.tuition_fee).toLocaleString("ru-RU")} сум/год` : "";
+                const codeStr = spec.code && spec.code.trim() ? ` (${spec.code})` : "";
+                opt.textContent = `${spec.name}${codeStr}${feeStr}`;
+                if (preselectedSpecId && spec.id === preselectedSpecId) {
+                    opt.selected = true;
+                }
+                specSelect.appendChild(opt);
+            });
+            specSelect.disabled = false;
+        }
+    } catch (e) {
+        console.error("Error loading modal specialties:", e);
+        specSelect.innerHTML = `<option value="" disabled selected>Ошибка загрузки направлений</option>`;
+    }
+
+    modal.style.display = "flex";
+    setTimeout(() => modal.classList.add("show"), 10);
+    lucide.createIcons();
+}
+
+function closeQuickApplyModal() {
+    const modal = document.getElementById("quick-apply-modal");
+    if (!modal) return;
+    modal.classList.remove("show");
+    setTimeout(() => {
+        modal.style.display = "none";
+    }, 200);
 }
 
 // 2. Load university details
@@ -933,11 +1240,7 @@ async function loadUniversityDetails(id) {
                 `;
                 
                 card.onclick = () => {
-                    const select = document.getElementById("form-university");
-                    select.value = uni.id;
-                    
-                    loadSpecialtiesAndSelect(uni.id, spec.id);
-                    window.location.hash = "profile";
+                    openQuickApplyModal(uni.id, uni.name, spec.id);
                 };
                 
                 specGrid.appendChild(card);
@@ -948,12 +1251,11 @@ async function loadUniversityDetails(id) {
 
         // Bind details page button
         const applyBtn = document.querySelector("#page-university .apply-now-btn");
-        applyBtn.onclick = () => {
-            const select = document.getElementById("form-university");
-            select.value = uni.id;
-            loadSpecialtiesForForm(uni.id);
-            window.location.hash = "profile";
-        };
+        if (applyBtn) {
+            applyBtn.onclick = () => {
+                openQuickApplyModal(uni.id, uni.name);
+            };
+        }
 
         lucide.createIcons();
     } catch (err) {

@@ -103,46 +103,15 @@
                 </div>
             </div>
 
-            <!-- STEP 2: Academic Statistics (IELTS, SAT, GPA) -->
+            <!-- STEP 2: Personal Information (Mandatory: Name, Birthday, Phone) -->
             <div id="onboard-step-2" class="onboard-step">
-                <h2 class="onboard-step-title">Академические достижения</h2>
-                <p class="onboard-step-desc">Укажите ваши текущие баллы (эти поля не обязательны, их можно заполнить позже)</p>
-                
-                <div class="onboard-stats-inputs">
-                    <div class="form-group">
-                        <label for="onboard-val-ielts">Балл IELTS</label>
-                        <input type="number" id="onboard-val-ielts" min="0" max="9" step="0.5" placeholder="например, 6.5">
-                    </div>
-                    <div class="form-group">
-                        <label for="onboard-val-sat">Балл SAT</label>
-                        <input type="number" id="onboard-val-sat" min="400" max="1600" placeholder="например, 1350">
-                    </div>
-                    <div class="form-group">
-                        <label for="onboard-val-gpa">Средний балл (GPA)</label>
-                        <input type="number" id="onboard-val-gpa" min="0" max="5" step="0.1" placeholder="например, 4.8">
-                    </div>
-                </div>
-
-                <div class="onboard-step-footer">
-                    <button class="btn btn-outline" id="onboard-prev-2-btn" style="margin-right: 1rem;">
-                        <i data-lucide="arrow-left" class="btn-icon"></i> Назад
-                    </button>
-                    <button class="btn btn-primary" id="onboard-next-2-btn">
-                        Далее <i data-lucide="arrow-right" class="btn-icon-right"></i>
-                    </button>
-                    <button class="btn-link onboard-skip-link" id="onboard-skip-2-btn" style="margin-left: auto;">Пропустить этот шаг</button>
-                </div>
-            </div>
-
-            <!-- STEP 3: Personal Information (Name, Birthday, Phone) -->
-            <div id="onboard-step-3" class="onboard-step">
                 <h2 class="onboard-step-title">Основная информация</h2>
                 <p class="onboard-step-desc">Заполните обязательные поля для создания вашего профиля</p>
                 
-                <form id="onboard-final-form" class="custom-form" onsubmit="return false;">
+                <div class="custom-form">
                     <div class="form-group">
                         <label for="onboard-val-name">ФИО полностью <span class="required">*</span></label>
-                        <input type="text" id="onboard-val-name" placeholder="Иванов Иван Иванович" required>
+                        <input type="text" id="onboard-val-name" placeholder="Фамилия Имя Отчество" required>
                     </div>
                     
                     <div class="form-row">
@@ -152,17 +121,50 @@
                         </div>
                         <div class="form-group">
                             <label for="onboard-val-phone">Номер телефона <span class="required">*</span></label>
-                            <input type="tel" id="onboard-val-phone" placeholder="+7 (999) 123-45-67" required>
+                            <input type="tel" id="onboard-val-phone" placeholder="+998 (90) 123-45-67" required>
                         </div>
                     </div>
                     
                     <div class="onboard-step-footer" style="margin-top: 1.5rem; display: flex; gap: 1.25rem; width: 100%;">
-                        <button class="btn btn-outline" id="onboard-prev-3-btn" style="flex: 1; display: inline-flex; align-items: center; justify-content: center; height: 48px;">
+                        <button class="btn btn-outline" id="onboard-prev-2-btn" style="flex: 1; display: inline-flex; align-items: center; justify-content: center; height: 48px;">
                             <i data-lucide="arrow-left" class="btn-icon"></i> Назад
                         </button>
-                        <button type="submit" class="btn btn-primary" id="onboard-finish-btn" style="flex: 2; height: 48px;">
+                        <button class="btn btn-primary" id="onboard-next-2-btn" style="flex: 2; height: 48px; display: inline-flex; align-items: center; justify-content: center;">
+                            Далее <i data-lucide="arrow-right" class="btn-icon-right"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- STEP 3: Academic Statistics (Optional: IELTS, SAT, GPA) -->
+            <div id="onboard-step-3" class="onboard-step">
+                <h2 class="onboard-step-title">Академические достижения</h2>
+                <p class="onboard-step-desc">Укажите ваши текущие баллы (эти поля не обязательны, их можно заполнить позже)</p>
+                
+                <form id="onboard-final-form" class="custom-form" onsubmit="return false;">
+                    <div class="onboard-stats-inputs">
+                        <div class="form-group">
+                            <label for="onboard-val-ielts">Балл IELTS</label>
+                            <input type="number" id="onboard-val-ielts" min="0" max="9" step="0.5" placeholder="например, 6.5">
+                        </div>
+                        <div class="form-group">
+                            <label for="onboard-val-sat">Балл SAT</label>
+                            <input type="number" id="onboard-val-sat" min="400" max="1600" placeholder="например, 1350">
+                        </div>
+                        <div class="form-group">
+                            <label for="onboard-val-gpa">Средний балл (GPA)</label>
+                            <input type="number" id="onboard-val-gpa" min="0" max="5" step="0.1" placeholder="например, 4.8">
+                        </div>
+                    </div>
+
+                    <div class="onboard-step-footer" style="margin-top: 1.5rem; display: flex; gap: 1rem; width: 100%; flex-wrap: wrap;">
+                        <button class="btn btn-outline" id="onboard-prev-3-btn" style="height: 48px;">
+                            <i data-lucide="arrow-left" class="btn-icon"></i> Назад
+                        </button>
+                        <button type="submit" class="btn btn-primary" id="onboard-finish-btn" style="height: 48px;">
                             <i data-lucide="check-circle" class="btn-icon"></i>Создать профиль
                         </button>
+                        <button type="button" class="btn-link onboard-skip-link" id="onboard-skip-3-btn" style="margin-left: auto;">Пропустить и завершить</button>
                     </div>
                 </form>
             </div>
@@ -218,24 +220,107 @@
                     </div>
                     <div class="filter-dropdown-wrapper">
                         <button class="btn btn-filter" id="filter-btn">
-                            <i data-lucide="sliders-horizontal" class="btn-icon"></i>Фильтры
+                            <i data-lucide="sliders-horizontal" class="btn-icon"></i>Фильтр
                         </button>
                         <div class="filter-dropdown" id="filter-menu">
+                            <div class="filter-header">
+                                <span class="filter-title">Фильтр</span>
+                                <button class="btn-filter-reset" id="filter-reset-btn">Сбросить</button>
+                            </div>
+
+                            <!-- Cost Range Section -->
+                            <div class="filter-section">
+                                <label class="filter-section-label">Стоимость контракта</label>
+                                <div class="price-range-display">
+                                    <span id="price-min-val">4 000 000 сум</span>
+                                    <span id="price-max-val">135 000 000 сум</span>
+                                </div>
+                                <input type="range" id="filter-price-slider" min="4000000" max="135000000" step="1000000" value="135000000" class="filter-slider">
+                            </div>
+
+                            <!-- Toggles Section (Icons removed per request) -->
+                            <div class="filter-toggles">
+                                <label class="toggle-item">
+                                    <span class="toggle-text">Доступны бюджетные места</span>
+                                    <input type="checkbox" id="filter-grant-toggle" class="toggle-input">
+                                    <span class="toggle-slider"></span>
+                                </label>
+
+                                <label class="toggle-item">
+                                    <span class="toggle-text">Стипендиальная поддержка</span>
+                                    <input type="checkbox" id="filter-scholarship-toggle" class="toggle-input">
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+
+                            <!-- Directions Section (Rephrased & Duplicates Fixed) -->
                             <div class="filter-group">
-                                <label>Направление</label>
+                                <label>Образовательное направление</label>
                                 <select id="filter-direction">
                                     <option value="all">Все направления</option>
-                                    <option value="it">IT и AI</option>
-                                    <option value="engineering">Инженерия</option>
-                                    <option value="finance">Финансы</option>
+                                    <option value="it">Информационные технологии и ИИ</option>
+                                    <option value="business">Бизнес, Финансы и Менеджмент</option>
+                                    <option value="economics">Экономика, Учет и Налогообложение</option>
+                                    <option value="engineering">Инженерия и Технологии</option>
+                                    <option value="architecture">Архитектура, Строительство и Дизайн</option>
+                                    <option value="law">Право и Юриспруденция</option>
+                                    <option value="medicine">Медицина, Здравоохранение и Фармация</option>
+                                    <option value="marketing">Маркетинг, PR и Реклама</option>
+                                    <option value="logistics">Логистика, Транспорт и Снабжение</option>
+                                    <option value="languages">Языки, Филология и Перевод</option>
+                                    <option value="journalism">Журналистика, Медиа и Связь</option>
+                                    <option value="psychology">Психология и Социология</option>
+                                    <option value="science">Естественные и Точные науки</option>
+                                    <option value="social">Гуманитарные и Общественные науки</option>
+                                    <option value="pedagogy">Педагогика и Образование</option>
+                                    <option value="arts">Искусство, Мода и Креативные индустрии</option>
+                                    <option value="tourism">Туризм, Гостеприимство и Сервис</option>
+                                    <option value="ecology">Экология и Природопользование</option>
+                                    <option value="mining">Горное дело и Энергетика</option>
+                                    <option value="security">Безопасность и Военное дело</option>
+                                    <option value="sports">Спорт и Физическая культура</option>
+                                    <option value="food">Пищевые технологии и Агрономия</option>
                                 </select>
                             </div>
+
+                            <!-- Sorting Section -->
+                            <div class="filter-group">
+                                <label>Сортировка по стоимости</label>
+                                <select id="filter-sort">
+                                    <option value="default">По умолчанию</option>
+                                    <option value="price_asc">Сначала доступные (По возрастанию)</option>
+                                    <option value="price_desc">Сначала престижные (По убыванию)</option>
+                                </select>
+                            </div>
+
+                            <!-- Accordions / Selects (Icons removed per request) -->
+                            <div class="filter-group">
+                                <label>Форма собственности ВУЗа</label>
+                                <select id="filter-uni-type">
+                                    <option value="all">Все варианты</option>
+                                    <option value="state">Государственный</option>
+                                    <option value="private">Частный</option>
+                                    <option value="international">Международный филиал</option>
+                                </select>
+                            </div>
+
                             <div class="filter-group">
                                 <label>Формат обучения</label>
                                 <select id="filter-format">
-                                    <option value="all">Любой</option>
-                                    <option value="offline">Офлайн</option>
-                                    <option value="online">Дистанционно</option>
+                                    <option value="all">Любой формат</option>
+                                    <option value="fulltime">Очный (Дневной)</option>
+                                    <option value="online">Дистанционный (Онлайн)</option>
+                                    <option value="extramural">Вечерний / Заочный</option>
+                                </select>
+                            </div>
+
+                            <div class="filter-group">
+                                <label>Язык преподавания</label>
+                                <select id="filter-language">
+                                    <option value="all">Все языки</option>
+                                    <option value="uz">Узбекский</option>
+                                    <option value="ru">Русский</option>
+                                    <option value="en">Английский</option>
                                 </select>
                             </div>
                         </div>
@@ -1031,6 +1116,70 @@
             <button class="modal-close-btn" id="close-wb-preview-btn">&times;</button>
             <h3 style="margin-bottom: 1.5rem; color: var(--primary); border-bottom: 1px solid rgba(102,2,60,0.08); padding-bottom: 0.75rem; font-family: var(--font-heading); font-size: 1.4rem;">Предпросмотр карточки (Глазами студента)</h3>
             <div id="modal-preview-container"></div>
+        </div>
+    </div>
+
+    <!-- Quick Application Modal (Pop-up window for fast document submission) -->
+    <div id="quick-apply-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-card glass-card">
+            <div class="modal-header">
+                <div class="modal-header-info">
+                    <span class="modal-badge"><i data-lucide="zap"></i> Быстрая подача документов</span>
+                    <h2 class="modal-title" id="apply-modal-uni-name">Университет</h2>
+                    <p class="modal-subtitle">Подача документов в выбранный университет без бюрократии в 1 клик</p>
+                </div>
+                <button class="modal-close-btn" id="close-apply-modal-btn">&times;</button>
+            </div>
+
+            <form id="quick-apply-form" class="modal-body">
+                <!-- Hidden uni ID -->
+                <input type="hidden" id="quick-apply-uni-id">
+
+                <div class="form-group">
+                    <label for="quick-apply-spec">Выберите образовательное направление <span class="required">*</span></label>
+                    <select id="quick-apply-spec" required>
+                        <option value="" disabled selected>Загрузка специальностей...</option>
+                    </select>
+                </div>
+
+                <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="form-group">
+                        <label for="quick-apply-name">ФИО абитуриента <span class="required">*</span></label>
+                        <input type="text" id="quick-apply-name" placeholder="Фамилия Имя Отчество" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="quick-apply-phone">Номер телефона <span class="required">*</span></label>
+                        <input type="tel" id="quick-apply-phone" placeholder="+998 (90) 123-45-67" required>
+                    </div>
+                </div>
+
+                <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="form-group">
+                        <label for="quick-apply-ielts">Балл IELTS (если есть)</label>
+                        <input type="number" id="quick-apply-ielts" step="0.5" min="0" max="9" placeholder="6.5">
+                    </div>
+                    <div class="form-group">
+                        <label for="quick-apply-gpa">Средний балл GPA (если есть)</label>
+                        <input type="number" id="quick-apply-gpa" step="0.01" min="0" max="5" placeholder="4.8">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="quick-apply-file">Скан аттестата / сертификата <span class="required">*</span></label>
+                    <div class="file-upload-wrapper">
+                        <input type="file" id="quick-apply-file" class="file-upload-input" accept=".pdf,image/*" required>
+                        <div class="file-upload-design">
+                            <i data-lucide="cloud-upload" class="upload-icon"></i>
+                            <span class="upload-text">Нажмите для выбора файла или перетащите сюда</span>
+                            <span class="file-selected-name" id="quick-file-name-preview">Файл не выбран</span>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-full" id="quick-apply-submit-btn" style="margin-top: 1rem; width: 100%;">
+                    <i data-lucide="send" class="btn-icon"></i>Отправить документы в ВУЗ
+                </button>
+            </form>
         </div>
     </div>
 
