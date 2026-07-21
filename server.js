@@ -1243,10 +1243,19 @@ app.post('/api/v1/applications/apply', upload.single('file'), (req, res) => {
 
     const db = loadDB();
     const uni = db.universities.find(u => u.id === university_id);
-    const spec = db.specialties.find(s => s.id === specialty_id);
+    if (!uni) {
+        return res.status(404).json({ detail: 'Университет не найден' });
+    }
 
-    if (!uni || !spec) {
-        return res.status(404).json({ detail: 'University or specialty not found' });
+    let spec = db.specialties.find(s => s.id === specialty_id);
+    if (!spec) {
+        spec = {
+            id: specialty_id,
+            university_id: university_id,
+            name: req.body.specialty_name || 'Общее направление (Бакалавриат)',
+            tuition_fee: 10000000
+        };
+        db.specialties.push(spec);
     }
 
     // Find or create student profile
