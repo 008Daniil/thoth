@@ -1107,7 +1107,7 @@ app.post('/api/v1/universities/register', (req, res) => {
 
 // POST: Create or Update Student Profile (from Onboarding Intro Wizard)
 app.post('/api/v1/students/profile', (req, res) => {
-    const { full_name, phone, birthday, gpa, ielts_score, sat_score } = req.body;
+    const { full_name, phone, telegram, birthday, gpa, ielts_score, sat_score } = req.body;
     if (!phone || !full_name) {
         return res.status(400).json({ detail: 'Необходимы ФИО и номер телефона' });
     }
@@ -1117,6 +1117,7 @@ app.post('/api/v1/students/profile', (req, res) => {
 
     if (student) {
         student.full_name = full_name;
+        if (telegram !== undefined) student.telegram = telegram;
         student.birthday = birthday || student.birthday || null;
         student.gpa = gpa ? parseFloat(gpa) : (student.gpa || null);
         if (ielts_score !== undefined) student.ielts_score = ielts_score ? parseFloat(ielts_score) : student.ielts_score;
@@ -1126,6 +1127,7 @@ app.post('/api/v1/students/profile', (req, res) => {
             id: crypto.randomUUID(),
             full_name,
             phone,
+            telegram: telegram || null,
             birthday: birthday || null,
             gpa: gpa ? parseFloat(gpa) : null,
             ielts_score: ielts_score ? parseFloat(ielts_score) : null,
@@ -1217,6 +1219,9 @@ app.post('/api/v1/universities/profile', (req, res) => {
                 name: spec.name,
                 code: spec.code || 'FAC',
                 tuition_fee: spec.tuition_fee ? parseInt(spec.tuition_fee) : 0,
+                language: spec.language || 'Английский',
+                format: spec.format || 'Очный (Дневной)',
+                has_grant: spec.has_grant === true || spec.has_grant === 'true' || false,
                 min_requirements: spec.min_requirements || ''
             });
         });
