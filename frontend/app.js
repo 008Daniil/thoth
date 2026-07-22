@@ -21,6 +21,126 @@ const SKETCH_STUDENT = {
     achievements: "Призер регионального этапа олимпиады по информатике (2025), диплом за лучший проект на хакатоне AI Hack."
 };
 
+// International Country Codes data (Comprehensive World List)
+const COUNTRY_CODES = [
+    { code: "+998", flag: "🇺🇿", name: "Узбекистан (+998)" },
+    { code: "+7", flag: "🇰🇿", name: "Казахстан (+7)" },
+    { code: "+7", flag: "🇷🇺", name: "Россия (+7)" },
+    { code: "+996", flag: "🇰🇬", name: "Кыргызстан (+996)" },
+    { code: "+992", flag: "🇹🇯", name: "Таджикистан (+992)" },
+    { code: "+993", flag: "🇹🇲", name: "Туркменистан (+993)" },
+    { code: "+90", flag: "🇹🇷", name: "Турция (+90)" },
+    { code: "+971", flag: "🇦🇪", name: "ОАЭ (+971)" },
+    { code: "+1", flag: "🇺🇸", name: "США (+1)" },
+    { code: "+1", flag: "🇨🇦", name: "Канада (+1)" },
+    { code: "+44", flag: "🇬🇧", name: "Великобритания (+44)" },
+    { code: "+49", flag: "🇩🇪", name: "Германия (+49)" },
+    { code: "+33", flag: "🇫🇷", name: "Франция (+33)" },
+    { code: "+39", flag: "🇮🇹", name: "Италия (+39)" },
+    { code: "+34", flag: "🇪🇸", name: "Испания (+34)" },
+    { code: "+82", flag: "🇰🇷", name: "Южная Корея (+82)" },
+    { code: "+86", flag: "🇨🇳", name: "Китай (+86)" },
+    { code: "+81", flag: "🇯🇵", name: "Япония (+81)" },
+    { code: "+91", flag: "🇮🇳", name: "Индия (+91)" },
+    { code: "+61", flag: "🇦🇺", name: "Австралия (+61)" },
+    { code: "+380", flag: "🇺·🇦", name: "Украина (+380)" },
+    { code: "+375", flag: "🇧🇾", name: "Беларусь (+375)" },
+    { code: "+374", flag: "🇦🇲", name: "Армения (+374)" },
+    { code: "+995", flag: "🇬🇪", name: "Грузия (+995)" },
+    { code: "+994", flag: "🇦🇿", name: "Азербайджан (+994)" },
+    { code: "+373", flag: "🇲🇩", name: "Молдова (+373)" },
+    { code: "+48", flag: "🇵🇱", name: "Польша (+48)" },
+    { code: "+420", flag: "🇨🇿", name: "Чехия (+420)" },
+    { code: "+43", flag: "🇦🇹", name: "Австрия (+43)" },
+    { code: "+41", flag: "🇨🇭", name: "Швейцария (+41)" },
+    { code: "+31", flag: "🇳🇱", name: "Нидерланды (+31)" },
+    { code: "+32", flag: "🇧🇪", name: "Бельгия (+32)" },
+    { code: "+46", flag: "🇸🇪", name: "Швеция (+46)" },
+    { code: "+47", flag: "🇳🇴", name: "Норвегия (+47)" },
+    { code: "+358", flag: "🇫🇮", name: "Финляндия (+358)" },
+    { code: "+966", flag: "🇸🇦", name: "Саудовская Аравия (+966)" },
+    { code: "+974", flag: "🇶🇦", name: "Катар (+974)" },
+    { code: "+965", flag: "🇰🇼", name: "Кувейт (+965)" },
+    { code: "+20", flag: "🇪🇬", name: "Египет (+20)" },
+    { code: "+62", flag: "🇮🇩", name: "Индонезия (+62)" },
+    { code: "+60", flag: "🇲🇾", name: "Малайзия (+60)" },
+    { code: "+65", flag: "🇸🇬", name: "Сингапур (+65)" },
+    { code: "+66", flag: "🇹🇭", name: "Таиланд (+66)" },
+    { code: "+84", flag: "🇻🇳", name: "Вьетнам (+84)" },
+    { code: "+55", flag: "🇧🇷", name: "Бразилия (+55)" },
+    { code: "+52", flag: "🇲🇽", name: "Мексика (+52)" },
+    { code: "+27", flag: "🇿🇦", name: "ЮАР (+27)" }
+];
+
+// Detect User's Default Country Code by TimeZone or Geolocation
+function detectDefaultCountryCode() {
+    try {
+        const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "";
+        if (tz.includes("Tashkent") || tz.includes("Samarkand")) return "+998";
+        if (tz.includes("Almaty") || tz.includes("Qostanay") || tz.includes("Aqtobe")) return "+7";
+        if (tz.includes("Bishkek")) return "+996";
+        if (tz.includes("Dushanbe")) return "+992";
+        if (tz.includes("Ashgabat")) return "+993";
+        if (tz.includes("Moscow") || tz.includes("Yekaterinburg")) return "+7";
+        if (tz.includes("Istanbul")) return "+90";
+    } catch(e) {}
+    return "+998"; // Default fallback to Uzbekistan (+998)
+}
+
+function setupCountryCodeInputs() {
+    const phoneInputs = [
+        document.getElementById("onboard-val-phone"),
+        document.getElementById("form-phone"),
+        document.getElementById("quick-apply-phone")
+    ];
+
+    const detectedCode = detectDefaultCountryCode();
+
+    phoneInputs.forEach(input => {
+        if (!input || input.dataset.countryBound) return;
+        input.dataset.countryBound = "true";
+
+        // Remove rigid format masks or template placeholders
+        input.placeholder = "90 123 45 67";
+        input.type = "tel";
+
+        const wrapper = document.createElement("div");
+        wrapper.className = "phone-input-group";
+        wrapper.style.display = "flex";
+        wrapper.style.alignItems = "center";
+        wrapper.style.gap = "0.5rem";
+        wrapper.style.width = "100%";
+
+        const select = document.createElement("select");
+        select.className = "country-code-select";
+        select.style.padding = "0.75rem 0.5rem";
+        select.style.borderRadius = "12px";
+        select.style.border = "1px solid var(--card-border)";
+        select.style.background = "var(--card-bg)";
+        select.style.color = "var(--text-primary)";
+        select.style.fontSize = "0.95rem";
+        select.style.fontWeight = "600";
+        select.style.cursor = "pointer";
+        select.style.flexShrink = "0";
+
+        COUNTRY_CODES.forEach(item => {
+            const opt = document.createElement("option");
+            opt.value = item.code;
+            opt.textContent = `${item.flag} ${item.code}`;
+            if (item.code === detectedCode && !select.value) {
+                opt.selected = true;
+            }
+            select.appendChild(opt);
+        });
+
+        if (input.parentNode) {
+            input.parentNode.insertBefore(wrapper, input);
+            wrapper.appendChild(select);
+            wrapper.appendChild(input);
+        }
+    });
+}
+
 // --- DOM READY INITIALIZATION ---
 document.addEventListener("DOMContentLoaded", () => {
     // Initialize Theme from localStorage
@@ -31,6 +151,9 @@ document.addEventListener("DOMContentLoaded", () => {
     
     // Initialize WebGL shader background
     initBackground();
+
+    // Setup country code selects for phone inputs
+    setupCountryCodeInputs();
 
     // Router setup
     window.addEventListener("hashchange", handleRoute);
@@ -323,6 +446,21 @@ function setupEventListeners() {
         quickModalOverlay.addEventListener("click", (e) => {
             if (e.target === quickModalOverlay) {
                 closeQuickApplyModal();
+            }
+        });
+    }
+
+    // Lead Student Profile Modal Close Listeners
+    const closeLeadModalBtn = document.getElementById("close-lead-modal-btn");
+    if (closeLeadModalBtn) {
+        closeLeadModalBtn.addEventListener("click", closeLeadStudentModal);
+    }
+
+    const leadModalOverlay = document.getElementById("student-profile-modal");
+    if (leadModalOverlay) {
+        leadModalOverlay.addEventListener("click", (e) => {
+            if (e.target === leadModalOverlay) {
+                closeLeadStudentModal();
             }
         });
     }
@@ -1118,8 +1256,7 @@ async function openQuickApplyModal(uniId, uniName, preselectedSpecId = null) {
                 const opt = document.createElement("option");
                 opt.value = spec.id;
                 const feeStr = spec.tuition_fee ? ` — ${Number(spec.tuition_fee).toLocaleString("ru-RU")} сум/год` : "";
-                const codeStr = spec.code && spec.code.trim() ? ` (${spec.code})` : "";
-                opt.textContent = `${spec.name}${codeStr}${feeStr}`;
+                opt.textContent = `${spec.name}${feeStr}`;
                 if (preselectedSpecId && spec.id === preselectedSpecId) {
                     opt.selected = true;
                 }
@@ -1156,7 +1293,15 @@ async function loadUniversityDetails(id) {
         
         // 1. Title, Alias & Slogan
         document.getElementById("det-uni-name").textContent = uni.name;
-        document.getElementById("det-uni-slogan").textContent = uni.slogan || "Создаем будущее, объединяя таланты со всего мира";
+        
+        const sloganElem = document.getElementById("det-uni-slogan");
+        if (uni.slogan && uni.slogan.trim()) {
+            sloganElem.textContent = uni.slogan.trim();
+            sloganElem.style.display = "block";
+        } else {
+            sloganElem.textContent = "";
+            sloganElem.style.display = "none";
+        }
         
         // Alias generation (first letters of words, e.g. MIT)
         const words = uni.name.split(" ");
@@ -1181,7 +1326,7 @@ async function loadUniversityDetails(id) {
         // 2. Description
         document.getElementById("det-uni-desc").textContent = uni.description || "Описание университета на модерации.";
         
-        // 3. Specs Table
+        // 3. Specs Table (Calculated dynamically from specialties)
         document.getElementById("det-spec-country").textContent = uni.country;
         document.getElementById("det-spec-city").textContent = uni.city;
         
@@ -1195,8 +1340,36 @@ async function loadUniversityDetails(id) {
             websiteLink.removeAttribute("href");
         }
         
-        document.getElementById("det-spec-ielts").textContent = uni.min_ielts || "—";
-        document.getElementById("det-spec-sat").textContent = uni.min_sat || "—";
+        let ieltsScores = [];
+        let satScores = [];
+        if (uni.specialties && Array.isArray(uni.specialties)) {
+            uni.specialties.forEach(s => {
+                if (s.min_requirements) {
+                    const ieltsMatch = s.min_requirements.match(/IELTS\s*([0-9\.]+)/i);
+                    if (ieltsMatch) ieltsScores.push(parseFloat(ieltsMatch[1]));
+                    const satMatch = s.min_requirements.match(/SAT\s*([0-9]+)/i);
+                    if (satMatch) satScores.push(parseInt(satMatch[1]));
+                }
+            });
+        }
+
+        const ieltsElem = document.getElementById("det-spec-ielts");
+        if (ieltsScores.length > 0) {
+            const minIelts = Math.min(...ieltsScores);
+            const maxIelts = Math.max(...ieltsScores);
+            ieltsElem.textContent = minIelts === maxIelts ? `${minIelts}` : `${minIelts} - ${maxIelts}`;
+        } else {
+            ieltsElem.textContent = uni.min_ielts ? `${uni.min_ielts}` : "—";
+        }
+
+        const satElem = document.getElementById("det-spec-sat");
+        if (satScores.length > 0) {
+            const minSat = Math.min(...satScores);
+            const maxSat = Math.max(...satScores);
+            satElem.textContent = minSat === maxSat ? `${minSat}` : `${minSat} - ${maxSat}`;
+        } else {
+            satElem.textContent = uni.min_sat ? `${uni.min_sat}` : "—";
+        }
         
         // 4. Cost Range / Price Tag
         if (uni.specialties && uni.specialties.length > 0) {
@@ -1223,19 +1396,39 @@ async function loadUniversityDetails(id) {
                 const card = document.createElement("div");
                 card.className = "wb-spec-option glass-card";
                 
-                const tuitionDisplay = spec.tuition_fee ? `$${parseInt(spec.tuition_fee).toLocaleString()}/год` : "Цена на модерации";
-                const reqs = spec.min_requirements ? `Требования: ${spec.min_requirements}` : "Стандартные условия поступления";
-                
+                const tuitionDisplay = spec.tuition_fee ? `${parseInt(spec.tuition_fee).toLocaleString("ru-RU")} сум/год` : "Цена на модерации";
+                const reqsDisplay = spec.min_requirements && spec.min_requirements.trim() ? spec.min_requirements : "Стандартные условия приёма (IELTS / Аттестат)";
+                const langDisplay = spec.language || "Английский / Русский";
+                const formatDisplay = spec.format || "Очный (Дневной)";
+                const hasGrantBadge = (spec.has_grant || uni.has_grant) ? `<span style="display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.75rem; font-weight: 600; color: #2e7d32; background: rgba(46,125,50,0.1); padding: 0.2rem 0.5rem; border-radius: 6px; margin-top: 0.35rem;"><i data-lucide="trophy" style="width: 12px; height: 12px;"></i> Доступен грант</span>` : "";
+
                 card.innerHTML = `
-                    <div class="wb-spec-opt-header">
-                        <span class="wb-spec-opt-name">${spec.name}</span>
-                        ${spec.code && spec.code.trim() ? `<span class="wb-spec-opt-code">${spec.code}</span>` : ""}
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; width: 100%;">
+                        <div>
+                            <h4 style="font-family: var(--font-heading); font-size: 1.15rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.25rem;">${spec.name}</h4>
+                        </div>
+                        <button class="btn btn-primary btn-sm" style="flex-shrink: 0;">Подать документы</button>
                     </div>
-                    <div class="wb-spec-opt-fee">${tuitionDisplay}</div>
-                    <p class="wb-spec-opt-reqs">${reqs}</p>
-                    <div class="wb-spec-opt-action">
-                        <span>Выбрать специальность</span>
-                        <i data-lucide="chevron-right" style="width: 16px; height: 16px;"></i>
+
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 1rem; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--card-border);">
+                        <div>
+                            <span style="font-size: 0.75rem; color: var(--text-secondary); display: block;">Язык обучения</span>
+                            <strong style="font-size: 0.85rem; color: var(--text-primary);">${langDisplay}</strong>
+                        </div>
+                        <div>
+                            <span style="font-size: 0.75rem; color: var(--text-secondary); display: block;">Режим обучения</span>
+                            <strong style="font-size: 0.85rem; color: var(--text-primary);">${formatDisplay}</strong>
+                        </div>
+                        <div>
+                            <span style="font-size: 0.75rem; color: var(--text-secondary); display: block;">Стоимость обучения</span>
+                            <strong style="font-size: 0.9rem; color: var(--primary);">${tuitionDisplay}</strong>
+                            ${hasGrantBadge}
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 0.85rem; padding-top: 0.85rem; border-top: 1px dashed var(--card-border);">
+                        <span style="font-size: 0.75rem; color: var(--text-secondary); display: block; margin-bottom: 0.2rem;">Требования для поступления</span>
+                        <p style="font-size: 0.85rem; font-weight: 500; color: var(--text-primary); margin: 0;">${reqsDisplay}</p>
                     </div>
                 `;
                 
@@ -1715,30 +1908,53 @@ function openWizard(isEdit = false) {
 
 // 9. Submit onboarding wizard
 async function handleWizardSubmit(e) {
-    e.preventDefault();
+    if (e) e.preventDefault();
 
-    if (currentSpecialties.length === 0) {
+    const nameVal = document.getElementById("wizard-name") ? document.getElementById("wizard-name").value.trim() : "";
+    const countryVal = document.getElementById("wizard-country") ? document.getElementById("wizard-country").value.trim() : "";
+    const cityVal = document.getElementById("wizard-city") ? document.getElementById("wizard-city").value.trim() : "";
+
+    if (!nameVal || !countryVal || !cityVal) {
+        showToast("Пожалуйста, заполните название университета, страну и город на шаге 1", "danger");
+        document.getElementById("wizard-step-1").style.display = "block";
+        document.getElementById("wizard-step-2").style.display = "none";
+        return;
+    }
+
+    if (!currentSpecialties || currentSpecialties.length === 0) {
         showToast("Пожалуйста, добавьте хотя бы одну специальность", "danger");
         return;
     }
 
     // Validate fields inside currentSpecialties
-    const hasEmpty = currentSpecialties.some(s => !s.name.trim() || !s.tuition_fee);
+    const hasEmpty = currentSpecialties.some(s => !s.name || !s.name.trim() || !s.tuition_fee);
     if (hasEmpty) {
         showToast("Заполните название и стоимость для всех специальностей", "danger");
         return;
     }
 
+    // Compute IELTS / SAT range from currentSpecialties
+    let calcIelts = [];
+    let calcSat = [];
+    currentSpecialties.forEach(s => {
+        if (s.min_requirements) {
+            const mI = s.min_requirements.match(/IELTS\s*([0-9\.]+)/i);
+            if (mI) calcIelts.push(parseFloat(mI[1]));
+            const mS = s.min_requirements.match(/SAT\s*([0-9]+)/i);
+            if (mS) calcSat.push(parseInt(mS[1]));
+        }
+    });
+
     const payload = {
-        partner_id: currentPartner.id,
-        name: document.getElementById("wizard-name").value.trim(),
-        country: document.getElementById("wizard-country").value.trim(),
-        city: document.getElementById("wizard-city").value.trim(),
-        website: document.getElementById("wizard-website").value.trim(),
-        description: document.getElementById("wizard-description").value.trim(),
-        min_ielts: document.getElementById("wizard-ielts").value.trim() || null,
-        min_sat: document.getElementById("wizard-sat").value.trim() || null,
-        slogan: document.getElementById("wizard-slogan").value.trim(),
+        partner_id: currentPartner ? currentPartner.id : "partner-default",
+        name: nameVal,
+        country: countryVal,
+        city: cityVal,
+        website: document.getElementById("wizard-website") ? document.getElementById("wizard-website").value.trim() : "",
+        description: document.getElementById("wizard-description") ? document.getElementById("wizard-description").value.trim() : "",
+        min_ielts: calcIelts.length > 0 ? Math.min(...calcIelts) : null,
+        min_sat: calcSat.length > 0 ? Math.min(...calcSat) : null,
+        slogan: document.getElementById("wizard-slogan") ? document.getElementById("wizard-slogan").value.trim() : "",
         adv_1_title: currentAdvantages[0] ? currentAdvantages[0].title.trim() : "",
         adv_1_desc: currentAdvantages[0] ? currentAdvantages[0].desc.trim() : "",
         adv_2_title: currentAdvantages[1] ? currentAdvantages[1].title.trim() : "",
@@ -1761,7 +1977,10 @@ async function handleWizardSubmit(e) {
             throw new Error(data.detail || "Ошибка сохранения профиля");
         }
 
-        showToast("Профиль отправлен на модерацию администратору!", "success");
+        showToast("🎉 Профиль университета успешно отправлен на модерацию!", "success");
+        if (data.university) {
+            myUniversity = data.university;
+        }
         renderPartnerCabinet();
     } catch (err) {
         showToast(err.message || "Ошибка отправки профиля", "danger");
@@ -1933,54 +2152,52 @@ function renderLeadsTable() {
     tableBody.innerHTML = "";
     filteredLeads.forEach(lead => {
         const tr = document.createElement("tr");
+        tr.style.cursor = "pointer";
         const dateObj = new Date(lead.created_at);
         const formattedDate = dateObj.toLocaleDateString("ru-RU", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
 
-        const ieltsVal = lead.student.ielts_score !== null ? `IELTS ${lead.student.ielts_score}` : "";
-        const satVal = lead.student.sat_score !== null ? `SAT ${lead.student.sat_score}` : "";
+        const ieltsVal = lead.student && lead.student.ielts_score !== null ? `IELTS ${lead.student.ielts_score}` : "";
+        const satVal = lead.student && lead.student.sat_score !== null ? `SAT ${lead.student.sat_score}` : "";
         const statsBadge = [ieltsVal, satVal].filter(Boolean).join(" / ") || "—";
+        const studentName = (lead.student && lead.student.full_name) ? lead.student.full_name : "Абитуриент";
+        const studentPhone = (lead.student && lead.student.phone) ? lead.student.phone : "—";
+        const specName = (lead.specialty && lead.specialty.name) ? lead.specialty.name : "Общее направление";
+        const specCode = (lead.specialty && lead.specialty.code) ? lead.specialty.code : "";
 
         const statusSelectHtml = `
             <select class="table-status-select" data-app-id="${lead.id}">
                 <option value="pending" ${lead.status === 'pending' ? 'selected' : ''}>На модерации</option>
                 <option value="under_review" ${lead.status === 'under_review' ? 'selected' : ''}>На рассмотрении</option>
-                <option value="accepted" ${lead.status === 'accepted' ? 'selected' : ''}>Одобрен ВУЗом</option>
+                <option value="accepted" ${lead.status === 'accepted' || lead.status === 'approved' ? 'selected' : ''}>Одобрен ВУЗом</option>
                 <option value="rejected" ${lead.status === 'rejected' ? 'selected' : ''}>Отклонен</option>
             </select>
         `;
 
         tr.innerHTML = `
-            <td style="font-weight: 500;">${lead.student.full_name}</td>
-            <td style="font-size: 0.85rem; color: var(--text-secondary);">${lead.student.phone}</td>
+            <td style="font-weight: 600; color: var(--primary);">${studentName}</td>
+            <td style="font-size: 0.85rem; color: var(--text-secondary);">${studentPhone}</td>
             <td>
-                <span style="font-weight:500;">${lead.specialty.name}</span>
-                ${lead.specialty.code ? `<br><span style="font-size: 0.75rem; color: var(--text-muted);">${lead.specialty.code}</span>` : ""}
+                <span style="font-weight:500;">${specName}</span>
+                ${specCode ? `<br><span style="font-size: 0.75rem; color: var(--text-muted);">${specCode}</span>` : ""}
             </td>
             <td style="font-weight: 500; color: var(--primary);">${statsBadge}</td>
             <td>
-                <a href="${API_BASE}/api/v1/applications/download/${lead.id}" class="download-link" target="_blank">
+                <a href="${API_BASE}/api/v1/applications/download/${lead.id}" class="download-link" target="_blank" onclick="event.stopPropagation();">
                     <i data-lucide="download"></i> Скачать
                 </a>
             </td>
-            <td>${statusSelectHtml}</td>
+            <td onclick="event.stopPropagation();">${statusSelectHtml}</td>
             <td style="font-size: 0.85rem; color: var(--text-secondary);">${formattedDate}</td>
         `;
 
+        tr.addEventListener("click", () => {
+            openLeadStudentModal(lead);
+        });
+
         tr.querySelector(".table-status-select").addEventListener("change", async (e) => {
+            e.stopPropagation();
             const newStatus = e.target.value;
-            try {
-                const res = await fetch(`${API_BASE}/api/v1/applications/${lead.id}/status`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ status: newStatus })
-                });
-                if (!res.ok) throw new Error("Status update failed");
-                showToast("Статус заявки успешно изменен", "success");
-                // Update local model status
-                lead.status = newStatus;
-            } catch (err) {
-                showToast(err.message || "Ошибка обновления статуса", "danger");
-            }
+            await updateLeadApplicationStatus(lead.id, newStatus, lead);
         });
 
         tableBody.appendChild(tr);
@@ -1988,6 +2205,99 @@ function renderLeadsTable() {
 
     lucide.createIcons();
 }
+
+// --- PARTNER LEAD STUDENT MODAL FUNCTIONS ---
+function openLeadStudentModal(lead) {
+    const modal = document.getElementById("student-profile-modal");
+    if (!modal) return;
+
+    const studentName = (lead.student && lead.student.full_name) ? lead.student.full_name : "Абитуриент";
+    document.getElementById("lead-modal-student-name").textContent = studentName;
+    
+    const dateObj = new Date(lead.created_at);
+    const dateStr = dateObj.toLocaleDateString("ru-RU", { day: "numeric", month: "long", year: "numeric" });
+    document.getElementById("lead-modal-app-date").textContent = `Подано: ${dateStr}`;
+
+    document.getElementById("lead-modal-phone").textContent = (lead.student && lead.student.phone) ? lead.student.phone : "—";
+    
+    const tgHandle = (lead.student && lead.student.telegram) ? lead.student.telegram : "";
+    const tgDisplay = tgHandle ? (tgHandle.startsWith("@") ? tgHandle : `@${tgHandle}`) : "не указан";
+    document.getElementById("lead-modal-telegram").textContent = tgDisplay;
+
+    const specName = (lead.specialty && lead.specialty.name) ? lead.specialty.name : "Общее направление";
+    const specCode = (lead.specialty && lead.specialty.code) ? lead.specialty.code : "";
+    document.getElementById("lead-modal-specialty").textContent = specCode ? `${specName} (${specCode})` : specName;
+
+    document.getElementById("lead-modal-ielts").textContent = (lead.student && lead.student.ielts_score !== null) ? lead.student.ielts_score : "—";
+    document.getElementById("lead-modal-sat").textContent = (lead.student && lead.student.sat_score !== null) ? lead.student.sat_score : "—";
+    document.getElementById("lead-modal-gpa").textContent = (lead.student && lead.student.gpa !== null) ? lead.student.gpa : "—";
+
+    document.getElementById("lead-modal-doc-name").textContent = lead.document_name || "Файл заявки";
+    document.getElementById("lead-modal-doc-link").href = `${API_BASE}/api/v1/applications/download/${lead.id}`;
+
+    const badge = document.getElementById("lead-modal-status-badge");
+    if (lead.status === "accepted" || lead.status === "approved") {
+        badge.className = "badge badge-success";
+        badge.textContent = "Одобрен ВУЗом";
+    } else if (lead.status === "rejected") {
+        badge.className = "badge badge-danger";
+        badge.textContent = "Отклонен";
+    } else {
+        badge.className = "badge badge-warning";
+        badge.textContent = "На рассмотрении";
+    }
+
+    const approveBtn = document.getElementById("lead-action-approve-btn");
+    const rejectBtn = document.getElementById("lead-action-reject-btn");
+
+    approveBtn.onclick = async () => {
+        await updateLeadApplicationStatus(lead.id, "accepted", lead);
+        closeLeadStudentModal();
+    };
+
+    rejectBtn.onclick = async () => {
+        await updateLeadApplicationStatus(lead.id, "rejected", lead);
+        closeLeadStudentModal();
+    };
+
+    modal.style.display = "flex";
+    setTimeout(() => modal.classList.add("show"), 10);
+    lucide.createIcons();
+}
+
+function closeLeadStudentModal() {
+    const modal = document.getElementById("student-profile-modal");
+    if (!modal) return;
+    modal.classList.remove("show");
+    setTimeout(() => {
+        modal.style.display = "none";
+    }, 200);
+}
+
+async function updateLeadApplicationStatus(appId, newStatus, leadObj) {
+    try {
+        const res = await fetch(`${API_BASE}/api/v1/applications/${appId}/status`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ status: newStatus })
+        });
+        if (!res.ok) throw new Error("Status update failed");
+        showToast(newStatus === "accepted" ? "🎉 Заявка абитуриента успешно одобрена!" : "Заявка отклонена", newStatus === "accepted" ? "success" : "info");
+        if (leadObj) leadObj.status = newStatus;
+        renderLeadsTable();
+    } catch (err) {
+        showToast("Ошибка при изменении статуса заявки", "danger");
+    }
+}
+
+const MAIN_EXAM_TYPES = [
+    { label: "+ IELTS", prefix: "IELTS", type: "score", placeholder: "например 6.5" },
+    { label: "+ SAT", prefix: "SAT", type: "score", placeholder: "например 1200" },
+    { label: "+ GPA", prefix: "GPA", type: "score", placeholder: "например 4.5" },
+    { label: "+ Экзамен по математике", prefix: "Экзамен по математике", type: "direct" },
+    { label: "+ Собеседование", prefix: "Собеседование", type: "direct" },
+    { label: "+ Аттестат / Диплом", prefix: "Аттестат / Диплом", type: "direct" }
+];
 
 // 12. Specialties Constructor Row rendering
 let currentSpecialties = [];
@@ -2005,36 +2315,77 @@ function renderWizardSpecialties() {
         row.className = "specialty-constructor-card";
         row.style.background = "var(--bg-accent)";
         row.style.padding = "1.25rem";
-        row.style.borderRadius = "10px";
+        row.style.borderRadius = "12px";
         row.style.border = "1px solid var(--card-border)";
         row.style.display = "flex";
         row.style.flexDirection = "column";
         row.style.gap = "1rem";
         row.style.position = "relative";
         
+        if (!spec.reqTags) {
+            spec.reqTags = spec.min_requirements ? spec.min_requirements.split(",").map(s => s.trim()).filter(Boolean) : ["IELTS 6.0"];
+        }
+
+        const tagsHtml = spec.reqTags.map((tag, tIdx) => `
+            <span class="req-tag-chip" style="display: inline-flex; align-items: center; gap: 0.35rem; background: var(--card-bg); border: 1px solid var(--card-border); padding: 0.25rem 0.6rem; border-radius: 8px; font-size: 0.85rem; font-weight: 500;">
+                ${tag}
+                <button type="button" class="remove-tag-btn" data-tag-idx="${tIdx}" style="background: none; border: none; cursor: pointer; color: var(--text-secondary); font-size: 1rem; line-height: 1; padding: 0 2px;">&times;</button>
+            </span>
+        `).join("");
+
         row.innerHTML = `
-            <div class="form-group" style="margin-bottom:0;">
-                <label style="font-size:0.75rem; margin-bottom:4px; font-weight:600;">Название специальности <span class="required">*</span></label>
-                <input type="text" class="spec-name-input" value="${spec.name || ''}" placeholder="Информатика и ИИ" required style="width: 100%;">
-            </div>
-            <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
-                <div class="form-group" style="margin-bottom:0; flex: 1; min-width: 120px;">
-                    <label style="font-size:0.75rem; margin-bottom:4px; font-weight:600;">Код</label>
-                    <input type="text" class="spec-code-input" value="${spec.code || ''}" placeholder="CS-101" style="width: 100%;">
-                </div>
-                <div class="form-group" style="margin-bottom:0; flex: 1; min-width: 120px;">
-                    <label style="font-size:0.75rem; margin-bottom:4px; font-weight:600;">Стоимость ($ / год) <span class="required">*</span></label>
-                    <input type="number" class="spec-fee-input" value="${spec.tuition_fee || ''}" placeholder="12000" required style="width: 100%;">
-                </div>
-            </div>
-            <div style="display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap;">
-                <div class="form-group" style="margin-bottom:0; flex: 1; min-width: 180px;">
-                    <label style="font-size:0.75rem; margin-bottom:4px; font-weight:600;">Минимальные требования</label>
-                    <input type="text" class="spec-reqs-input" value="${spec.min_requirements || ''}" placeholder="IELTS 6.5 / SAT 1200" style="width: 100%;">
-                </div>
-                <button type="button" class="btn btn-outline spec-delete-btn" style="padding: 0.75rem; border-color: var(--card-border); color: var(--text-secondary); height: 42px; width: 42px; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;" title="Удалить специальность">
-                    <i data-lucide="trash-2" style="width:16px; height:16px;"></i>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h5 style="margin: 0; font-weight: 700; font-size: 1rem; color: var(--primary);">Специальность #${idx + 1}</h5>
+                <button type="button" class="btn btn-outline spec-delete-btn" style="padding: 0.35rem 0.75rem; border-color: rgba(255,77,79,0.3); color: #ff4d4f; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 0.35rem;" title="Удалить направление">
+                    <i data-lucide="trash-2" style="width:14px; height:14px;"></i> Удалить
                 </button>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1rem;">
+                <div class="form-group" style="margin-bottom:0;">
+                    <label style="font-size:0.75rem; margin-bottom:4px; font-weight:600;">Название направления <span class="required">*</span></label>
+                    <input type="text" class="spec-name-input" value="${spec.name || ''}" placeholder="Информационные технологии и ИИ" required style="width: 100%;">
+                </div>
+                <div class="form-group" style="margin-bottom:0;">
+                    <label style="font-size:0.75rem; margin-bottom:4px; font-weight:600;">Стоимость ($ / год) <span class="required">*</span></label>
+                    <input type="number" class="spec-fee-input" value="${spec.tuition_fee || ''}" placeholder="4000" required style="width: 100%;">
+                </div>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 0.65rem; background: var(--card-bg); padding: 1rem; border-radius: 12px; border: 1px dashed var(--card-border);">
+                <label style="font-size:0.85rem; font-weight:700; color: var(--text-primary);">Минимальные требования к абитуриенту</label>
+
+                <!-- Active Tags -->
+                <div class="req-tags-container" style="display: flex; flex-wrap: wrap; gap: 0.5rem; min-height: 28px;">
+                    ${tagsHtml || '<span style="font-size:0.8rem; color: var(--text-muted);">Требования пока не добавлены</span>'}
+                </div>
+
+                <!-- Main Exam Types -->
+                <div style="margin-top: 0.35rem; padding-top: 0.5rem; border-top: 1px solid var(--card-border);">
+                    <span style="font-size: 0.75rem; color: var(--text-secondary); display: block; margin-bottom: 0.35rem; font-weight: 500;">Выберите вид экзамена:</span>
+                    <div style="display: flex; flex-wrap: wrap; gap: 0.35rem;">
+                        ${MAIN_EXAM_TYPES.map((exam, eIdx) => `
+                            <button type="button" class="exam-type-chip" data-exam-idx="${eIdx}" style="background: var(--bg-accent); border: 1px solid var(--card-border); padding: 0.3rem 0.7rem; border-radius: 20px; font-size: 0.8rem; font-weight: 600; cursor: pointer; color: var(--text-primary);">
+                                ${exam.label}
+                            </button>
+                        `).join("")}
+                    </div>
+                </div>
+
+                <!-- Score Input Box (hidden by default, opens on exam click) -->
+                <div class="score-input-box" style="display: none; gap: 0.5rem; margin-top: 0.35rem; background: var(--bg-accent); padding: 0.6rem; border-radius: 8px; align-items: center;">
+                    <span class="selected-exam-name" style="font-size: 0.85rem; font-weight: 700; color: var(--primary);">IELTS</span>
+                    <input type="text" class="score-val-input" placeholder="например 6.5" style="flex: 1; padding: 0.4rem 0.65rem; font-size: 0.85rem; border-radius: 6px; border: 1px solid var(--card-border); background: var(--card-bg); color: var(--text-primary);">
+                    <button type="button" class="confirm-score-btn btn btn-primary btn-sm" style="padding: 0.4rem 0.75rem; font-size: 0.8rem;">Добавить</button>
+                </div>
+
+                <!-- Custom requirement input -->
+                <div style="display: flex; gap: 0.5rem; margin-top: 0.35rem;">
+                    <input type="text" class="new-req-input" placeholder="Или введите своё требование..." style="flex: 1; padding: 0.45rem 0.75rem; font-size: 0.85rem; border-radius: 8px; border: 1px solid var(--card-border); background: var(--bg); color: var(--text-primary);">
+                    <button type="button" class="add-req-tag-btn btn btn-outline btn-sm" style="padding: 0.45rem 0.85rem; font-size: 0.8rem; border-color: var(--primary); color: var(--primary); font-weight: 600; white-space: nowrap;">
+                        + Своё требование
+                    </button>
+                </div>
             </div>
         `;
         
@@ -2042,17 +2393,95 @@ function renderWizardSpecialties() {
             spec.name = e.target.value;
             syncWizardLivePreview();
         });
-        row.querySelector(".spec-code-input").addEventListener("input", (e) => {
-            spec.code = e.target.value;
-            syncWizardLivePreview();
-        });
         row.querySelector(".spec-fee-input").addEventListener("input", (e) => {
             spec.tuition_fee = e.target.value;
             syncWizardLivePreview();
         });
-        row.querySelector(".spec-reqs-input").addEventListener("input", (e) => {
-            spec.min_requirements = e.target.value;
-            syncWizardLivePreview();
+
+        const scoreBox = row.querySelector(".score-input-box");
+        const selectedExamName = row.querySelector(".selected-exam-name");
+        const scoreValInput = row.querySelector(".score-val-input");
+        const confirmScoreBtn = row.querySelector(".confirm-score-btn");
+        let activeExamPrefix = "";
+
+        row.querySelectorAll(".exam-type-chip").forEach(btn => {
+            btn.addEventListener("click", () => {
+                const eIdx = parseInt(btn.dataset.examIdx);
+                const exam = MAIN_EXAM_TYPES[eIdx];
+                if (!exam) return;
+
+                if (exam.type === "direct") {
+                    if (!spec.reqTags.includes(exam.prefix)) {
+                        spec.reqTags.push(exam.prefix);
+                        spec.min_requirements = spec.reqTags.join(", ");
+                        renderWizardSpecialties();
+                        syncWizardLivePreview();
+                    }
+                } else {
+                    activeExamPrefix = exam.prefix;
+                    selectedExamName.textContent = `${exam.prefix}:`;
+                    scoreValInput.placeholder = exam.placeholder;
+                    scoreValInput.value = "";
+                    scoreBox.style.display = "flex";
+                    scoreValInput.focus();
+                }
+            });
+        });
+
+        const addScoreTag = () => {
+            const val = scoreValInput ? scoreValInput.value.trim() : "";
+            if (activeExamPrefix && val) {
+                const fullTag = `${activeExamPrefix} ${val}`;
+                if (!spec.reqTags.includes(fullTag)) {
+                    spec.reqTags.push(fullTag);
+                    spec.min_requirements = spec.reqTags.join(", ");
+                    renderWizardSpecialties();
+                    syncWizardLivePreview();
+                }
+            }
+        };
+
+        if (confirmScoreBtn) confirmScoreBtn.addEventListener("click", addScoreTag);
+        if (scoreValInput) {
+            scoreValInput.addEventListener("keydown", (e) => {
+                if (e.key === "Enter") {
+                    e.preventDefault();
+                    addScoreTag();
+                }
+            });
+        }
+
+        const reqInput = row.querySelector(".new-req-input");
+        const addBtn = row.querySelector(".add-req-tag-btn");
+
+        const addRequirement = () => {
+            const val = reqInput ? reqInput.value.trim() : "";
+            if (val) {
+                spec.reqTags.push(val);
+                spec.min_requirements = spec.reqTags.join(", ");
+                renderWizardSpecialties();
+                syncWizardLivePreview();
+            }
+        };
+
+        if (addBtn) addBtn.addEventListener("click", addRequirement);
+        if (reqInput) {
+            reqInput.addEventListener("keydown", (e) => {
+                if (e.key === "Enter") {
+                    e.preventDefault();
+                    addRequirement();
+                }
+            });
+        }
+
+        row.querySelectorAll(".remove-tag-btn").forEach(btn => {
+            btn.addEventListener("click", (e) => {
+                const tIdx = parseInt(e.target.dataset.tagIdx);
+                spec.reqTags.splice(tIdx, 1);
+                spec.min_requirements = spec.reqTags.join(", ");
+                renderWizardSpecialties();
+                syncWizardLivePreview();
+            });
         });
         
         row.querySelector(".spec-delete-btn").addEventListener("click", () => {
@@ -2068,7 +2497,7 @@ function renderWizardSpecialties() {
 }
 
 function addSpecialtyRow() {
-    currentSpecialties.push({ name: "", code: "", tuition_fee: "", min_requirements: "" });
+    currentSpecialties.push({ name: "", tuition_fee: "", min_requirements: "IELTS 6.0", reqTags: ["IELTS 6.0"] });
     renderWizardSpecialties();
 }
 
