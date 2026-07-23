@@ -1,0 +1,160 @@
+{
+  "students": [
+    {
+      "id": "ca0c819b-5b70-4418-bf23-4e308c3a48c3",
+      "bio": null,
+      "gpa": 5,
+      "phone": "+998909373125",
+      "birthday": "2008-05-18",
+      "full_name": "Староверов Даниил Дмитриевич",
+      "sat_score": 1400,
+      "created_at": "2026-07-19T13:14:06.422Z",
+      "ielts_score": 7,
+      "extra_achievements": null
+    },
+    {
+      "id": "9ac4b3d4-050d-4d55-aca7-749eec65acd2",
+      "bio": null,
+      "gpa": 4,
+      "phone": "+998993712128",
+      "birthday": "1993-10-21",
+      "full_name": "Test",
+      "sat_score": null,
+      "created_at": "2026-07-20T05:05:26.868Z",
+      "ielts_score": null,
+      "extra_achievements": null
+    },
+    {
+      "id": "a84461df-77cc-4202-b7c1-c1a0395a3e30",
+      "bio": null,
+      "gpa": null,
+      "phone": "+7 (911) 222-33-44",
+      "birthday": null,
+      "full_name": "Староверов Даниил Дмитриевич",
+      "sat_score": null,
+      "created_at": "2026-07-21T17:45:45.861Z",
+      "ielts_score": null,
+      "extra_achievements": null
+    },
+    {
+      "id": "f5df2c6f-98ac-482f-a328-4745ad782555",
+      "bio": null,
+      "gpa": null,
+      "phone": "68386",
+      "birthday": "2026-07-10",
+      "full_name": "Jfjd",
+      "sat_score": null,
+      "created_at": "2026-07-21T18:25:38.909Z",
+      "ielts_score": null,
+      "extra_achievements": null
+    },
+    {
+      "id": "aa8f876b-1c00-4332-b085-ae64632077b3",
+      "bio": null,
+      "gpa": null,
+      "phone": "909373125",
+      "birthday": "1111-11-11",
+      "telegram": null,
+      "full_name": "Староверов Даниил Дмитриевич",
+      "sat_score": null,
+      "created_at": "2026-07-22T18:11:23.305Z",
+      "ielts_score": null,
+      "extra_achievements": null
+    }
+  ],
+  "specialties": [
+    {
+      "id": "d1da36b2-6099-4a96-84ca-668e07ebe86f",
+      "code": "",
+      "name": "ИИ",
+      "format": "Очный (Дневной)",
+      "duration": "4 года (Бакалавриат)",
+      "language": "Английский ",
+      "has_grant": false,
+      "tuition_fee": 5000,
+      "university_id": "8c8718ff-7dec-4ee1-8e3f-138e5d8c8cb4",
+      "min_requirements": "IELTS 6.0"
+    }
+  ],
+  "applications": [
+    {
+      "id": "5906e4a5-6279-4778-8055-d94f6240bd51",
+      "status": "pending",
+      "created_at": "2026-07-22T17:52:56.764Z",
+      "student_id": "ca0c819b-5b70-4418-bf23-4e308c3a48c3",
+      "specialty_id": "9332675c-e5c4-4ce0-a808-88272684803d",
+      "document_path": "uploads/3acfc0e5-7993-43ea-8ba7-42c229334b3f.jpg",
+      "university_id": "8c8718ff-7dec-4ee1-8e3f-138e5d8c8cb4"
+    },
+    {
+      "id": "ccc9c36b-3852-4722-8ea0-35db5328b17c",
+      "status": "accepted",
+      "created_at": "2026-07-22T18:11:46.443Z",
+      "student_id": "aa8f876b-1c00-4332-b085-ae64632077b3",
+      "specialty_id": "548535a2-0780-41ba-a73f-6111800a51da",
+      "document_path": "uploads\\e126492a-b899-40e7-92c1-457a04482fd6.png",
+      "university_id": "8c8718ff-7dec-4ee1-8e3f-138e5d8c8cb4"
+    },
+    {
+      "id": "12a06dba-96c1-4594-a5a1-419d90555174",
+      "status": "accepted",
+      "app_type": "standard",
+      "created_at": "2026-07-23T17:40:21.085Z",
+      "student_id": "aa8f876b-1c00-4332-b085-ae64632077b3",
+      "specialty_id": "d1da36b2-6099-4a96-84ca-668e07ebe86f",
+      "document_path": "uploads\\752bc9e5-fbbe-42d4-ba7f-4bdcae5845bb.png",
+      "university_id": "8c8718ff-7dec-4ee1-8e3f-138e5d8c8cb4"
+    }
+  ],
+  "universities": [
+    {
+      "id": "8c8718ff-7dec-4ee1-8e3f-138e5d8c8cb4",
+      "city": "Ташкент",
+      "name": "TEAM UNIVERSITY",
+      "photo": "",
+      "views": 362,
+      "slogan": "",
+      "status": "approved",
+      "country": "Узбекистан",
+      "min_sat": null,
+      "website": "https://teamuni.uz/ru/",
+      "has_grant": true,
+      "min_ielts": 6,
+      "adv_1_desc": "",
+      "adv_2_desc": "",
+      "adv_3_desc": "",
+      "created_at": "2026-07-17T10:51:02.737Z",
+      "grant_info": "",
+      "partner_id": "068b0f05-d93c-4f46-beb8-78e171ca9a38",
+      "adv_1_title": "",
+      "adv_2_title": "",
+      "adv_3_title": "",
+      "description": "...",
+      "contact_info": "",
+      "has_scholarship": true,
+      "scholarship_info": ""
+    }
+  ],
+  "partner_accounts": [
+    {
+      "id": "p0ea0000-0000-0000-0000-000000000000",
+      "status": "approved",
+      "password": "admin",
+      "created_at": "2026-07-17T10:46:11.564Z",
+      "contact_info": "+7 (999) 123-45-67",
+      "contact_name": "Елена Дмитриевна",
+      "personal_email": "director@aetheris-global.edu",
+      "university_email": "admissions@aetheris-global.edu"
+    },
+    {
+      "id": "068b0f05-d93c-4f46-beb8-78e171ca9a38",
+      "status": "approved",
+      "password": "667788Dany@",
+      "created_at": "2026-07-17T10:51:02.737Z",
+      "contact_info": "+998909373125",
+      "contact_name": "Даниил Староверов",
+      "personal_email": "startingdaniil@gmail.com",
+      "university_email": "staroverovone@gmail.com"
+    }
+  ]
+}
