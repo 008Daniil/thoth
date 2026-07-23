@@ -14,7 +14,8 @@ let config = {
     WEBHOOK_MODE: process.env.WEBHOOK_MODE || 'false',
     UPLOAD_DIR: process.env.UPLOAD_DIR || './uploads',
     SUPABASE_URL: process.env.SUPABASE_URL || '',
-    SUPABASE_KEY: process.env.SUPABASE_KEY || ''
+    SUPABASE_KEY: process.env.SUPABASE_KEY || '',
+    GEMINI_API_KEY: process.env.GEMINI_API_KEY || ''
 };
 
 if (fs.existsSync('.env')) {
@@ -88,6 +89,13 @@ function loadDB() {
     db.universities.forEach(u => {
         if (u.views === undefined) {
             u.views = 242;
+            updated = true;
+        }
+        if (u.has_grant === undefined) {
+            u.has_grant = true;
+            u.grant_info = u.grant_info || 'Покрытие до 100% стоимости обучения для абитуриентов с высокими баллами IELTS/SAT или по результатам вступительных испытаний.';
+            u.has_scholarship = true;
+            u.scholarship_info = u.scholarship_info || 'Ежемесячная академическая стипендия от $300 до $800 за успеваемость и участие в научно-исследовательских проектах.';
             updated = true;
         }
     });
@@ -1178,6 +1186,11 @@ app.post('/api/v1/universities/profile', (req, res) => {
         uni.adv_2_desc = adv_2_desc || '';
         uni.adv_3_title = adv_3_title || '';
         uni.adv_3_desc = adv_3_desc || '';
+        uni.has_grant = req.body.has_grant === true || req.body.has_grant === 'true' || req.body.has_grant === 'on';
+        uni.grant_info = req.body.grant_info || '';
+        uni.has_scholarship = req.body.has_scholarship === true || req.body.has_scholarship === 'true' || req.body.has_scholarship === 'on';
+        uni.scholarship_info = req.body.scholarship_info || '';
+        uni.contact_info = req.body.contact_info || '';
         uni.photo = photo || '';
         uni.status = 'pending_profile'; // Go back to pending validation
     } else {
@@ -1198,6 +1211,11 @@ app.post('/api/v1/universities/profile', (req, res) => {
             adv_2_desc: adv_2_desc || '',
             adv_3_title: adv_3_title || '',
             adv_3_desc: adv_3_desc || '',
+            has_grant: req.body.has_grant === true || req.body.has_grant === 'true' || req.body.has_grant === 'on',
+            grant_info: req.body.grant_info || '',
+            has_scholarship: req.body.has_scholarship === true || req.body.has_scholarship === 'true' || req.body.has_scholarship === 'on',
+            scholarship_info: req.body.scholarship_info || '',
+            contact_info: req.body.contact_info || '',
             photo: photo || '',
             status: 'pending_profile',
             views: 0,
@@ -1217,10 +1235,11 @@ app.post('/api/v1/universities/profile', (req, res) => {
                 id: crypto.randomUUID(),
                 university_id: uni.id,
                 name: spec.name,
-                code: spec.code || 'FAC',
+                code: spec.code || '',
                 tuition_fee: spec.tuition_fee ? parseInt(spec.tuition_fee) : 0,
-                language: spec.language || 'Английский',
+                language: spec.language || 'Английский / Русский',
                 format: spec.format || 'Очный (Дневной)',
+                duration: spec.duration || '4 года (Бакалавриат)',
                 has_grant: spec.has_grant === true || spec.has_grant === 'true' || false,
                 min_requirements: spec.min_requirements || ''
             });
@@ -1241,7 +1260,7 @@ app.post('/api/v1/universities/profile', (req, res) => {
 
 // POST: Apply to university (Upload file)
 app.post('/api/v1/applications/apply', upload.single('file'), (req, res) => {
-    const { university_id, specialty_id, full_name, phone, ielts_score, sat_score, gpa, bio, extra_achievements } = req.body;
+    const { university_id, specialty_id, full_name, phone, ielts_score, sat_score, gpa, bio, extra_achievements, app_type } = req.body;
     if (!university_id || !specialty_id || !full_name || !phone || !req.file) {
         return res.status(400).json({ detail: 'Missing required fields or file' });
     }
@@ -1294,6 +1313,7 @@ app.post('/api/v1/applications/apply', upload.single('file'), (req, res) => {
         student_id: student.id,
         university_id: university_id,
         specialty_id: specialty_id,
+        app_type: app_type || 'standard',
         document_path: req.file.path,
         status: 'pending',
         created_at: new Date().toISOString()
@@ -1324,8 +1344,14 @@ app.get('/api/v1/students/:phone/profile', (req, res) => {
         return {
             id: a.id,
             university_name: uni.name || 'Unknown',
+            university_contact_info: uni.contact_info || '',
+            university_website: uni.website || '',
+            accepted_message: uni.accepted_message || uni.contact_info || '',
+            rejected_message: uni.rejected_message || '',
+            admissions_phone: uni.admissions_phone || '',
             specialty_name: spec.name || 'Unknown',
             specialty_code: spec.code || '',
+            app_type: a.app_type || 'standard',
             status: a.status,
             created_at: a.created_at,
             document_name: path.basename(a.document_path)
@@ -1335,6 +1361,32 @@ app.get('/api/v1/students/:phone/profile', (req, res) => {
     res.json({
         profile: student,
         applications: apps
+    });
+});
+
+// POST: Save partner university message settings
+app.post('/api/v1/universities/settings', (req, res) => {
+    const { university_id, accepted_message, rejected_message, admissions_phone } = req.body;
+    if (!university_id) {
+        return res.status(400).json({ detail: 'Missing university_id' });
+    }
+
+    const db = loadDB();
+    const uni = db.universities.find(u => u.id === university_id);
+    if (!uni) {
+        return res.status(404).json({ detail: 'Университет не найден' });
+    }
+
+    uni.accepted_message = accepted_message || '';
+    uni.rejected_message = rejected_message || '';
+    uni.admissions_phone = admissions_phone || '';
+
+    saveDB(db);
+
+    res.json({
+        status: 'success',
+        message: 'Настройки сообщений успешно сохранены',
+        university: uni
     });
 });
 
@@ -1455,12 +1507,158 @@ app.get('/', (req, res) => {
     res.sendFile(filePath, { dotfiles: 'allow' }, err => {
         if (err) {
             console.error('Error sending file:', err);
-            if (!res.headersSent) {
-                res.status(404).send('index.html not found: ' + filePath);
-            }
         }
     });
 });
+
+// --- AI ORIENTATION ENDPOINT (Google Gemini 2.0 Flash API) ---
+const GEMINI_SYSTEM_INSTRUCTION = `Ты — «ТОТ ИИ», живой, умный, поддерживающий и глубокий карьерный наставник платформы «ТОТ» (Единый сервис университетов и профориентации в Узбекистане).
+
+ТВОЙ ХАРАКТЕР И ТОНАЛЬНОСТЬ:
+- Общайся на «ты», свободно, современно и по-человечески тепло.
+- Избегай сухих роботоподобных шаблонов и заученных списков. Пиши емко, осмысленно (около 40–60 слов на шаг).
+- Будь внимателен к ответам абитуриента: комментируй его мысли, подмечай интересные детали перед тем, как задать следующий вопрос.
+
+ТВОЯ ГЛАВНАЯ ЦЕЛЬ:
+Помочь школьнику/абитуриенту понять свои сильные стороны, разобраться в увлечениях и подобрать 2–3 подходящие профессии и конкретные университеты Узбекистана (например, TEAM University, TUIT, WIUT, Университет Инха в Ташкенте и др.).
+
+ПРАВИЛА И ЗАЩИТА:
+1. Задавай наводящие вопросы строго ПО ОДНОМУ за раз.
+2. Не торопи события и не перескакивай вопросы. Если пользователь ответил на один вопрос, отреагируй на него и задай следующй.
+3. Категорически запрещено: писать программный код, решать домашние задания, писать эссе, сочинения или выполнять переводы.
+4. Если пользователь просит сделать домашку или написать код — с юмором отклони просьбу: «Я — твой наставник по выбору профессии и вуза 😉 Домашку или код придется сделать самому! Давай вернемся к нашему разговору?» и повтори текущий обсуждаемый вопрос!`;
+
+async function handleAIOrientation(req, res) {
+    try {
+        const { message, history } = req.body;
+
+        if (!message || typeof message !== 'string' || !message.trim()) {
+            return res.status(400).json({ detail: 'Сообщение не может быть пустым' });
+        }
+
+        // Limit incoming message to max 250 chars
+        const trimmedMessage = message.trim().substring(0, 250);
+        const apiKey = config.GEMINI_API_KEY || process.env.GEMINI_API_KEY || '';
+
+        // Build Gemini contents array
+        const contents = [];
+        if (Array.isArray(history)) {
+            history.forEach(item => {
+                if (item.role && item.text) {
+                    contents.push({
+                        role: item.role === 'ai' || item.role === 'model' ? 'model' : 'user',
+                        parts: [{ text: String(item.text).substring(0, 250) }]
+                    });
+                }
+            });
+        }
+        contents.push({
+            role: 'user',
+            parts: [{ text: trimmedMessage }]
+        });
+
+        if (!apiKey) {
+            const fallbackReply = generateAIFallbackReply(trimmedMessage, history);
+            return res.json({ status: 'fallback', reply: fallbackReply });
+        }
+
+        const geminiPayload = JSON.stringify({
+            system_instruction: {
+                parts: [{ text: GEMINI_SYSTEM_INSTRUCTION }]
+            },
+            contents: contents,
+            generationConfig: {
+                maxOutputTokens: 300,
+                temperature: 0.75
+            }
+        });
+
+        const options = {
+            hostname: 'generativelanguage.googleapis.com',
+            path: `/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Content-Length': Buffer.byteLength(geminiPayload)
+            }
+        };
+
+        const apiReq = https.request(options, (apiRes) => {
+            let data = '';
+            apiRes.on('data', (chunk) => { data += chunk; });
+            apiRes.on('end', () => {
+                try {
+                    const parsed = JSON.parse(data);
+                    if (parsed.candidates && parsed.candidates[0] && parsed.candidates[0].content && parsed.candidates[0].content.parts[0]) {
+                        const aiReply = parsed.candidates[0].content.parts[0].text;
+                        return res.json({ status: 'success', reply: aiReply });
+                    }
+                    
+                    const fallbackReply = generateAIFallbackReply(trimmedMessage, history);
+                    return res.json({ status: 'fallback', reply: fallbackReply });
+                } catch (e) {
+                    const fallbackReply = generateAIFallbackReply(trimmedMessage, history);
+                    return res.json({ status: 'fallback', reply: fallbackReply });
+                }
+            });
+        });
+
+        apiReq.on('error', (err) => {
+            console.error('Gemini HTTPS Request Error:', err);
+            const fallbackReply = generateAIFallbackReply(trimmedMessage, history);
+            return res.json({ status: 'fallback', reply: fallbackReply });
+        });
+
+        apiReq.write(geminiPayload);
+        apiReq.end();
+
+    } catch (err) {
+        console.error('AI Orientation endpoint error:', err);
+        const fallbackReply = generateAIFallbackReply(req.body ? req.body.message : '', req.body ? req.body.history : []);
+        return res.json({ status: 'fallback', reply: fallbackReply });
+    }
+}
+
+function generateAIFallbackReply(userMsg, history) {
+    const msg = (userMsg || '').toLowerCase();
+    const hist = Array.isArray(history) ? history : [];
+    
+    // Find last question asked by AI if available
+    const lastAiObj = hist.filter(h => h.role === 'model' || h.role === 'ai').pop();
+    const lastAiText = lastAiObj ? lastAiObj.text : '';
+
+    // Check for homework / cheating / code request attempt
+    const isOffTopic = msg.includes("реши") || msg.includes("код") || msg.includes("эссе") || msg.includes("сочинени") || msg.includes("переведи") || msg.includes("скрипт") || msg.includes("сайт");
+    
+    if (isOffTopic) {
+        let repeatQ = "Какое направление тебе больше по душе — IT, бизнес, творчество или науки?";
+        if (lastAiText && (lastAiText.includes("?") || lastAiText.includes("Вопрос"))) {
+            repeatQ = lastAiText;
+        }
+        return `Я — твой наставник по выбору профессии и университета 😉 Домашку или код придется сделать самостоятельно!\n\nДавай вернемся к нашему разговору: ${repeatQ}`;
+    }
+
+    // Determine current logical step from user responses
+    const validUserMsgs = hist.filter(h => h.role === 'user' && !h.text.toLowerCase().includes("код") && !h.text.toLowerCase().includes("реши"));
+    const stepCount = validUserMsgs.length;
+
+    if (stepCount === 0 || msg.includes("быстр") || msg.includes("экспресс")) {
+        return "Здорово! Начнем с первого наводящего вопроса.\n\nКакая область вызывает у тебя наибольший драйв?\n1) IT, алгоритмы и технологии\n2) Управление, предпринимательство и финансовая аналитика\n3) Медиа, дизайн и цифровой контент\n4) Инженерия, архитектура и естественные науки";
+    }
+
+    if (stepCount === 1) {
+        return "Интересный выбор! В этой сфере сейчас очень крутые перспективы.\n\nА в каком формате ты видишь свою рабочую среду?\n• Гибкий график и работа над собственными проектами\n• Работа в драйвовой команде современного офиса\n• Лабораторные исследования и научная практика";
+    }
+
+    if (stepCount === 2) {
+        return "Отлично, с форматом определились! Теперь давай про учебу.\n\nЧто для тебя станет решающим фактором при выборе ВУЗа в Узбекистане?\n• Наличие международных программ и учеба на английском\n• Практика с 1 курса и стажировки в IT-компаниях\n• Академическая стипендия или полный грант";
+    }
+
+    return "🎯 Отлично! На основе твоих ответов я подготовил профориентационный разбор:\n\n• Твой психотип: Стратег-Разработчик\n• Рекомендуемые профессии: Software Engineer, Data Analyst, Product Manager\n• Топовые ВУЗы Узбекистана под твой профиль:\n1. TEAM University (Ташкент) — упор на предпринимательство и практики\n2. TUIT / Университет Инха в Ташкенте — ведущие программы в IT\n3. WIUT (Вестминстер) — международная аналитическая база\n\nХочешь подробнее узнать про требования к проходным баллам IELTS/SAT в эти университеты?";
+}
+
+app.post('/api/ai-orientation', handleAIOrientation);
+app.post('/api/v1/ai-orientation', handleAIOrientation);
 
 // --- 6. START SERVER ---
 const PORT = process.env.PORT || 8000;
