@@ -121,7 +121,7 @@
                         </div>
                         <div class="form-group">
                             <label for="onboard-val-phone">Номер телефона <span class="required">*</span></label>
-                            <input type="tel" id="onboard-val-phone" placeholder="+998 (90) 123-45-67" required>
+                            <input type="tel" id="onboard-val-phone" placeholder="Ваш номер телефона" required>
                         </div>
                     </div>
                     
@@ -422,11 +422,11 @@
                                 <a href="#" target="_blank" class="wb-spec-value link" id="det-spec-website">website.edu</a>
                             </div>
                             <div class="wb-spec-item">
-                                <span class="wb-spec-name">IELTS (мин.)</span>
+                                <span class="wb-spec-name">IELTS</span>
                                 <span class="wb-spec-value" id="det-spec-ielts">6.5</span>
                             </div>
                             <div class="wb-spec-item">
-                                <span class="wb-spec-name">SAT (мин.)</span>
+                                <span class="wb-spec-name">SAT</span>
                                 <span class="wb-spec-value" id="det-spec-sat">1200</span>
                             </div>
                         </div>
@@ -446,6 +446,18 @@
                     <div class="wb-desc-card glass-card">
                         <h3>Описание университета</h3>
                         <p id="det-uni-desc">Aetheris Global University объединяет передовую научную инфраструктуру и лучших преподавателей планеты. Мы стремимся создать экосистему, где таланты со всего мира могут создавать прорывные продукты и проводить фундаментальные исследования. Учебный план строится на проектной работе и гибких траекториях обучения.</p>
+                    </div>
+
+                    <!-- Grants & Scholarships Section -->
+                    <div class="wb-grants-section" id="det-grants-section" style="margin-top: 2rem;">
+                        <div class="glass-card" style="border: 1px solid var(--card-border); background: var(--card-bg); padding: 1.5rem; border-radius: 16px;">
+                            <h3 style="color: var(--text-primary); margin-bottom: 1.25rem; font-size: 1.25rem; font-weight: 700;">
+                                Гранты и стипендиальные программы
+                            </h3>
+                            <div id="det-grants-scholarships-content" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.25rem;">
+                                <!-- Dynamic Grant & Scholarship Cards loaded by JS -->
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Advantages Grid (3 Cards) -->
@@ -484,7 +496,7 @@
             <div class="auth-bar glass-card" style="display: none;">
                 <div class="auth-bar-inputs">
                     <i data-lucide="smartphone" class="input-icon"></i>
-                    <input type="text" placeholder="Введите номер телефона для входа..." id="auth-phone-input" value="+7 (911) 222-33-44">
+                    <input type="text" placeholder="Ваш номер телефона" id="auth-phone-input" value="">
                     <button class="btn btn-outline" id="load-profile-btn">Войти в профиль</button>
                     <button class="btn btn-primary" id="relaunch-onboarding-btn" style="margin-left: auto;">
                         <i data-lucide="plus-circle" class="btn-icon"></i>Создать новый профиль
@@ -505,7 +517,7 @@
                             </div>
                             <div class="passport-name-wrapper" style="position: relative; width: 100%;">
                                 <h3 id="pass-fullname">Новый абитуриент</h3>
-                                <p class="passport-phone" id="pass-phone">+7 (999) 000-00-00</p>
+                                <p class="passport-phone" id="pass-phone">Номер не указан</p>
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.5rem; width: 100%;">
                                     <span class="passport-badge">Профиль абитуриента</span>
                                     <button class="btn btn-outline btn-sm" id="student-logout-btn" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; border-color: rgba(102, 2, 60, 0.2); color: var(--primary);">Выйти</button>
@@ -557,6 +569,61 @@
                         </div>
                     </div>
 
+                    <!-- AI Career Orientation Card inside Student Profile -->
+                    <div class="glass-card ai-profile-card" style="margin-top: 1.5rem; border: 1px solid var(--card-border); padding: 1.5rem; border-radius: 20px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                            <div style="display: flex; align-items: center; gap: 0.65rem;">
+                                <div style="width: 36px; height: 36px; border-radius: 10px; background: var(--text-primary); color: var(--bg); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.9rem;">
+                                    ТОТ
+                                </div>
+                                <div>
+                                    <h3 style="margin: 0; font-size: 1.05rem; font-weight: 700; color: var(--text-primary);">
+                                        ИИ-Профориентатор ТОТ
+                                    </h3>
+                                    <span style="font-size: 0.75rem; color: var(--text-secondary);">Персональный подбор профессии и ВУЗа</span>
+                                </div>
+                            </div>
+                            <button class="btn btn-outline btn-sm" id="reset-ai-chat-btn" style="font-size: 0.75rem; padding: 0.3rem 0.65rem;">
+                                <i data-lucide="rotate-ccw" class="btn-icon"></i>Сбросить чат
+                            </button>
+                        </div>
+
+                        <!-- Auth Lock notice if student is not authorized -->
+                        <div id="ai-auth-locked-notice" style="display: none; padding: 2.5rem 1.5rem; text-align: center; background: var(--bg-accent); border-radius: 16px; border: 1px dashed var(--card-border);">
+                            <i data-lucide="lock" style="width: 36px; height: 36px; color: var(--text-muted); margin-bottom: 0.75rem;"></i>
+                            <h4 style="font-size: 1rem; margin-bottom: 0.35rem; color: var(--text-primary); font-weight: 700;">Доступно только авторизованным пользователям</h4>
+                            <p style="font-size: 0.82rem; color: var(--text-secondary); max-width: 400px; margin: 0 auto 1.25rem auto; line-height: 1.4;">Пожалуйста, войдите в свой профиль или пройдите регистрацию, чтобы получить профориентацию от ИИ.</p>
+                            <button class="btn btn-primary btn-sm" id="ai-lock-login-btn">Войти в профиль</button>
+                        </div>
+
+                        <!-- Active Chat Container (visible when authorized) -->
+                        <div id="ai-profile-chat-wrapper" style="display: flex; flex-direction: column; height: 440px; background: var(--card-bg); border-radius: 16px; border: 1px solid var(--card-border); overflow: hidden;">
+                            <!-- Messages Area -->
+                            <div id="ai-chat-messages" style="flex: 1; padding: 1.25rem; overflow-y: auto; display: flex; flex-direction: column; gap: 1rem; background: var(--card-bg);">
+                                <!-- Dynamic Bubbles loaded by JS -->
+                            </div>
+
+                            <!-- Quick Action Choice Buttons -->
+                            <div id="ai-quick-buttons" style="padding: 0.5rem 1.25rem; display: flex; gap: 0.5rem; flex-wrap: wrap; background: var(--card-bg);">
+                                <!-- Dynamic Quick Action Buttons -->
+                            </div>
+
+                            <!-- Footer / Input Bar -->
+                            <div style="padding: 1rem 1.25rem; background: var(--bg-accent); border-top: 1px solid var(--card-border);">
+                                <div style="position: relative;">
+                                    <textarea id="ai-chat-input" rows="2" maxlength="250" placeholder="Например: Люблю математику, монтирую видео и хочу работать удаленно" style="width: 100%; padding: 0.75rem 3rem 0.75rem 0.85rem; font-size: 0.88rem; border-radius: 12px; border: 1px solid var(--card-border); background: var(--card-bg); color: var(--text-primary); resize: none; outline: none; line-height: 1.4;"></textarea>
+                                    <button id="ai-chat-send-btn" style="position: absolute; right: 0.6rem; bottom: 0.85rem; background: var(--text-primary); color: var(--bg); border: none; width: 32px; height: 32px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: opacity 0.2s ease;">
+                                        <i data-lucide="send" style="width: 15px; height: 15px;"></i>
+                                    </button>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.4rem; padding: 0 0.2rem;">
+                                    <span style="font-size: 0.72rem; color: var(--text-muted);">Лимит ответа — 250 символов</span>
+                                    <span id="ai-char-counter" style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">0/250</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Logout button at the bottom of the left column -->
                     <div style="margin-top: 1.5rem; width: 100%;">
                         <button class="btn btn-outline" id="profile-logout-btn" style="border-color: rgba(220, 53, 69, 0.25); color: #dc3545; width: 100%; height: 48px; display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; font-weight: 500;">
@@ -590,7 +657,7 @@
                             <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                                 <div class="form-group">
                                     <label for="form-phone">Телефон для связи <span class="required">*</span></label>
-                                    <input type="tel" id="form-phone" placeholder="+998 (90) 123-45-67" required>
+                                    <input type="tel" id="form-phone" placeholder="Ваш номер телефона" required>
                                 </div>
                                 <div class="form-group">
                                     <label for="form-telegram">Telegram юзернейм</label>
@@ -941,11 +1008,40 @@
                                         <button type="button" class="btn btn-outline btn-sm" id="wizard-add-adv-btn" style="margin-top: 1rem; align-self: flex-start; display: inline-flex; align-items: center; gap: 0.5rem; height: 38px;">
                                             <i data-lucide="plus" style="width: 16px; height: 16px;"></i>Добавить преимущество
                                         </button>
-                                    </div>
+                                     <!-- Grants & Scholarships Controls in Wizard -->
+                                     <div class="form-group" style="margin-top: 1.5rem; background: var(--bg-accent); padding: 1.25rem; border-radius: 12px; border: 1px solid var(--card-border);">
+                                         <label style="font-weight: 700; color: var(--text-primary); font-size: 0.95rem; margin-bottom: 0.5rem; display: block;">
+                                             Гранты и стипендии университета
+                                         </label>
+                                         <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 1rem;">
+                                             Нажмите на кнопку ниже, чтобы добавить информацию для абитуриентов:
+                                         </p>
 
+                                         <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 1rem;">
+                                             <button type="button" id="wizard-toggle-grant-btn" class="btn btn-outline btn-sm" style="border-color: var(--card-border); color: var(--text-primary); font-weight: 600; padding: 0.4rem 0.85rem; border-radius: 20px;">
+                                                 + Грант на обучение
+                                             </button>
+                                             <button type="button" id="wizard-toggle-scholarship-btn" class="btn btn-outline btn-sm" style="border-color: var(--card-border); color: var(--text-primary); font-weight: 600; padding: 0.4rem 0.85rem; border-radius: 20px;">
+                                                 + Академическая стипендия
+                                             </button>
+                                         </div>
 
+                                         <div id="wizard-grant-box" style="display: block; margin-bottom: 1rem; background: var(--card-bg); padding: 1rem; border-radius: 10px; border: 1px solid var(--card-border);">
+                                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                                                 <label for="wizard-grant-info" style="font-weight: 700; font-size: 0.85rem; color: var(--text-primary); margin: 0;">Условия получения Гранта</label>
+                                                 <label style="font-size: 0.75rem; color: var(--text-muted); cursor: pointer;"><input type="checkbox" id="wizard-has-grant" checked> Доступен</label>
+                                             </div>
+                                             <textarea id="wizard-grant-info" rows="2" placeholder="Напишите условия (например: Покрытие 100% стоимости обучения для абитуриентов с IELTS 7.0+)..." style="width: 100%; font-size: 0.85rem;"></textarea>
+                                         </div>
 
-                                    <div style="display: flex; justify-content: flex-end; margin-top: 2rem;">
+                                         <div id="wizard-scholarship-box" style="display: block; background: var(--card-bg); padding: 1rem; border-radius: 10px; border: 1px solid var(--card-border);">
+                                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                                                 <label for="wizard-scholarship-info" style="font-weight: 700; font-size: 0.85rem; color: var(--text-primary); margin: 0;">Условия получения Стипендии</label>
+                                                 <label style="font-size: 0.75rem; color: var(--text-muted); cursor: pointer;"><input type="checkbox" id="wizard-has-scholarship" checked> Доступна</label>
+                                             </div>
+                                             <textarea id="wizard-scholarship-info" rows="2" placeholder="Напишите условия (например: Ежемесячные выплаты за отличную успеваемость по итогам семестра)..." style="width: 100%; font-size: 0.85rem;"></textarea>
+                                         </div>
+                                     </div>
                                         <button type="button" class="btn btn-primary" id="wizard-next-btn" style="height: 48px;">
                                             Далее к специальностям <i data-lucide="arrow-right" class="btn-icon" style="margin-left: 8px; margin-right: 0;"></i>
                                         </button>
@@ -990,6 +1086,9 @@
                         <div class="admin-actions" style="display: flex; gap: 0.75rem;">
                             <button class="btn btn-outline" id="dash-preview-profile-btn" style="border-color: var(--primary);">
                                 <i data-lucide="eye" class="btn-icon"></i>Как видят студенты
+                            </button>
+                            <button class="btn btn-outline" id="dash-settings-btn" style="border-color: var(--card-border); color: var(--text-primary);">
+                                <i data-lucide="settings" class="btn-icon"></i>Настройки
                             </button>
                             <button class="btn btn-outline" id="dash-edit-profile-btn">
                                 <i data-lucide="edit-3" class="btn-icon"></i>Редактировать ВУЗ
@@ -1116,6 +1215,47 @@
         </div>
     </div>
 
+    <!-- Partner Settings Modal -->
+    <div id="partner-settings-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-card glass-card" style="max-width: 600px; width: 90%; padding: 2rem;">
+            <div class="modal-header" style="margin-bottom: 1.25rem;">
+                <div>
+                    <h3 class="modal-title" style="font-size: 1.3rem;">Настройки сообщений приёмной комиссии</h3>
+                    <p class="modal-subtitle" style="font-size: 0.85rem; color: var(--text-secondary);">Текст, отправляемый поступившим и не поступившим абитуриентам</p>
+                </div>
+                <button class="modal-close-btn" id="close-partner-settings-btn">&times;</button>
+            </div>
+            
+            <form id="partner-settings-form" style="display: flex; flex-direction: column; gap: 1.25rem;">
+                <div class="form-group">
+                    <label for="settings-accepted-msg" style="font-weight: 700; font-size: 0.85rem; color: var(--text-primary);">
+                        Сообщение для ОДОБРЕННЫХ (Поступивших) студентов
+                    </label>
+                    <textarea id="settings-accepted-msg" rows="3" placeholder="Поздравляем с успешным зачислением! Свяжитесь с приемной комиссией для предоставления оригиналов документов..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="settings-rejected-msg" style="font-weight: 700; font-size: 0.85rem; color: var(--text-primary);">
+                        Сообщение для ОТКЛОНЕННЫХ (Не поступивших) студентов
+                    </label>
+                    <textarea id="settings-rejected-msg" rows="3" placeholder="К сожалению, ваш конкурсный балл ниже требуемого. Желаем успехов в дальнейшем обучении!"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="settings-admissions-phone" style="font-weight: 700; font-size: 0.85rem; color: var(--text-primary);">
+                        Прямой телефон приемной комиссии
+                    </label>
+                    <input type="text" id="settings-admissions-phone" placeholder="Ваш номер телефона">
+                </div>
+
+                <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 0.5rem;">
+                    <button type="button" class="btn btn-outline" id="cancel-partner-settings-btn">Отмена</button>
+                    <button type="submit" class="btn btn-primary">Сохранить настройки</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Quick Application Modal (Pop-up window for fast document submission) -->
     <div id="quick-apply-modal" class="modal-overlay" style="display: none;">
         <div class="modal-card glass-card">
@@ -1133,6 +1273,15 @@
                 <input type="hidden" id="quick-apply-uni-id">
 
                 <div class="form-group">
+                    <label for="quick-apply-app-type">Цель подачи заявки <span class="required">*</span></label>
+                    <select id="quick-apply-app-type" required style="font-weight: 600; color: var(--text-primary);">
+                        <option value="standard">Поступление на Контракт</option>
+                        <option value="grant">Заявка на Грант</option>
+                        <option value="scholarship">Заявка на Стипендию</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
                     <label for="quick-apply-spec">Выберите образовательное направление <span class="required">*</span></label>
                     <select id="quick-apply-spec" required>
                         <option value="" disabled selected>Загрузка специальностей...</option>
@@ -1146,7 +1295,7 @@
                     </div>
                     <div class="form-group">
                         <label for="quick-apply-phone">Номер телефона <span class="required">*</span></label>
-                        <input type="tel" id="quick-apply-phone" placeholder="+998 (90) 123-45-67" required>
+                        <input type="tel" id="quick-apply-phone" placeholder="Ваш номер телефона" required>
                     </div>
                 </div>
 
@@ -1210,7 +1359,6 @@
                     <div>
                         <span style="font-size: 0.8rem; color: var(--text-secondary); display: block;">Выбранное направление</span>
                         <strong id="lead-modal-specialty" style="font-size: 0.95rem; color: var(--text-primary);">Информационные технологии</strong>
-                    </div>
                     <div>
                         <span style="font-size: 0.8rem; color: var(--text-secondary); display: block;">Текущий статус</span>
                         <span id="lead-modal-status-badge" class="badge">В обработке</span>
@@ -1250,6 +1398,55 @@
                     <button class="btn btn-primary" id="lead-action-approve-btn" style="flex: 1.5; background: #2e7d32; border-color: #2e7d32;">
                         <i data-lucide="check-circle" class="btn-icon"></i>Одобрить заявку
                     </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Floating AI Orientation Trigger Button -->
+    <button id="ai-orientation-fab" style="position: fixed; bottom: 2rem; right: 2rem; z-index: 999; background: var(--text-primary); color: var(--bg); border: 1px solid var(--card-border); padding: 0.85rem 1.4rem; border-radius: 50px; font-weight: 700; font-size: 0.95rem; cursor: pointer; box-shadow: 0 8px 30px rgba(0,0,0,0.25); display: flex; align-items: center; gap: 0.6rem; transition: transform 0.2s ease, box-shadow 0.2s ease;">
+        <i data-lucide="sparkles" style="width: 18px; height: 18px;"></i> ИИ-Профориентатор
+    </button>
+
+    <!-- AI Orientation Chat Modal -->
+    <div id="ai-orientation-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-card glass-card" style="max-width: 520px; width: 92%; height: 82vh; max-height: 680px; display: flex; flex-direction: column; padding: 0; overflow: hidden; border-radius: 20px;">
+            <!-- Modal Header -->
+            <div style="padding: 1.25rem 1.5rem; background: var(--bg-accent); border-bottom: 1px solid var(--card-border); display: flex; justify-content: space-between; align-items: center;">
+                <div style="display: flex; align-items: center; gap: 0.65rem;">
+                    <div style="width: 36px; height: 36px; border-radius: 10px; background: var(--text-primary); color: var(--bg); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.9rem;">
+                        ТОТ
+                    </div>
+                    <div>
+                        <h3 style="margin: 0; font-size: 1.05rem; font-weight: 700; color: var(--text-primary);">
+                            ТОТ ИИ
+                        </h3>
+                        <span style="font-size: 0.75rem; color: var(--text-secondary);">Персональный профориентатор</span>
+                    </div>
+                </div>
+                <button class="modal-close-btn" id="close-ai-modal-btn" style="position: static;">&times;</button>
+            </div>
+
+            <!-- Messages Area -->
+            <div id="ai-chat-messages" style="flex: 1; padding: 1.25rem; overflow-y: auto; display: flex; flex-direction: column; gap: 1rem; background: var(--card-bg);">
+                <!-- Dynamic Messenger Bubbles loaded by JS -->
+            </div>
+
+            <!-- Quick Action Choice Buttons -->
+            <div id="ai-quick-buttons" style="padding: 0.5rem 1.25rem; display: flex; gap: 0.5rem; flex-wrap: wrap; background: var(--card-bg);">
+                <!-- Dynamic Quick Action Buttons -->
+            </div>
+
+            <!-- Footer / Input Bar -->
+            <div style="padding: 1rem 1.25rem; background: var(--bg-accent); border-top: 1px solid var(--card-border);">
+                <div style="position: relative;">
+                    <textarea id="ai-chat-input" rows="2" maxlength="250" placeholder="Например: Люблю математику, монтирую видео и хочу работать удаленно" style="width: 100%; padding: 0.75rem 3rem 0.75rem 0.85rem; font-size: 0.88rem; border-radius: 12px; border: 1px solid var(--card-border); background: var(--card-bg); color: var(--text-primary); resize: none; outline: none; line-height: 1.4;"></textarea>
+                    <button id="ai-chat-send-btn" style="position: absolute; right: 0.6rem; bottom: 0.85rem; background: var(--text-primary); color: var(--bg); border: none; width: 32px; height: 32px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: opacity 0.2s ease;">
+                        <i data-lucide="send" style="width: 15px; height: 15px;"></i>
+                    </button>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.4rem; padding: 0 0.2rem;">
+                    <span style="font-size: 0.72rem; color: var(--text-muted);">Лимит ответа — 250 символов</span>
+                    <span id="ai-char-counter" style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">0/250</span>
                 </div>
             </div>
         </div>

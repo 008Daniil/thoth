@@ -13,7 +13,7 @@ let currentAdvantages = []; // Store current university profile advantages (0-3)
 // Default student details from user sketch for ease of testing
 const SKETCH_STUDENT = {
     fullName: "Староверов Даниил Дмитриевич",
-    phone: "+7 (911) 222-33-44",
+    phone: "",
     ielts: 7.5,
     sat: 1420,
     gpa: 4.8,
@@ -87,57 +87,19 @@ function detectDefaultCountryCode() {
     return "+998"; // Default fallback to Uzbekistan (+998)
 }
 
-function setupCountryCodeInputs() {
+function setupPhoneInputs() {
     const phoneInputs = [
         document.getElementById("onboard-val-phone"),
+        document.getElementById("onboard-login-phone"),
         document.getElementById("form-phone"),
-        document.getElementById("quick-apply-phone")
+        document.getElementById("quick-apply-phone"),
+        document.getElementById("auth-phone-input")
     ];
 
-    const detectedCode = detectDefaultCountryCode();
-
     phoneInputs.forEach(input => {
-        if (!input || input.dataset.countryBound) return;
-        input.dataset.countryBound = "true";
-
-        // Remove rigid format masks or template placeholders
-        input.placeholder = "90 123 45 67";
+        if (!input) return;
+        input.placeholder = "Ваш номер телефона";
         input.type = "tel";
-
-        const wrapper = document.createElement("div");
-        wrapper.className = "phone-input-group";
-        wrapper.style.display = "flex";
-        wrapper.style.alignItems = "center";
-        wrapper.style.gap = "0.5rem";
-        wrapper.style.width = "100%";
-
-        const select = document.createElement("select");
-        select.className = "country-code-select";
-        select.style.padding = "0.75rem 0.5rem";
-        select.style.borderRadius = "12px";
-        select.style.border = "1px solid var(--card-border)";
-        select.style.background = "var(--card-bg)";
-        select.style.color = "var(--text-primary)";
-        select.style.fontSize = "0.95rem";
-        select.style.fontWeight = "600";
-        select.style.cursor = "pointer";
-        select.style.flexShrink = "0";
-
-        COUNTRY_CODES.forEach(item => {
-            const opt = document.createElement("option");
-            opt.value = item.code;
-            opt.textContent = `${item.flag} ${item.code}`;
-            if (item.code === detectedCode && !select.value) {
-                opt.selected = true;
-            }
-            select.appendChild(opt);
-        });
-
-        if (input.parentNode) {
-            input.parentNode.insertBefore(wrapper, input);
-            wrapper.appendChild(select);
-            wrapper.appendChild(input);
-        }
     });
 }
 
@@ -152,8 +114,11 @@ document.addEventListener("DOMContentLoaded", () => {
     // Initialize WebGL shader background
     initBackground();
 
-    // Setup country code selects for phone inputs
-    setupCountryCodeInputs();
+    // Setup phone input placeholders
+    setupPhoneInputs();
+
+    // Initialize AI Career Orientation Widget
+    initAIOrientation();
 
     // Router setup
     window.addEventListener("hashchange", handleRoute);
@@ -515,11 +480,15 @@ function setupEventListeners() {
                 return;
             }
 
+            const appTypeElem = document.getElementById("quick-apply-app-type");
+            const appType = appTypeElem ? appTypeElem.value : "standard";
+
             const formData = new FormData();
             formData.append("university_id", uniId);
             formData.append("specialty_id", specId);
             formData.append("full_name", fullName);
             formData.append("phone", phone);
+            formData.append("app_type", appType);
             if (ielts) formData.append("ielts_score", ielts);
             if (gpa) formData.append("gpa", gpa);
             formData.append("file", file);
@@ -875,6 +844,68 @@ function setupEventListeners() {
         });
     }
 
+    // Partner Settings button & modal
+    const dashSettingsBtn = document.getElementById("dash-settings-btn");
+    const settingsModal = document.getElementById("partner-settings-modal");
+    const closeSettingsBtn = document.getElementById("close-partner-settings-btn");
+    const cancelSettingsBtn = document.getElementById("cancel-partner-settings-btn");
+    const settingsForm = document.getElementById("partner-settings-form");
+
+    if (dashSettingsBtn && settingsModal) {
+        dashSettingsBtn.addEventListener("click", () => {
+            if (myUniversity) {
+                document.getElementById("settings-accepted-msg").value = myUniversity.accepted_message || myUniversity.contact_info || "";
+                document.getElementById("settings-rejected-msg").value = myUniversity.rejected_message || "";
+                document.getElementById("settings-admissions-phone").value = myUniversity.admissions_phone || "";
+            }
+            settingsModal.style.display = "flex";
+            setTimeout(() => settingsModal.classList.add("show"), 10);
+        });
+    }
+
+    const closeSettings = () => {
+        if (!settingsModal) return;
+        settingsModal.classList.remove("show");
+        setTimeout(() => settingsModal.style.display = "none", 200);
+    };
+
+    if (closeSettingsBtn) closeSettingsBtn.onclick = closeSettings;
+    if (cancelSettingsBtn) cancelSettingsBtn.onclick = closeSettings;
+
+    if (settingsForm) {
+        settingsForm.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            if (!myUniversity) return;
+
+            const accMsg = document.getElementById("settings-accepted-msg").value.trim();
+            const rejMsg = document.getElementById("settings-rejected-msg").value.trim();
+            const phone = document.getElementById("settings-admissions-phone").value.trim();
+
+            try {
+                const res = await fetch(`${API_BASE}/api/v1/universities/settings`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        university_id: myUniversity.id,
+                        accepted_message: accMsg,
+                        rejected_message: rejMsg,
+                        admissions_phone: phone
+                    })
+                });
+                if (!res.ok) throw new Error("Failed to save settings");
+                
+                myUniversity.accepted_message = accMsg;
+                myUniversity.rejected_message = rejMsg;
+                myUniversity.admissions_phone = phone;
+
+                showToast("Настройки сообщений приёмной комиссии сохранены!", "success");
+                closeSettings();
+            } catch (err) {
+                showToast("Не удалось сохранить настройки", "danger");
+            }
+        });
+    }
+
     // Refresh Dashboard button
     const refreshDashBtn = document.getElementById("refresh-dash-data-btn");
     if (refreshDashBtn) {
@@ -1028,6 +1059,27 @@ function setupEventListeners() {
                 renderWizardAdvantages();
                 syncWizardLivePreview();
             }
+        });
+    }
+
+    // Toggle Grant & Scholarship Boxes in Wizard
+    const toggleGrantBtn = document.getElementById("wizard-toggle-grant-btn");
+    const grantBox = document.getElementById("wizard-grant-box");
+    if (toggleGrantBtn && grantBox) {
+        toggleGrantBtn.addEventListener("click", () => {
+            grantBox.style.display = (grantBox.style.display === "none") ? "block" : "none";
+            const input = document.getElementById("wizard-grant-info");
+            if (grantBox.style.display === "block" && input) input.focus();
+        });
+    }
+
+    const toggleScholarshipBtn = document.getElementById("wizard-toggle-scholarship-btn");
+    const scholarshipBox = document.getElementById("wizard-scholarship-box");
+    if (toggleScholarshipBtn && scholarshipBox) {
+        toggleScholarshipBtn.addEventListener("click", () => {
+            scholarshipBox.style.display = (scholarshipBox.style.display === "none") ? "block" : "none";
+            const input = document.getElementById("wizard-scholarship-info");
+            if (scholarshipBox.style.display === "block" && input) input.focus();
         });
     }
 
@@ -1211,12 +1263,15 @@ function populateUniversityDropdowns(list) {
 }
 
 // --- QUICK APPLY MODAL FUNCTIONS ---
-async function openQuickApplyModal(uniId, uniName, preselectedSpecId = null) {
+async function openQuickApplyModal(uniId, uniName, preselectedSpecId = null, defaultAppType = "standard") {
     const modal = document.getElementById("quick-apply-modal");
     if (!modal) return;
 
     document.getElementById("quick-apply-uni-id").value = uniId;
     document.getElementById("apply-modal-uni-name").textContent = uniName;
+
+    const appTypeElem = document.getElementById("quick-apply-app-type");
+    if (appTypeElem) appTypeElem.value = defaultAppType;
 
     const savedName = localStorage.getItem("currentStudentName") || (window.currentStudentProfile ? window.currentStudentProfile.full_name : "");
     const savedPhone = localStorage.getItem("currentStudentPhone") || (window.currentStudentProfile ? window.currentStudentProfile.phone : "");
@@ -1386,6 +1441,73 @@ async function loadUniversityDetails(id) {
         
         // 5. Advantages (Dynamic, monochrome, no icons)
         renderUniversityAdvantages(uni, "det-advantages-container", false);
+
+        // 5.5. Grants & Scholarships Section
+        const grantsSection = document.getElementById("det-grants-section");
+        const grantsContent = document.getElementById("det-grants-scholarships-content");
+        if (grantsSection && grantsContent) {
+            let html = "";
+            if (uni.has_grant !== false || (uni.grant_info && uni.grant_info.trim())) {
+                const gInfo = (uni.grant_info && uni.grant_info.trim()) 
+                    ? uni.grant_info 
+                    : "Покрытие до 100% стоимости обучения для абитуриентов с высокими баллами IELTS/SAT или по результатам вступительных испытаний.";
+                html += `
+                    <div style="background: var(--bg-accent); border: 1px solid var(--card-border); border-radius: 12px; padding: 1.25rem; display: flex; flex-direction: column; justify-content: space-between; gap: 1rem;">
+                        <div>
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                                <span style="font-size: 0.75rem; font-weight: 700; color: var(--text-primary); background: var(--card-bg); border: 1px solid var(--card-border); padding: 0.25rem 0.65rem; border-radius: 20px;">
+                                    ГРАНТ НА ОБУЧЕНИЕ
+                                </span>
+                                <span style="font-size: 0.75rem; color: var(--text-muted);">Доступен</span>
+                            </div>
+                            <h4 style="font-size: 1.1rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.5rem;">Грантовая программа</h4>
+                            <p style="font-size: 0.88rem; color: var(--text-secondary); line-height: 1.5; margin: 0;">${gInfo}</p>
+                        </div>
+                        <button class="btn btn-primary btn-sm det-apply-grant-btn" style="width: 100%; height: 42px; font-weight: 600;">
+                            Подать заявку на грант
+                        </button>
+                    </div>
+                `;
+            }
+            if (uni.has_scholarship !== false || (uni.scholarship_info && uni.scholarship_info.trim())) {
+                const sInfo = (uni.scholarship_info && uni.scholarship_info.trim()) 
+                    ? uni.scholarship_info 
+                    : "Академическая стипендия выплачивается ежемесячно студентам за отличную успеваемость и научную деятельность.";
+                html += `
+                    <div style="background: var(--bg-accent); border: 1px solid var(--card-border); border-radius: 12px; padding: 1.25rem; display: flex; flex-direction: column; justify-content: space-between; gap: 1rem;">
+                        <div>
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                                <span style="font-size: 0.75rem; font-weight: 700; color: var(--text-primary); background: var(--card-bg); border: 1px solid var(--card-border); padding: 0.25rem 0.65rem; border-radius: 20px;">
+                                    АКАДЕМИЧЕСКАЯ СТИПЕНДИЯ
+                                </span>
+                                <span style="font-size: 0.75rem; color: var(--text-muted);">Доступна</span>
+                            </div>
+                            <h4 style="font-size: 1.1rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.5rem;">Стипендиальная программа</h4>
+                            <p style="font-size: 0.88rem; color: var(--text-secondary); line-height: 1.5; margin: 0;">${sInfo}</p>
+                        </div>
+                        <button class="btn btn-outline btn-sm det-apply-scholarship-btn" style="width: 100%; height: 42px; font-weight: 600;">
+                            Подать заявку на стипендию
+                        </button>
+                    </div>
+                `;
+            }
+
+            if (html) {
+                grantsContent.innerHTML = html;
+                grantsSection.style.display = "block";
+
+                const grantBtn = grantsContent.querySelector(".det-apply-grant-btn");
+                if (grantBtn) {
+                    grantBtn.onclick = () => openQuickApplyModal(uni.id, uni.name, null, "grant");
+                }
+                const schBtn = grantsContent.querySelector(".det-apply-scholarship-btn");
+                if (schBtn) {
+                    schBtn.onclick = () => openQuickApplyModal(uni.id, uni.name, null, "scholarship");
+                }
+            } else {
+                grantsSection.style.display = "none";
+            }
+        }
         
         // 6. Specialties Grid Rendering (Wildberries options layout)
         const specGrid = document.getElementById("det-specialties-grid");
@@ -1400,7 +1522,8 @@ async function loadUniversityDetails(id) {
                 const reqsDisplay = spec.min_requirements && spec.min_requirements.trim() ? spec.min_requirements : "Стандартные условия приёма (IELTS / Аттестат)";
                 const langDisplay = spec.language || "Английский / Русский";
                 const formatDisplay = spec.format || "Очный (Дневной)";
-                const hasGrantBadge = (spec.has_grant || uni.has_grant) ? `<span style="display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.75rem; font-weight: 600; color: #2e7d32; background: rgba(46,125,50,0.1); padding: 0.2rem 0.5rem; border-radius: 6px; margin-top: 0.35rem;"><i data-lucide="trophy" style="width: 12px; height: 12px;"></i> Доступен грант</span>` : "";
+                const durationDisplay = spec.duration || "4 года (Бакалавриат)";
+                const hasGrantBadge = (spec.has_grant || uni.has_grant) ? `<span style="display: inline-flex; align-items: center; font-size: 0.75rem; font-weight: 600; color: var(--text-primary); background: var(--bg-accent); border: 1px solid var(--card-border); padding: 0.2rem 0.5rem; border-radius: 6px; margin-top: 0.35rem;">Доступен грант</span>` : "";
 
                 card.innerHTML = `
                     <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; width: 100%;">
@@ -1410,14 +1533,18 @@ async function loadUniversityDetails(id) {
                         <button class="btn btn-primary btn-sm" style="flex-shrink: 0;">Подать документы</button>
                     </div>
 
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 1rem; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--card-border);">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 1rem; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--card-border);">
+                        <div>
+                            <span style="font-size: 0.75rem; color: var(--text-secondary); display: block;">Форма обучения</span>
+                            <strong style="font-size: 0.85rem; color: var(--text-primary);">${formatDisplay}</strong>
+                        </div>
+                        <div>
+                            <span style="font-size: 0.75rem; color: var(--text-secondary); display: block;">Срок обучения</span>
+                            <strong style="font-size: 0.85rem; color: var(--text-primary);">${durationDisplay}</strong>
+                        </div>
                         <div>
                             <span style="font-size: 0.75rem; color: var(--text-secondary); display: block;">Язык обучения</span>
                             <strong style="font-size: 0.85rem; color: var(--text-primary);">${langDisplay}</strong>
-                        </div>
-                        <div>
-                            <span style="font-size: 0.75rem; color: var(--text-secondary); display: block;">Режим обучения</span>
-                            <strong style="font-size: 0.85rem; color: var(--text-primary);">${formatDisplay}</strong>
                         </div>
                         <div>
                             <span style="font-size: 0.75rem; color: var(--text-secondary); display: block;">Стоимость обучения</span>
@@ -1573,6 +1700,9 @@ async function loadStudentProfile(phone, notifyUser = true) {
         // Sync form button and banner styles
         updateProfileFormUI();
 
+        // Sync AI Orientation widget auth state
+        if (typeof checkAiAuthStatus === "function") checkAiAuthStatus();
+
         if (notifyUser) {
             showToast("Цифровой паспорт успешно загружен!", "success");
         }
@@ -1587,7 +1717,7 @@ async function loadStudentProfile(phone, notifyUser = true) {
 // Resets passport visual card to default state
 function resetPassportCard(phone = "") {
     document.getElementById("pass-fullname").textContent = "Новый абитуриент";
-    document.getElementById("pass-phone").textContent = phone || "+7 (999) 000-00-00";
+    document.getElementById("pass-phone").textContent = phone || "Номер не указан";
     document.getElementById("pass-ielts").textContent = "—";
     document.getElementById("pass-sat").textContent = "—";
     document.getElementById("pass-gpa").textContent = "—";
@@ -1605,6 +1735,7 @@ function resetPassportCard(phone = "") {
     `;
     window.currentStudentProfile = null;
     updateProfileFormUI();
+    if (typeof checkAiAuthStatus === "function") checkAiAuthStatus();
     lucide.createIcons();
 }
 
@@ -1636,16 +1767,52 @@ function renderStudentApplications(apps) {
         if (app.status === "accepted") statusText = "Принят";
         if (app.status === "rejected") statusText = "Отклонен";
 
+        let appTypeBadge = `<span style="font-size: 0.72rem; color: var(--text-secondary); background: var(--bg-accent); border: 1px solid var(--card-border); padding: 0.15rem 0.45rem; border-radius: 4px; display: inline-block; margin-left: 0.35rem;">Контракт</span>`;
+        if (app.app_type === "grant") {
+            appTypeBadge = `<span style="font-size: 0.72rem; color: var(--text-primary); background: var(--card-bg); border: 1px solid var(--card-border); padding: 0.15rem 0.45rem; border-radius: 4px; font-weight: 700; display: inline-block; margin-left: 0.35rem;">Грант</span>`;
+        } else if (app.app_type === "scholarship") {
+            appTypeBadge = `<span style="font-size: 0.72rem; color: var(--text-primary); background: var(--card-bg); border: 1px solid var(--card-border); padding: 0.15rem 0.45rem; border-radius: 4px; font-weight: 700; display: inline-block; margin-left: 0.35rem;">Стипендия</span>`;
+        }
+
+        let contactBoxHtml = "";
+        if (app.status === "accepted" || app.status === "approved") {
+            const accMsg = (app.accepted_message && app.accepted_message.trim())
+                ? app.accepted_message
+                : ((app.university_contact_info && app.university_contact_info.trim()) ? app.university_contact_info : `Поздравляем с зачислением! Пожалуйста, свяжитесь с приёмной комиссией для предоставления документов.`);
+            const phoneText = app.admissions_phone ? `\nТелефон приёмной комиссии: ${app.admissions_phone}` : "";
+            
+            contactBoxHtml = `
+                <div style="width: 100%; margin-top: 0.75rem; background: var(--bg-accent); padding: 0.85rem 1rem; border-radius: 8px; border: 1px solid var(--card-border);">
+                    <h5 style="margin: 0 0 0.35rem 0; font-size: 0.85rem; font-weight: 700; color: var(--text-primary);">
+                        Сообщение приемной комиссии (Поступление):
+                    </h5>
+                    <p style="font-size: 0.82rem; color: var(--text-secondary); margin: 0; white-space: pre-line; line-height: 1.4;">${accMsg}${phoneText}</p>
+                </div>
+            `;
+        } else if (app.status === "rejected" && app.rejected_message && app.rejected_message.trim()) {
+            contactBoxHtml = `
+                <div style="width: 100%; margin-top: 0.75rem; background: var(--bg-accent); padding: 0.85rem 1rem; border-radius: 8px; border: 1px solid var(--card-border);">
+                    <h5 style="margin: 0 0 0.35rem 0; font-size: 0.85rem; font-weight: 700; color: var(--text-primary);">
+                        Сообщение приемной комиссии:
+                    </h5>
+                    <p style="font-size: 0.82rem; color: var(--text-secondary); margin: 0; white-space: pre-line; line-height: 1.4;">${app.rejected_message}</p>
+                </div>
+            `;
+        }
+
         item.innerHTML = `
-            <div class="app-time-info">
-                <h4>${app.university_name}</h4>
-                <p>${app.specialty_name}${app.specialty_code ? ` (${app.specialty_code})` : ''}</p>
-                <p style="font-size:0.75rem; color:var(--text-muted); margin-top:0.25rem;"><i data-lucide="file" style="width:12px; height:12px; display:inline-block; vertical-align:middle; margin-right:4px;"></i> ${app.document_name}</p>
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; width: 100%;">
+                <div class="app-time-info">
+                    <h4>${app.university_name} ${appTypeBadge}</h4>
+                    <p>${app.specialty_name}</p>
+                    <p style="font-size:0.75rem; color:var(--text-muted); margin-top:0.25rem;"><i data-lucide="file" style="width:12px; height:12px; display:inline-block; vertical-align:middle; margin-right:4px;"></i> ${app.document_name}</p>
+                </div>
+                <div>
+                    <span class="status-badge status-${app.status}">${statusText}</span>
+                    <p style="font-size:0.75rem; color:var(--text-muted); text-align:right; margin-top:0.4rem;">${formattedDate}</p>
+                </div>
             </div>
-            <div>
-                <span class="status-badge status-${app.status}">${statusText}</span>
-                <p style="font-size:0.75rem; color:var(--text-muted); text-align:right; margin-top:0.4rem;">${formattedDate}</p>
-            </div>
+            ${contactBoxHtml}
         `;
         list.appendChild(item);
     });
@@ -1868,8 +2035,19 @@ function openWizard(isEdit = false) {
         document.getElementById("wizard-description").value = myUniversity.description || "";
         document.getElementById("wizard-ielts").value = myUniversity.min_ielts || "";
         document.getElementById("wizard-sat").value = myUniversity.min_sat || "";
-        
         document.getElementById("wizard-slogan").value = myUniversity.slogan || "";
+
+        const hasGrantBox = document.getElementById("wizard-has-grant");
+        const grantInfoInput = document.getElementById("wizard-grant-info");
+        const hasSchBox = document.getElementById("wizard-has-scholarship");
+        const schInfoInput = document.getElementById("wizard-scholarship-info");
+        const contactInfoInput = document.getElementById("wizard-contact-info");
+
+        if (hasGrantBox) hasGrantBox.checked = myUniversity.has_grant !== false;
+        if (grantInfoInput) grantInfoInput.value = myUniversity.grant_info || "";
+        if (hasSchBox) hasSchBox.checked = myUniversity.has_scholarship !== false;
+        if (schInfoInput) schInfoInput.value = myUniversity.scholarship_info || "";
+        if (contactInfoInput) contactInfoInput.value = myUniversity.contact_info || "";
         
         // Load advantages dynamically
         currentAdvantages = [];
@@ -1945,6 +2123,11 @@ async function handleWizardSubmit(e) {
         }
     });
 
+    const hasGrantElem = document.getElementById("wizard-has-grant");
+    const grantInfoElem = document.getElementById("wizard-grant-info");
+    const hasSchElem = document.getElementById("wizard-has-scholarship");
+    const schInfoElem = document.getElementById("wizard-scholarship-info");
+
     const payload = {
         partner_id: currentPartner ? currentPartner.id : "partner-default",
         name: nameVal,
@@ -1955,12 +2138,17 @@ async function handleWizardSubmit(e) {
         min_ielts: calcIelts.length > 0 ? Math.min(...calcIelts) : null,
         min_sat: calcSat.length > 0 ? Math.min(...calcSat) : null,
         slogan: document.getElementById("wizard-slogan") ? document.getElementById("wizard-slogan").value.trim() : "",
+        contact_info: document.getElementById("wizard-contact-info") ? document.getElementById("wizard-contact-info").value.trim() : "",
         adv_1_title: currentAdvantages[0] ? currentAdvantages[0].title.trim() : "",
         adv_1_desc: currentAdvantages[0] ? currentAdvantages[0].desc.trim() : "",
         adv_2_title: currentAdvantages[1] ? currentAdvantages[1].title.trim() : "",
         adv_2_desc: currentAdvantages[1] ? currentAdvantages[1].desc.trim() : "",
         adv_3_title: currentAdvantages[2] ? currentAdvantages[2].title.trim() : "",
         adv_3_desc: currentAdvantages[2] ? currentAdvantages[2].desc.trim() : "",
+        has_grant: hasGrantElem ? hasGrantElem.checked : false,
+        grant_info: grantInfoElem ? grantInfoElem.value.trim() : "",
+        has_scholarship: hasSchElem ? hasSchElem.checked : false,
+        scholarship_info: schInfoElem ? schInfoElem.value.trim() : "",
         photo: wizardPhotoBase64,
         specialties: currentSpecialties
     };
@@ -2164,6 +2352,13 @@ function renderLeadsTable() {
         const specName = (lead.specialty && lead.specialty.name) ? lead.specialty.name : "Общее направление";
         const specCode = (lead.specialty && lead.specialty.code) ? lead.specialty.code : "";
 
+        let appTypeBadge = `<span class="badge" style="background: var(--bg-accent); border: 1px solid var(--card-border); color: var(--text-secondary); font-size: 0.7rem; margin-top: 0.25rem; display: inline-block;">КОНТРАКТ</span>`;
+        if (lead.app_type === "grant") {
+            appTypeBadge = `<span class="badge" style="background: var(--card-bg); border: 1px solid var(--card-border); color: var(--text-primary); font-size: 0.7rem; margin-top: 0.25rem; display: inline-block; font-weight: 700;">ГРАНТ</span>`;
+        } else if (lead.app_type === "scholarship") {
+            appTypeBadge = `<span class="badge" style="background: var(--card-bg); border: 1px solid var(--card-border); color: var(--text-primary); font-size: 0.7rem; margin-top: 0.25rem; display: inline-block; font-weight: 700;">СТИПЕНДИЯ</span>`;
+        }
+
         const statusSelectHtml = `
             <select class="table-status-select" data-app-id="${lead.id}">
                 <option value="pending" ${lead.status === 'pending' ? 'selected' : ''}>На модерации</option>
@@ -2178,7 +2373,7 @@ function renderLeadsTable() {
             <td style="font-size: 0.85rem; color: var(--text-secondary);">${studentPhone}</td>
             <td>
                 <span style="font-weight:500;">${specName}</span>
-                ${specCode ? `<br><span style="font-size: 0.75rem; color: var(--text-muted);">${specCode}</span>` : ""}
+                <br>${appTypeBadge}
             </td>
             <td style="font-weight: 500; color: var(--primary);">${statsBadge}</td>
             <td>
@@ -2352,6 +2547,27 @@ function renderWizardSpecialties() {
                 </div>
             </div>
 
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.75rem;">
+                <div class="form-group" style="margin-bottom:0;">
+                    <label style="font-size:0.75rem; margin-bottom:4px; font-weight:600;">Форма обучения</label>
+                    <select class="spec-format-input" style="width: 100%; font-size: 0.85rem; padding: 0.45rem 0.6rem; border-radius: 8px; border: 1px solid var(--card-border); background: var(--bg); color: var(--text-primary);">
+                        <option value="Очный (Дневной)" ${(spec.format === 'Очный (Дневной)' || !spec.format) ? 'selected' : ''}>Очный (Дневной)</option>
+                        <option value="Дистанционный (Онлайн)" ${spec.format === 'Дистанционный (Онлайн)' ? 'selected' : ''}>Дистанционный (Онлайн)</option>
+                        <option value="Заочный" ${spec.format === 'Заочный' ? 'selected' : ''}>Заочный</option>
+                        <option value="Вечерний" ${spec.format === 'Вечерний' ? 'selected' : ''}>Вечерний</option>
+                        <option value="Гибридный" ${spec.format === 'Гибридный' ? 'selected' : ''}>Гибридный</option>
+                    </select>
+                </div>
+                <div class="form-group" style="margin-bottom:0;">
+                    <label style="font-size:0.75rem; margin-bottom:4px; font-weight:600;">Срок обучения</label>
+                    <input type="text" class="spec-duration-input" value="${spec.duration || '4 года (Бакалавриат)'}" placeholder="4 года" style="width: 100%; font-size: 0.85rem; padding: 0.45rem 0.6rem; border-radius: 8px; border: 1px solid var(--card-border); background: var(--bg); color: var(--text-primary);">
+                </div>
+                <div class="form-group" style="margin-bottom:0;">
+                    <label style="font-size:0.75rem; margin-bottom:4px; font-weight:600;">Язык обучения</label>
+                    <input type="text" class="spec-language-input" value="${spec.language || 'Английский / Русский'}" placeholder="Английский" style="width: 100%; font-size: 0.85rem; padding: 0.45rem 0.6rem; border-radius: 8px; border: 1px solid var(--card-border); background: var(--bg); color: var(--text-primary);">
+                </div>
+            </div>
+
             <div style="display: flex; flex-direction: column; gap: 0.65rem; background: var(--card-bg); padding: 1rem; border-radius: 12px; border: 1px dashed var(--card-border);">
                 <label style="font-size:0.85rem; font-weight:700; color: var(--text-primary);">Минимальные требования к абитуриенту</label>
 
@@ -2395,6 +2611,18 @@ function renderWizardSpecialties() {
         });
         row.querySelector(".spec-fee-input").addEventListener("input", (e) => {
             spec.tuition_fee = e.target.value;
+            syncWizardLivePreview();
+        });
+        row.querySelector(".spec-format-input").addEventListener("change", (e) => {
+            spec.format = e.target.value;
+            syncWizardLivePreview();
+        });
+        row.querySelector(".spec-duration-input").addEventListener("input", (e) => {
+            spec.duration = e.target.value;
+            syncWizardLivePreview();
+        });
+        row.querySelector(".spec-language-input").addEventListener("input", (e) => {
+            spec.language = e.target.value;
             syncWizardLivePreview();
         });
 
@@ -2820,11 +3048,11 @@ function showWizardLivePreview() {
                             <span class="wb-spec-value link">${shortWeb}</span>
                         </div>
                         <div class="wb-spec-item">
-                            <span class="wb-spec-name">IELTS (мин.)</span>
+                            <span class="wb-spec-name">IELTS</span>
                             <span class="wb-spec-value">${minIelts}</span>
                         </div>
                         <div class="wb-spec-item">
-                            <span class="wb-spec-name">SAT (мин.)</span>
+                            <span class="wb-spec-name">SAT</span>
                             <span class="wb-spec-value">${minSat}</span>
                         </div>
                     </div>
@@ -3220,5 +3448,244 @@ function renderWizardAdvantages() {
     }
     
     lucide.createIcons();
+}
+
+// --- 13. AI CAREER ORIENTATION CHAT WIDGET ---
+let aiChatHistory = [];
+let isAiLoading = false;
+
+function checkAiAuthStatus() {
+    const savedPhone = localStorage.getItem("currentStudentPhone");
+    const lockNotice = document.getElementById("ai-auth-locked-notice");
+    const chatWrapper = document.getElementById("ai-profile-chat-wrapper");
+
+    if (!lockNotice || !chatWrapper) return;
+
+    if (savedPhone) {
+        lockNotice.style.display = "none";
+        chatWrapper.style.display = "flex";
+        if (aiChatHistory.length === 0) {
+            startAiChat();
+        }
+    } else {
+        lockNotice.style.display = "block";
+        chatWrapper.style.display = "none";
+    }
+}
+
+function initAIOrientation() {
+    const resetBtn = document.getElementById("reset-ai-chat-btn");
+    const lockLoginBtn = document.getElementById("ai-lock-login-btn");
+    const input = document.getElementById("ai-chat-input");
+    const sendBtn = document.getElementById("ai-chat-send-btn");
+    const counter = document.getElementById("ai-char-counter");
+
+    // Check auth status initially
+    checkAiAuthStatus();
+
+    if (resetBtn) {
+        resetBtn.addEventListener("click", () => {
+            startAiChat();
+            showToast("Диалог с ИИ-профориентатором сброшен", "info");
+        });
+    }
+
+    if (lockLoginBtn) {
+        lockLoginBtn.addEventListener("click", () => {
+            const onboardModal = document.getElementById("onboarding-modal");
+            if (onboardModal) {
+                onboardModal.style.display = "flex";
+                setTimeout(() => onboardModal.classList.add("show"), 10);
+            }
+        });
+    }
+
+    // Live Character Counter
+    if (input && counter) {
+        input.addEventListener("input", () => {
+            const len = input.value.length;
+            counter.textContent = `${len}/250`;
+            if (len >= 250) {
+                counter.style.color = "#ff4d4f";
+            } else {
+                counter.style.color = "var(--text-muted)";
+            }
+        });
+
+        input.addEventListener("keydown", (e) => {
+            if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                sendAiUserMessage();
+            }
+        });
+    }
+
+    if (sendBtn) {
+        sendBtn.onclick = () => sendAiUserMessage();
+    }
+}
+
+function startAiChat() {
+    const initialText = "Привет! Я ИИ-гид платформы ТОТ. Помогу тебе понять, какая профессия и универ тебе реально подойдут.\n\nКак поступим: сделаем быстрый экспресс-тест на 4 вопроса или пройдем детальный разбор (7–8 вопросов), чтобы подобрать профессию максимально точно?";
+    
+    aiChatHistory = [];
+    const messagesContainer = document.getElementById("ai-chat-messages");
+    if (messagesContainer) messagesContainer.innerHTML = "";
+
+    appendAiBubble(initialText);
+
+    // Render initial mode selection buttons
+    renderAiQuickButtons([
+        { label: "⚡ Быстрый (4 вопроса)", text: "Выбираю быстрый экспресс-тест на 4 вопроса" },
+        { label: "🎯 Детальный (7–8 вопросов)", text: "Выбираю детальный разбор на 7-8 вопросов" }
+    ]);
+}
+
+function appendAiBubble(text) {
+    const container = document.getElementById("ai-chat-messages");
+    if (!container) return;
+
+    const bubble = document.createElement("div");
+    bubble.className = "ai-bubble";
+    bubble.style.alignSelf = "flex-start";
+    bubble.style.maxWidth = "85%";
+    bubble.style.background = "var(--bg-accent)";
+    bubble.style.border = "1px solid var(--card-border)";
+    bubble.style.color = "var(--text-primary)";
+    bubble.style.padding = "0.85rem 1.1rem";
+    bubble.style.borderRadius = "16px 16px 16px 4px";
+    bubble.style.fontSize = "0.9rem";
+    bubble.style.lineHeight = "1.5";
+    bubble.style.whiteSpace = "pre-line";
+
+    bubble.textContent = text;
+    container.appendChild(bubble);
+    container.scrollTop = container.scrollHeight;
+}
+
+function appendUserBubble(text) {
+    const container = document.getElementById("ai-chat-messages");
+    if (!container) return;
+
+    const bubble = document.createElement("div");
+    bubble.className = "user-bubble";
+    bubble.style.alignSelf = "flex-end";
+    bubble.style.maxWidth = "85%";
+    bubble.style.background = "var(--text-primary)";
+    bubble.style.color = "var(--bg)";
+    bubble.style.padding = "0.85rem 1.1rem";
+    bubble.style.borderRadius = "16px 16px 4px 16px";
+    bubble.style.fontSize = "0.9rem";
+    bubble.style.lineHeight = "1.5";
+    bubble.style.fontWeight = "500";
+    bubble.style.whiteSpace = "pre-line";
+
+    bubble.textContent = text;
+    container.appendChild(bubble);
+    container.scrollTop = container.scrollHeight;
+}
+
+function renderAiQuickButtons(buttons) {
+    const container = document.getElementById("ai-quick-buttons");
+    if (!container) return;
+
+    container.innerHTML = "";
+    if (!buttons || buttons.length === 0) return;
+
+    buttons.forEach(btnInfo => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "btn btn-outline btn-sm";
+        btn.style.borderColor = "var(--card-border)";
+        btn.style.color = "var(--text-primary)";
+        btn.style.fontSize = "0.8rem";
+        btn.style.fontWeight = "600";
+        btn.style.padding = "0.4rem 0.85rem";
+        btn.style.borderRadius = "20px";
+        btn.style.cursor = "pointer";
+        btn.textContent = btnInfo.label;
+
+        btn.onclick = () => {
+            container.innerHTML = "";
+            sendAiUserMessage(btnInfo.text);
+        };
+
+        container.appendChild(btn);
+    });
+}
+
+async function sendAiUserMessage(overrideText = null) {
+    if (isAiLoading) return;
+
+    const input = document.getElementById("ai-chat-input");
+    const userText = overrideText ? overrideText.trim() : (input ? input.value.trim() : "");
+
+    if (!userText) return;
+
+    if (userText.length > 250) {
+        showToast("Сообщение не должно превышать 250 символов", "danger");
+        return;
+    }
+
+    if (input && !overrideText) {
+        input.value = "";
+        const counter = document.getElementById("ai-char-counter");
+        if (counter) counter.textContent = "0/250";
+    }
+
+    // Clear quick action buttons once user responds
+    const quickContainer = document.getElementById("ai-quick-buttons");
+    if (quickContainer) quickContainer.innerHTML = "";
+
+    appendUserBubble(userText);
+    aiChatHistory.push({ role: "user", text: userText });
+
+    // Show loading typing indicator
+    isAiLoading = true;
+    const container = document.getElementById("ai-chat-messages");
+    const loadingBubble = document.createElement("div");
+    loadingBubble.id = "ai-loading-bubble";
+    loadingBubble.style.alignSelf = "flex-start";
+    loadingBubble.style.padding = "0.6rem 1rem";
+    loadingBubble.style.background = "var(--bg-accent)";
+    loadingBubble.style.borderRadius = "16px";
+    loadingBubble.style.fontSize = "0.85rem";
+    loadingBubble.style.color = "var(--text-muted)";
+    loadingBubble.style.fontStyle = "italic";
+    loadingBubble.textContent = "ТОТ ИИ размышляет над ответом...";
+    container.appendChild(loadingBubble);
+    container.scrollTop = container.scrollHeight;
+
+    try {
+        // Natural human-like thinking delay (1.2 seconds)
+        await new Promise(resolve => setTimeout(resolve, 1200));
+
+        const res = await fetch(`${API_BASE}/api/ai-orientation`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                message: userText,
+                history: aiChatHistory.slice(-10) // Send last 10 messages for context
+            })
+        });
+
+        const loadingElem = document.getElementById("ai-loading-bubble");
+        if (loadingElem) loadingElem.remove();
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || "Ошибка получения ответа");
+
+        const aiReply = data.reply || "Не удалось получить ответ.";
+        appendAiBubble(aiReply);
+        aiChatHistory.push({ role: "model", text: aiReply });
+
+    } catch (err) {
+        const loadingElem = document.getElementById("ai-loading-bubble");
+        if (loadingElem) loadingElem.remove();
+        
+        appendAiBubble("Ошибка соединения с ИИ-сервером. Попробуйте еще раз.");
+    } finally {
+        isAiLoading = false;
+    }
 }
 

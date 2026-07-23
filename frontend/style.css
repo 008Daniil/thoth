@@ -2875,5 +2875,28 @@ body.dark-theme .step-connector {
         max-height: 92vh !important;
         border-radius: 20px !important;
     }
+
+    /* Mobile AI Profile Widget Optimizations */
+    .ai-profile-card {
+        padding: 1.1rem !important;
+    }
+    #ai-profile-chat-wrapper {
+        height: 380px !important;
+    }
+    #ai-chat-messages {
+        padding: 0.85rem !important;
+        gap: 0.75rem !important;
+    }
+    .ai-bubble, .user-bubble {
+        max-width: 90% !important;
+        font-size: 0.85rem !important;
+        padding: 0.75rem 0.95rem !important;
+    }
+    
+    /* Touch-friendly buttons for mobile */
+    .btn {
+        min-height: 44px;
+    }
 }
+
 
