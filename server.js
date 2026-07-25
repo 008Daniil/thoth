@@ -979,6 +979,10 @@ app.use((req, res, next) => {
 
 // Serve static frontend files
 app.use('/frontend', express.static(path.join(__dirname, 'frontend'), { dotfiles: 'allow' }));
+app.use(express.static(path.join(__dirname, 'frontend')));
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'frontend', 'index.html'));
+});
 
 // Configure Multer for file uploads
 const storage = multer.diskStorage({
