@@ -558,20 +558,40 @@ function sendUniversityProfileAlert(uni) {
     }, 100);
 }
 
-// Send main admin menu with inline keyboard
+// Send main admin menu with persistent keyboard
 function sendAdminMainMenu(messageText = 'Главное меню управления THOTH:') {
+    const replyMarkup = {
+        keyboard: [
+            [{ text: '🏢 Список ВУЗов' }, { text: '📨 Новые заявки' }],
+            [{ text: '🔍 Поиск по странам' }, { text: '⚙️ Главное меню' }]
+        ],
+        resize_keyboard: true,
+        one_time_keyboard: false
+    };
+    sendTelegramMessage(messageText, replyMarkup);
+}
+
+function sendTelegramCountryMenu() {
+    const textMenu = '🌎 *Выберите страну для фильтрации ВУЗов:*';
     const replyMarkup = {
         inline_keyboard: [
             [
-                { text: '🏢 Список ВУЗов', callback_data: 'menu_list' },
-                { text: '📨 Заявки', callback_data: 'menu_pending' }
+                { text: '🇨🇭 Швейцария', callback_data: 'search_country:Швейцария' },
+                { text: '🇺🇸 США', callback_data: 'search_country:США' }
             ],
             [
-                { text: '🔍 Поиск по странам', callback_data: 'menu_search_countries' }
+                { text: '🇷🇺 Россия', callback_data: 'search_country:Россия' },
+                { text: '🇸🇬 Сингапур', callback_data: 'search_country:Сингапур' }
+            ],
+            [
+                { text: '🇬🇧 Великобритания', callback_data: 'search_country:Великобритания' }
+            ],
+            [
+                { text: '⌨️ Текстовый поиск', callback_data: 'search_text_init' }
             ]
         ]
     };
-    sendTelegramMessage(messageText, replyMarkup);
+    sendTelegramMessage(textMenu, replyMarkup);
 }
 
 // List all universities in Telegram
@@ -653,9 +673,27 @@ function processTelegramUpdate(update) {
             return;
         }
 
-        if (text === '/start' || text === '/menu') {
+        if (text === '/start' || text === '/menu' || text === '⚙️ Главное меню' || text === '« Назад в меню') {
             adminState.step = 'idle';
-            sendAdminMainMenu('Добро пожаловать в админ-панель управления THOTH! Пожалуйста, используйте кнопки меню ниже:');
+            sendAdminMainMenu('Добро пожаловать в админ-панель управления THOTH! Используйте кнопки клавиатуры ниже:');
+            return;
+        }
+
+        if (text.includes('Список ВУЗов') || text === '🏢 Список ВУЗов') {
+            adminState.step = 'idle';
+            sendTelegramUniversitiesList();
+            return;
+        }
+
+        if (text.includes('Новые заявки') || text === '📨 Новые заявки' || text.includes('Заявки')) {
+            adminState.step = 'idle';
+            sendTelegramPendingAccounts();
+            return;
+        }
+
+        if (text.includes('Поиск по странам') || text === '🔍 Поиск по странам') {
+            adminState.step = 'idle';
+            sendTelegramCountryMenu();
             return;
         }
 
@@ -1196,7 +1234,7 @@ app.post('/api/v1/universities/profile', (req, res) => {
         uni.scholarship_info = req.body.scholarship_info || '';
         uni.contact_info = req.body.contact_info || '';
         uni.photo = photo || '';
-        uni.status = 'pending_profile'; // Go back to pending validation
+        uni.status = 'approved'; // Instantly publish university
     } else {
         uni = {
             id: crypto.randomUUID(),
@@ -1221,7 +1259,7 @@ app.post('/api/v1/universities/profile', (req, res) => {
             scholarship_info: req.body.scholarship_info || '',
             contact_info: req.body.contact_info || '',
             photo: photo || '',
-            status: 'pending_profile',
+            status: 'approved',
             views: 0,
             created_at: new Date().toISOString()
         };

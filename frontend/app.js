@@ -2214,13 +2214,21 @@ async function handleWizardSubmit(e) {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload)
         });
-        const data = await res.json();
+        
+        let data = {};
+        const contentType = res.headers.get("content-type");
+        if (contentType && contentType.includes("application/json")) {
+            data = await res.json();
+        } else {
+            const rawText = await res.text();
+            throw new Error("Ошибка сервера при сохранении ВУЗа");
+        }
 
         if (!res.ok) {
             throw new Error(data.detail || "Ошибка сохранения профиля");
         }
 
-        showToast("🎉 Профиль университета успешно отправлен на модерацию!", "success");
+        showToast("🎉 Профиль университета успешно сохранен и опубликован!", "success");
         if (data.university) {
             myUniversity = data.university;
         }
