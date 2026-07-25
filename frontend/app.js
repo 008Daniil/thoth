@@ -1138,23 +1138,24 @@ function setupEventListeners() {
         updateMobileNavActive(hash);
     });
 
-    // Floating Mobile Bottom Nav Scroll Handler (Hide on scroll down, show on scroll up)
+    // Floating Mobile Bottom Nav Scroll Handler (YouTube Mobile Style)
     let lastScrollY = window.pageYOffset || document.documentElement.scrollTop;
     const mobileBottomNav = document.getElementById("mobile-bottom-nav");
 
     window.addEventListener("scroll", () => {
         const currentScrollY = window.pageYOffset || document.documentElement.scrollTop;
-        
-        if (mobileBottomNav && window.innerWidth <= 992) {
-            if (currentScrollY > lastScrollY + 10 && currentScrollY > 70) {
-                // Scrolling DOWN -> Hide bottom nav
-                mobileBottomNav.classList.add("nav-hidden");
-            } else if (currentScrollY < lastScrollY - 6 || currentScrollY <= 20) {
-                // Scrolling UP or near top -> Show bottom nav
-                mobileBottomNav.classList.remove("nav-hidden");
-            }
+        if (!mobileBottomNav) return;
+
+        const diff = currentScrollY - lastScrollY;
+
+        if (diff > 10 && currentScrollY > 50) {
+            // User scrolled DOWN -> Hide bottom nav smooth YouTube style
+            mobileBottomNav.classList.add("nav-hidden");
+        } else if (diff < -6 || currentScrollY <= 25) {
+            // User scrolled UP -> Show bottom nav
+            mobileBottomNav.classList.remove("nav-hidden");
         }
-        
+
         lastScrollY = currentScrollY <= 0 ? 0 : currentScrollY;
     }, { passive: true });
 
