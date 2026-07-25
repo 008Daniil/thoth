@@ -2929,7 +2929,7 @@ body.dark-theme .step-connector {
     #mobile-bottom-nav {
         display: flex !important;
         position: fixed !important;
-        bottom: 12px !important;
+        bottom: calc(12px + env(safe-area-inset-bottom, 0px)) !important;
         left: 12px !important;
         right: 12px !important;
         height: 64px !important;
