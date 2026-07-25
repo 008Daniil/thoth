@@ -2930,7 +2930,13 @@ body.dark-theme .step-connector {
     align-items: center !important;
     padding-bottom: env(safe-area-inset-bottom, 0px) !important;
     transition: transform 0.3s cubic-bezier(0.2, 0, 0, 1) !important;
-    transform: translateY(0) !important;
+    transform: translateY(0) translateZ(0) !important;
+    -webkit-transform: translateY(0) translateZ(0) !important;
+    will-change: transform !important;
+}
+
+body {
+    padding-bottom: 70px !important;
 }
 
 /* Hide ONLY on desktop wide screens > 1200px */
