@@ -2913,7 +2913,7 @@ body.dark-theme .step-connector {
         min-height: 44px;
     }
 
-/* Native YouTube Mobile Style Bottom Navigation Bar */
+/* Permanent Mobile Bottom Navigation Bar (Always Visible at Bottom) */
 #mobile-bottom-nav, .mobile-bottom-nav {
     display: flex !important;
     position: fixed !important;
@@ -2921,22 +2921,17 @@ body.dark-theme .step-connector {
     left: 0 !important;
     right: 0 !important;
     width: 100% !important;
-    height: 58px !important;
-    background: #090a0f !important;
+    height: 60px !important;
+    background: #000000 !important;
     color: #ffffff !important;
-    border-top: 1px solid rgba(255, 255, 255, 0.14) !important;
-    z-index: 99999999 !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.18) !important;
+    z-index: 999999999 !important;
     justify-content: space-around !important;
     align-items: center !important;
     padding-bottom: env(safe-area-inset-bottom, 0px) !important;
-    transition: transform 0.3s cubic-bezier(0.2, 0, 0, 1) !important;
-    transform: translateY(0) translateZ(0) !important;
-    -webkit-transform: translateY(0) translateZ(0) !important;
-    will-change: transform !important;
-}
-
-body {
-    padding-bottom: 70px !important;
+    transform: none !important;
+    opacity: 1 !important;
+    visibility: visible !important;
 }
 
 /* Hide ONLY on desktop wide screens > 1200px */
