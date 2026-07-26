@@ -162,15 +162,14 @@ function handleRoute() {
         }
     });
 
-    // Show/hide mobile bottom navigation menu and AI orientation FAB on student sections only
+    // Show/hide AI orientation FAB ONLY on the profile page
     const aiFab = document.getElementById("ai-orientation-fab");
-    if (page === "home" || page === "profile" || page === "university") {
-        document.body.classList.add("show-mobile-nav");
+    if (page === "profile") {
         if (aiFab) aiFab.style.display = "flex";
     } else {
-        document.body.classList.remove("show-mobile-nav");
         if (aiFab) aiFab.style.display = "none";
     }
+    document.body.classList.remove("show-mobile-nav"); // Remove mobile nav class everywhere
 
     // Load specific pages
     if (page === "home") {
@@ -3199,7 +3198,7 @@ function showOnboardingOverlay() {
     overlay.style.display = "flex";
     overlay.style.opacity = "1";
     
-    document.body.classList.remove("show-mobile-nav"); // Hide bottom nav on onboarding
+    document.body.classList.remove("show-mobile-nav");
     const aiFab = document.getElementById("ai-orientation-fab");
     if (aiFab) aiFab.style.display = "none";
     // Init Lucide icons in onboarding overlay if any
@@ -3215,13 +3214,14 @@ function hideOnboardingOverlay() {
         overlay.style.display = "none";
     }, 500);
 
-    // Restore bottom nav and AI fab if on student pages
+    // Restore AI fab ONLY if we ended up on the profile page
     const hash = window.location.hash.substring(1) || "home";
     const page = hash.split("/")[0];
-    if (page === "home" || page === "profile" || page === "university") {
-        document.body.classList.add("show-mobile-nav");
-        const aiFab = document.getElementById("ai-orientation-fab");
+    const aiFab = document.getElementById("ai-orientation-fab");
+    if (page === "profile") {
         if (aiFab) aiFab.style.display = "flex";
+    } else {
+        if (aiFab) aiFab.style.display = "none";
     }
 }
 
