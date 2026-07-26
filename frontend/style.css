@@ -317,7 +317,7 @@ body {
 
 .header-container {
     width: 100%;
-    max-width: 1200px;
+    max-width: none;
     margin: 0 auto;
     padding: 0 3rem;
     display: flex;
@@ -382,8 +382,8 @@ body {
 
 /* --- LAYOUT & SECTIONS --- */
 .app-content {
-    max-width: 1200px;
-    margin: 0 auto;
+    max-width: none;
+    margin: 0;
     padding: 2.5rem 3rem 6rem 3rem;
     min-height: calc(100vh - 150px);
 }
