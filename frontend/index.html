@@ -17,7 +17,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <!-- Main Style Sheet -->
-    <link rel="stylesheet" href="/frontend/style.css?v=17.0">
+    <link rel="stylesheet" href="/frontend/style.css?v=19.0">
 </head>
 <body>
 
@@ -383,8 +383,9 @@
 
             <!-- University Title & Location -->
             <div style="margin-bottom: 2rem;">
-                <h1 id="det-uni-name" style="font-family: var(--font-heading); font-size: 2.6rem; font-weight: 800; color: var(--text-primary); margin: 0 0 0.5rem 0; line-height: 1.2;">University Name</h1>
-                <p style="font-size: 1.05rem; color: var(--text-secondary); display: flex; align-items: center; gap: 0.4rem; margin: 0;">
+                <h1 id="det-uni-name" style="font-family: var(--font-heading); font-size: 2.6rem; font-weight: 800; color: var(--text-primary); margin: 0 0 0.4rem 0; line-height: 1.2;">University Name</h1>
+                <p id="det-uni-slogan" style="font-size: 1.05rem; color: var(--text-secondary); font-style: italic; margin: 0 0 0.5rem 0; display: none;"></p>
+                <p style="font-size: 1rem; color: var(--text-muted); display: flex; align-items: center; gap: 0.4rem; margin: 0;">
                     <i data-lucide="map-pin" style="width: 18px; height: 18px; color: var(--text-muted);"></i>
                     <span id="det-location-text">Tashkent, Uzbekistan</span>
                 </p>
@@ -1451,6 +1452,6 @@
     <script src="/frontend/grainient.js"></script>
     
     <!-- App Logic Script -->
-    <script src="/frontend/app.js?v=18.0"></script>
+    <script src="/frontend/app.js?v=19.0"></script>
 </body>
 </html>

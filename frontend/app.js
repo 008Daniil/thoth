@@ -1490,12 +1490,19 @@ async function loadUniversityDetails(id) {
             satElem.textContent = uni.min_sat ? `SAT ${uni.min_sat}+` : "SAT —";
         }
         
-        // 4. Cost Range / Price Tag
+        // 4. Cost Range / Price Tag (min - max)
         if (uni.specialties && uni.specialties.length > 0) {
             const fees = uni.specialties.map(s => parseFloat(s.tuition_fee)).filter(f => !isNaN(f));
             if (fees.length > 0) {
                 const minFee = Math.min(...fees);
-                document.getElementById("det-uni-price").textContent = `$${minFee.toLocaleString()}`;
+                const maxFee = Math.max(...fees);
+                const priceElem = document.getElementById("det-uni-price");
+                if (minFee === maxFee) {
+                    priceElem.textContent = `$${minFee.toLocaleString()}`;
+                } else {
+                    priceElem.textContent = `$${minFee.toLocaleString()} — $${maxFee.toLocaleString()}`;
+                    priceElem.style.fontSize = "1.6rem";
+                }
             } else {
                 document.getElementById("det-uni-price").textContent = "$1,500";
             }
@@ -3429,24 +3436,17 @@ function renderUniversityAdvantages(uni, containerId, isPreview = false) {
             card.style.textAlign = "left";
             card.style.display = "flex";
             card.style.flexDirection = "column";
-            card.style.gap = "0.75rem";
+            card.style.gap = "0.5rem";
             card.style.borderRadius = "12px";
             card.style.border = "1px solid var(--card-border)";
             card.style.background = "var(--bg-accent)";
 
-            const iconName = getAdvIcon(adv.title);
-
             card.innerHTML = `
-                <div style="width: 40px; height: 40px; border-radius: 50%; background: rgba(255, 255, 255, 0.06); border: 1px solid var(--card-border); display: flex; align-items: center; justify-content: center; color: var(--text-primary);">
-                    <i data-lucide="${iconName}" style="width: 20px; height: 20px;"></i>
-                </div>
                 <h4 style="margin: 0; font-size: 1.1rem; font-weight: 700; color: var(--text-primary);">${adv.title}</h4>
                 <p style="margin: 0; font-size: 0.9rem; color: var(--text-secondary); line-height: 1.5;">${adv.desc || ''}</p>
             `;
             container.appendChild(card);
         });
-        // Render newly added Lucide icons
-        setTimeout(() => lucide.createIcons(), 50);
     }
 }
 
