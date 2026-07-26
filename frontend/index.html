@@ -17,7 +17,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <!-- Main Style Sheet -->
-    <link rel="stylesheet" href="/frontend/style.css?v=10.0">
+    <link rel="stylesheet" href="/frontend/style.css?v=11.0">
 </head>
 <body>
 
@@ -370,115 +370,108 @@
 
         <!-- 2. UNIVERSITY DETAIL PAGE -->
         <section id="page-university" class="page-section">
-            <button class="btn btn-back" id="back-to-home-btn">
+            <button class="btn btn-back" id="back-to-home-btn" style="margin-bottom: 2rem;">
                 <i data-lucide="arrow-left"></i> Назад к списку
             </button>
 
-            <!-- E-commerce Layout Grid -->
-            <div class="wb-product-container">
-                
-                <!-- Left Column: Gallery, Price Card, Specs -->
-                <div class="wb-product-gallery-side">
-                    <!-- Academic Style Banner / Cover -->
-                    <div class="wb-product-banner academic-banner-style">
-                        <div class="banner-overlay"></div>
-                        <div class="banner-content">
-                            <span class="banner-tag">OFFICIAL PROFILE</span>
-                            <span class="banner-alias" id="det-uni-alias">UNI</span>
-                        </div>
-                    </div>
+            <!-- cover image top span -->
+            <div class="wb-product-banner academic-banner-style" style="border-radius: 20px; margin-bottom: 2rem; height: 380px; position: relative; overflow: hidden; background-size: cover; background-position: center; border: 1px solid var(--card-border);">
+                <div class="banner-overlay" style="background: linear-gradient(to top, rgba(0,0,0,0.6) 0%, transparent 100%);"></div>
+                <div class="banner-content" style="position: absolute; bottom: 1.5rem; left: 1.5rem;">
+                    <span class="banner-alias" id="det-uni-alias" style="display: none; font-size: 4rem; font-weight: 900; color: rgba(255,255,255,0.15);">UNI</span>
+                </div>
+            </div>
 
-                    <!-- Price Card ("Buy" Box) -->
-                    <div class="wb-price-card glass-card">
-                        <div class="wb-price-row">
-                            <span class="price-label">Стоимость обучения</span>
-                            <h2 class="price-value" id="det-uni-price">от $3,000 / год</h2>
+            <!-- University Title & Location -->
+            <div style="margin-bottom: 2rem;">
+                <h1 id="det-uni-name" style="font-family: var(--font-heading); font-size: 2.6rem; font-weight: 800; color: var(--text-primary); margin: 0 0 0.5rem 0; line-height: 1.2;">University Name</h1>
+                <p style="font-size: 1.05rem; color: var(--text-secondary); display: flex; align-items: center; gap: 0.4rem; margin: 0;">
+                    <i data-lucide="map-pin" style="width: 18px; height: 18px; color: var(--text-muted);"></i>
+                    <span id="det-location-text">Tashkent, Uzbekistan</span>
+                </p>
+            </div>
+
+            <!-- Two Column Grid -->
+            <div class="uni-details-layout-grid">
+                
+                <!-- Left Side: Quick Facts & Tuition Card -->
+                <div class="uni-details-sidebar" style="display: flex; flex-direction: column; gap: 1.5rem;">
+                    
+                    <!-- Quick Facts Card -->
+                    <div class="wb-specs-card glass-card" style="padding: 1.5rem; border-radius: 16px; border: 1px solid var(--card-border); background: var(--card-bg);">
+                        <h3 style="font-size: 1.2rem; font-weight: 700; color: var(--text-primary); margin: 0 0 1.25rem 0;">Quick Facts</h3>
+                        <div class="wb-specs-list" style="display: flex; flex-direction: column; gap: 1rem;">
+                            <div class="wb-spec-item" style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--card-border); padding-bottom: 0.75rem;">
+                                <span class="wb-spec-name" style="color: var(--text-secondary); font-size: 0.95rem; display: flex; align-items: center; gap: 0.5rem;"><i data-lucide="globe" style="width:16px; height:16px; color: var(--text-muted);"></i> Country</span>
+                                <span class="wb-spec-value" id="det-spec-country" style="font-weight: 600; color: var(--text-primary); font-size: 0.95rem;">Uzbekistan</span>
+                            </div>
+                            <div class="wb-spec-item" style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--card-border); padding-bottom: 0.75rem;">
+                                <span class="wb-spec-name" style="color: var(--text-secondary); font-size: 0.95rem; display: flex; align-items: center; gap: 0.5rem;"><i data-lucide="building" style="width:16px; height:16px; color: var(--text-muted);"></i> City</span>
+                                <span class="wb-spec-value" id="det-spec-city" style="font-weight: 600; color: var(--text-primary); font-size: 0.95rem;">Tashkent</span>
+                            </div>
+                            <div class="wb-spec-item" style="display: flex; justify-content: space-between; padding-bottom: 0.5rem;">
+                                <span class="wb-spec-name" style="color: var(--text-secondary); font-size: 0.95rem; display: flex; align-items: center; gap: 0.5rem;"><i data-lucide="link-2" style="width:16px; height:16px; color: var(--text-muted);"></i> Website</span>
+                                <a href="#" target="_blank" class="wb-spec-value link" id="det-spec-website" style="font-weight: 600; color: var(--text-primary); text-decoration: none; font-size: 0.95rem;">wiut.uz</a>
+                            </div>
                         </div>
                         
-                        <div class="wb-fast-apply-badge">
-                            <i data-lucide="zap" style="color: var(--primary);"></i>
-                            <span>Мгновенная подача через Digital ID</span>
+                        <div style="margin-top: 1.5rem; border-top: 1px solid var(--card-border); padding-top: 1.25rem;">
+                            <span style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 0.75rem; letter-spacing: 0.05em; text-transform: uppercase;">Requirements</span>
+                            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                                <span style="font-size: 0.8rem; font-weight: 600; color: var(--text-primary); background: var(--bg-accent); border: 1px solid var(--card-border); padding: 0.35rem 0.65rem; border-radius: 8px;" id="det-spec-ielts">IELTS 6.0+</span>
+                                <span style="font-size: 0.8rem; font-weight: 600; color: var(--text-primary); background: var(--bg-accent); border: 1px solid var(--card-border); padding: 0.35rem 0.65rem; border-radius: 8px;" id="det-spec-sat">SAT 1200+</span>
+                            </div>
                         </div>
-
-                        <button class="btn btn-primary btn-full apply-now-btn" style="padding: 1rem; font-size: 1.1rem; font-weight: 600; margin-top: 1.25rem;">
-                            Подать документы
-                        </button>
                     </div>
 
-                    <!-- Specifications Table -->
-                    <div class="wb-specs-card glass-card">
-                        <h3>Характеристики ВУЗа</h3>
-                        <div class="wb-specs-list">
-                            <div class="wb-spec-item">
-                                <span class="wb-spec-name">Страна</span>
-                                <span class="wb-spec-value" id="det-spec-country">Швейцария</span>
-                            </div>
-                            <div class="wb-spec-item">
-                                <span class="wb-spec-name">Город</span>
-                                <span class="wb-spec-value" id="det-spec-city">Женева</span>
-                            </div>
-                            <div class="wb-spec-item">
-                                <span class="wb-spec-name">Сайт</span>
-                                <a href="#" target="_blank" class="wb-spec-value link" id="det-spec-website">website.edu</a>
-                            </div>
-                            <div class="wb-spec-item">
-                                <span class="wb-spec-name">IELTS</span>
-                                <span class="wb-spec-value" id="det-spec-ielts">6.5</span>
-                            </div>
-                            <div class="wb-spec-item">
-                                <span class="wb-spec-name">SAT</span>
-                                <span class="wb-spec-value" id="det-spec-sat">1200</span>
-                            </div>
+                    <!-- Tuition Cost Card -->
+                    <div class="wb-price-card glass-card" style="padding: 1.5rem; border-radius: 16px; border: 1px solid var(--card-border); background: var(--card-bg);">
+                        <span style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); display: flex; align-items: center; gap: 0.4rem; letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 0.5rem;">
+                            <i data-lucide="wallet" style="width: 14px; height: 14px;"></i> Tuition Cost
+                        </span>
+                        <div style="display: flex; align-items: baseline; gap: 0.35rem; margin-bottom: 1.25rem;">
+                            <h2 id="det-uni-price" style="font-size: 2.2rem; font-weight: 800; color: var(--text-primary); margin: 0;">$3,000</h2>
+                            <span style="color: var(--text-secondary); font-size: 0.95rem;">/ year</span>
                         </div>
+                        <button class="btn btn-primary btn-full apply-now-btn" style="width: 100%; height: 48px; border-radius: 12px; font-weight: 700; font-size: 1rem; background: #ffffff !important; color: #000000 !important; border: none; transition: transform 0.2s ease, opacity 0.2s ease;">
+                            Apply Now
+                        </button>
                     </div>
                 </div>
 
-                <!-- Right Column: Slogan, Description, Advantages, Specialties Selection -->
-                <div class="wb-product-info-side">
-                    <!-- Title & Slogan Section -->
-                    <div class="wb-title-card glass-card">
-                        <span class="badge badge-success">Верифицирован приемной комиссией</span>
-                        <h1 id="det-uni-name" style="font-family: var(--font-heading); font-size: 2.5rem; margin-top: 0.5rem; margin-bottom: 0.5rem; line-height: 1.2;">Aetheris Global University</h1>
-                        <p class="wb-slogan" id="det-uni-slogan">Создаем будущее, объединяя таланты со всего мира</p>
+                <!-- Right Side: About, Advantages, Specialties -->
+                <div class="uni-details-content" style="display: flex; flex-direction: column; gap: 2rem;">
+                    
+                    <!-- About Institution -->
+                    <div>
+                        <h3 style="font-size: 1.35rem; font-weight: 700; color: var(--text-primary); margin: 0 0 1rem 0; padding-bottom: 0.5rem; border-bottom: 1px solid var(--card-border);">About Institution</h3>
+                        <p id="det-uni-desc" style="font-size: 1.02rem; color: var(--text-secondary); line-height: 1.6; margin: 0;">Description text...</p>
                     </div>
 
-                    <!-- Description Card -->
-                    <div class="wb-desc-card glass-card">
-                        <h3>Описание университета</h3>
-                        <p id="det-uni-desc">Aetheris Global University объединяет передовую научную инфраструктуру и лучших преподавателей планеты. Мы стремимся создать экосистему, где таланты со всего мира могут создавать прорывные продукты и проводить фундаментальные исследования. Учебный план строится на проектной работе и гибких траекториях обучения.</p>
-                    </div>
-
-                    <!-- Grants & Scholarships Section -->
-                    <div class="wb-grants-section" id="det-grants-section" style="margin-top: 2rem;">
-                        <div class="glass-card" style="border: 1px solid var(--card-border); background: var(--card-bg); padding: 1.5rem; border-radius: 16px;">
-                            <h3 style="color: var(--text-primary); margin-bottom: 1.25rem; font-size: 1.25rem; font-weight: 700;">
-                                Гранты и стипендиальные программы
-                            </h3>
-                            <div id="det-grants-scholarships-content" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.25rem;">
-                                <!-- Dynamic Grant & Scholarship Cards loaded by JS -->
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Advantages Grid (3 Cards) -->
-                    <div class="wb-advantages-section" style="margin-top: 2rem;">
-                        <h3>Ключевые преимущества</h3>
-                        <div class="wb-advantages-grid" id="det-advantages-container">
+                    <!-- Key Advantages -->
+                    <div class="wb-advantages-section">
+                        <h3 style="font-size: 1.35rem; font-weight: 700; color: var(--text-primary); margin: 0 0 1.25rem 0; padding-bottom: 0.5rem; border-bottom: 1px solid var(--card-border);">Key Advantages</h3>
+                        <div class="wb-advantages-grid" id="det-advantages-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.25rem;">
                             <!-- Populated dynamically by JS -->
                         </div>
                     </div>
 
-                    <!-- Specialties Selection Grid (Options/Sizes selector) -->
-                    <div class="wb-specialties-selection glass-card">
-                        <h3>Выберите направление обучения</h3>
-                        <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1.25rem;">Ознакомьтесь с доступными программами обучения и стоимостью за академический год:</p>
-                        
-                        <div class="wb-spec-grid" id="det-specialties-grid">
-                            <!-- Specialties options loaded dynamically here -->
+                    <!-- Majors & Programs (Specialties) -->
+                    <div class="wb-specialties-selection">
+                        <h3 style="font-size: 1.35rem; font-weight: 700; color: var(--text-primary); margin: 0 0 1.25rem 0; padding-bottom: 0.5rem; border-bottom: 1px solid var(--card-border);">Majors & Programs</h3>
+                        <div id="det-specialties-grid" style="display: flex; flex-wrap: wrap; gap: 0.75rem;">
+                            <!-- Populated dynamically by JS as clean tags/pills to match screenshot! -->
+                        </div>
+                    </div>
+
+                    <!-- Grants & Scholarships Section -->
+                    <div class="wb-grants-section" id="det-grants-section" style="display: none; margin-top: 1rem;">
+                        <h3 style="font-size: 1.35rem; font-weight: 700; color: var(--text-primary); margin: 0 0 1.25rem 0; padding-bottom: 0.5rem; border-bottom: 1px solid var(--card-border);">Гранты и стипендиальные программы</h3>
+                        <div id="det-grants-scholarships-content" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.25rem;">
+                            <!-- Dynamic Grant & Scholarship Cards loaded by JS -->
                         </div>
                     </div>
                 </div>
-
             </div>
         </section>
 
@@ -1459,6 +1452,6 @@
     <script src="/frontend/grainient.js"></script>
     
     <!-- App Logic Script -->
-    <script src="/frontend/app.js?v=10.0"></script>
+    <script src="/frontend/app.js?v=11.0"></script>
 </body>
 </html>

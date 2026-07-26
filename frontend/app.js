@@ -1442,6 +1442,11 @@ async function loadUniversityDetails(id) {
         document.getElementById("det-spec-country").textContent = uni.country;
         document.getElementById("det-spec-city").textContent = uni.city;
         
+        const locText = document.getElementById("det-location-text");
+        if (locText) {
+            locText.textContent = `${uni.city}, ${uni.country}`;
+        }
+        
         const websiteLink = document.getElementById("det-spec-website");
         if (uni.website) {
             websiteLink.textContent = uni.website.replace("https://", "").replace("http://", "").split("/")[0];
@@ -1469,18 +1474,18 @@ async function loadUniversityDetails(id) {
         if (ieltsScores.length > 0) {
             const minIelts = Math.min(...ieltsScores);
             const maxIelts = Math.max(...ieltsScores);
-            ieltsElem.textContent = minIelts === maxIelts ? `${minIelts}` : `${minIelts} - ${maxIelts}`;
+            ieltsElem.textContent = minIelts === maxIelts ? `IELTS ${minIelts}+` : `IELTS ${minIelts} - ${maxIelts}`;
         } else {
-            ieltsElem.textContent = uni.min_ielts ? `${uni.min_ielts}` : "—";
+            ieltsElem.textContent = uni.min_ielts ? `IELTS ${uni.min_ielts}+` : "IELTS —";
         }
 
         const satElem = document.getElementById("det-spec-sat");
         if (satScores.length > 0) {
             const minSat = Math.min(...satScores);
             const maxSat = Math.max(...satScores);
-            satElem.textContent = minSat === maxSat ? `${minSat}` : `${minSat} - ${maxSat}`;
+            satElem.textContent = minSat === maxSat ? `SAT ${minSat}+` : `SAT ${minSat} - ${maxSat}`;
         } else {
-            satElem.textContent = uni.min_sat ? `${uni.min_sat}` : "—";
+            satElem.textContent = uni.min_sat ? `SAT ${uni.min_sat}+` : "SAT —";
         }
         
         // 4. Cost Range / Price Tag
@@ -1488,15 +1493,15 @@ async function loadUniversityDetails(id) {
             const fees = uni.specialties.map(s => parseFloat(s.tuition_fee)).filter(f => !isNaN(f));
             if (fees.length > 0) {
                 const minFee = Math.min(...fees);
-                document.getElementById("det-uni-price").textContent = `от $${minFee.toLocaleString()}/год`;
+                document.getElementById("det-uni-price").textContent = `$${minFee.toLocaleString()}`;
             } else {
-                document.getElementById("det-uni-price").textContent = "от $1,500/год";
+                document.getElementById("det-uni-price").textContent = "$1,500";
             }
         } else {
-            document.getElementById("det-uni-price").textContent = "от $1,500/год";
+            document.getElementById("det-uni-price").textContent = "$1,500";
         }
         
-        // 5. Advantages (Dynamic, monochrome, no icons)
+        // 5. Advantages
         renderUniversityAdvantages(uni, "det-advantages-container", false);
 
         // 5.5. Grants & Scholarships Section
@@ -1566,64 +1571,23 @@ async function loadUniversityDetails(id) {
             }
         }
         
-        // 6. Specialties Grid Rendering (Wildberries options layout)
+        // 6. Specialties Tags Rendering (Majors & Programs)
         const specGrid = document.getElementById("det-specialties-grid");
         specGrid.innerHTML = "";
         
         if (uni.specialties && uni.specialties.length > 0) {
             uni.specialties.forEach(spec => {
-                const card = document.createElement("div");
-                card.className = "wb-spec-option glass-card";
-                
-                const tuitionDisplay = spec.tuition_fee ? `$${parseInt(spec.tuition_fee).toLocaleString("ru-RU")}/год` : "Цена на модерации";
-                const reqsDisplay = spec.min_requirements && spec.min_requirements.trim() ? spec.min_requirements : "Стандартные условия приёма (IELTS / Аттестат)";
-                const langDisplay = spec.language || "Английский / Русский";
-                const formatDisplay = spec.format || "Очный (Дневной)";
-                const durationDisplay = spec.duration || "4 года (Бакалавриат)";
-                const hasGrantBadge = (spec.has_grant || uni.has_grant) ? `<span style="display: inline-flex; align-items: center; font-size: 0.75rem; font-weight: 600; color: var(--text-primary); background: var(--bg-accent); border: 1px solid var(--card-border); padding: 0.2rem 0.5rem; border-radius: 6px; margin-top: 0.35rem;">Доступен грант</span>` : "";
-
-                card.innerHTML = `
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; width: 100%;">
-                        <div>
-                            <h4 style="font-family: var(--font-heading); font-size: 1.15rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.25rem;">${spec.name}</h4>
-                        </div>
-                        <button class="btn btn-primary btn-sm" style="flex-shrink: 0;">Подать документы</button>
-                    </div>
-
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 1rem; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--card-border);">
-                        <div>
-                            <span style="font-size: 0.75rem; color: var(--text-secondary); display: block;">Форма обучения</span>
-                            <strong style="font-size: 0.85rem; color: var(--text-primary);">${formatDisplay}</strong>
-                        </div>
-                        <div>
-                            <span style="font-size: 0.75rem; color: var(--text-secondary); display: block;">Срок обучения</span>
-                            <strong style="font-size: 0.85rem; color: var(--text-primary);">${durationDisplay}</strong>
-                        </div>
-                        <div>
-                            <span style="font-size: 0.75rem; color: var(--text-secondary); display: block;">Язык обучения</span>
-                            <strong style="font-size: 0.85rem; color: var(--text-primary);">${langDisplay}</strong>
-                        </div>
-                        <div>
-                            <span style="font-size: 0.75rem; color: var(--text-secondary); display: block;">Стоимость обучения</span>
-                            <strong style="font-size: 0.9rem; color: var(--primary);">${tuitionDisplay}</strong>
-                            ${hasGrantBadge}
-                        </div>
-                    </div>
-
-                    <div style="margin-top: 0.85rem; padding-top: 0.85rem; border-top: 1px dashed var(--card-border);">
-                        <span style="font-size: 0.75rem; color: var(--text-secondary); display: block; margin-bottom: 0.2rem;">Требования для поступления</span>
-                        <p style="font-size: 0.85rem; font-weight: 500; color: var(--text-primary); margin: 0;">${reqsDisplay}</p>
-                    </div>
-                `;
-                
-                card.onclick = () => {
+                const tag = document.createElement("span");
+                tag.className = "wb-spec-tag";
+                tag.textContent = spec.name;
+                tag.style.cursor = "pointer";
+                tag.onclick = () => {
                     openQuickApplyModal(uni.id, uni.name, spec.id);
                 };
-                
-                specGrid.appendChild(card);
+                specGrid.appendChild(tag);
             });
         } else {
-            specGrid.innerHTML = `<div style="grid-column: 1 / -1; color: var(--text-secondary); text-align: center; padding: 2rem;">Специальности пока не добавлены или находятся на модерации.</div>`;
+            specGrid.innerHTML = `<span style="color: var(--text-secondary); font-size: 0.95rem;">Специальности пока не добавлены или находятся на модерации.</span>`;
         }
 
         // Bind details page button
@@ -3424,7 +3388,17 @@ function syncWizardLivePreview() {
     }
 }
 
-// Render dynamic filled advantages in student view (no icons, pure monochrome)
+function getAdvIcon(title) {
+    const t = (title || "").toLowerCase();
+    if (t.includes("english") || t.includes("английск") || t.includes("язык")) return "message-square";
+    if (t.includes("uk") || t.includes("аккредит") || t.includes("accreditation") || t.includes("диплом") || t.includes("международ")) return "graduation-cap";
+    if (t.includes("scholarship") || t.includes("стипенд") || t.includes("грант") || t.includes("merit") || t.includes("скидк")) return "award";
+    if (t.includes("career") || t.includes("трудоустро") || t.includes("работ") || t.includes("центр")) return "briefcase";
+    if (t.includes("campus") || t.includes("кампус") || t.includes("здан") || t.includes("инфраструктур")) return "building";
+    return "check-circle";
+}
+
+// Render dynamic filled advantages in student view (vector icons, pure monochrome circular border wrapper)
 function renderUniversityAdvantages(uni, containerId, isPreview = false) {
     const container = document.getElementById(containerId);
     if (!container) return;
@@ -3449,14 +3423,28 @@ function renderUniversityAdvantages(uni, containerId, isPreview = false) {
         advs.forEach(adv => {
             const card = document.createElement("div");
             card.className = "wb-adv-card glass-card";
-            card.style.padding = "1rem 1.25rem";
+            card.style.padding = "1.5rem";
             card.style.textAlign = "left";
+            card.style.display = "flex";
+            card.style.flexDirection = "column";
+            card.style.gap = "0.75rem";
+            card.style.borderRadius = "12px";
+            card.style.border = "1px solid var(--card-border)";
+            card.style.background = "var(--bg-accent)";
+
+            const iconName = getAdvIcon(adv.title);
+
             card.innerHTML = `
-                <h4 style="margin: 0; font-size: 1.05rem; font-weight: 600; color: var(--primary);">${adv.title}</h4>
-                <p style="margin: 0.4rem 0 0 0; font-size: 0.85rem; color: var(--text-secondary); line-height: 1.4;">${adv.desc || ''}</p>
+                <div style="width: 40px; height: 40px; border-radius: 50%; background: rgba(255, 255, 255, 0.06); border: 1px solid var(--card-border); display: flex; align-items: center; justify-content: center; color: var(--text-primary);">
+                    <i data-lucide="${iconName}" style="width: 20px; height: 20px;"></i>
+                </div>
+                <h4 style="margin: 0; font-size: 1.1rem; font-weight: 700; color: var(--text-primary);">${adv.title}</h4>
+                <p style="margin: 0; font-size: 0.9rem; color: var(--text-secondary); line-height: 1.5;">${adv.desc || ''}</p>
             `;
             container.appendChild(card);
         });
+        // Render newly added Lucide icons
+        setTimeout(() => lucide.createIcons(), 50);
     }
 }
 

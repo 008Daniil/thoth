@@ -3009,4 +3009,51 @@ body.dark-theme .step-connector {
     color: #000000;
 }
 
+/* Premium University Details Two-Column Layout */
+.uni-details-layout-grid {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    gap: 3rem;
+    align-items: start;
+}
+
+@media (max-width: 992px) {
+    .uni-details-layout-grid {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+    }
+}
+
+.uni-details-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.uni-details-content {
+    display: flex;
+    flex-direction: column;
+    gap: 2.5rem;
+}
+
+/* Majors and Programs Tags */
+.wb-spec-tag {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.6rem 1.2rem;
+    font-size: 0.92rem;
+    font-weight: 500;
+    color: var(--text-primary);
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--card-border);
+    border-radius: 8px;
+    transition: background 0.2s ease, border-color 0.2s ease;
+    cursor: default;
+}
+
+.wb-spec-tag:hover {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.25);
+}
+
 
