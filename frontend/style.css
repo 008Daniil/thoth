@@ -317,9 +317,9 @@ body {
 
 .header-container {
     width: 100%;
-    max-width: 100%;
+    max-width: 1200px;
     margin: 0 auto;
-    padding: 0 4rem;
+    padding: 0 3rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -382,7 +382,7 @@ body {
 
 /* --- LAYOUT & SECTIONS --- */
 .app-content {
-    max-width: 1560px;
+    max-width: 1200px;
     margin: 0 auto;
     padding: 2.5rem 3rem 6rem 3rem;
     min-height: calc(100vh - 150px);
@@ -831,8 +831,8 @@ body.dark-theme .price-range-display {
 /* --- UNIVERSITY CARDS --- */
 .uni-grid {
     display: grid;
-    grid-template-columns: 1fr;
-    gap: 3rem;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 2rem;
 }
 
 .uni-card {
