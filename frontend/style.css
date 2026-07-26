@@ -2912,6 +2912,7 @@ body.dark-theme .step-connector {
     .btn {
         min-height: 44px;
     }
+}
 
 /* Permanent Mobile Bottom Navigation Bar (Visible only when show-mobile-nav is active on body) */
 #mobile-bottom-nav, .mobile-bottom-nav {
