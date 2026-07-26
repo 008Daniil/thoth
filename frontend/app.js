@@ -834,7 +834,7 @@ function setupEventListeners() {
     const startWizardBtn = document.getElementById("start-wizard-btn");
     if (startWizardBtn) {
         startWizardBtn.addEventListener("click", () => {
-            openWizard(false); // false = new profile
+            openWYSIWYGEditor();
         });
     }
 
@@ -842,7 +842,7 @@ function setupEventListeners() {
     const editProfileBtn = document.getElementById("dash-edit-profile-btn");
     if (editProfileBtn) {
         editProfileBtn.addEventListener("click", () => {
-            openWizard(true); // true = edit
+            openWYSIWYGEditor();
         });
     }
 
@@ -3749,4 +3749,384 @@ async function sendAiUserMessage(overrideText = null) {
         isAiLoading = false;
     }
 }
+
+/* --- PARTNER WYSIWYG EDITOR IMPLEMENTATION --- */
+function openWYSIWYGEditor() {
+    document.getElementById("partner-no-profile-view").style.display = "none";
+    document.getElementById("partner-dashboard-view").style.display = "none";
+    document.getElementById("partner-wizard-view").style.display = "none";
+    document.getElementById("page-partner-editor").style.display = "block";
+
+    // Setup initial variables
+    if (myUniversity) {
+        document.getElementById("editor-name").innerText = myUniversity.name || "";
+        document.getElementById("editor-slogan").innerText = myUniversity.slogan || "";
+        document.getElementById("editor-description").innerText = myUniversity.description || "";
+        document.getElementById("editor-country").value = myUniversity.country || "";
+        document.getElementById("editor-city").value = myUniversity.city || "";
+        document.getElementById("editor-website").value = myUniversity.website || "";
+
+        const hasGrantBox = document.getElementById("editor-has-grant");
+        const grantInfoInput = document.getElementById("editor-grant-info");
+        const hasSchBox = document.getElementById("editor-has-scholarship");
+        const schInfoInput = document.getElementById("editor-scholarship-info");
+
+        if (hasGrantBox) hasGrantBox.checked = myUniversity.has_grant !== false;
+        if (grantInfoInput) grantInfoInput.value = myUniversity.grant_info || "";
+        if (hasSchBox) hasSchBox.checked = myUniversity.has_scholarship !== false;
+        if (schInfoInput) schInfoInput.value = myUniversity.scholarship_info || "";
+
+        // Load advantages
+        currentAdvantages = [];
+        if (myUniversity.adv_1_title) currentAdvantages.push({ title: myUniversity.adv_1_title, desc: myUniversity.adv_1_desc || "" });
+        if (myUniversity.adv_2_title) currentAdvantages.push({ title: myUniversity.adv_2_title, desc: myUniversity.adv_2_desc || "" });
+        if (myUniversity.adv_3_title) currentAdvantages.push({ title: myUniversity.adv_3_title, desc: myUniversity.adv_3_desc || "" });
+
+        // Load photo / banner
+        wizardPhotoBase64 = myUniversity.photo || "";
+        const bannerDiv = document.getElementById("editor-banner-div");
+        if (wizardPhotoBase64) {
+            bannerDiv.style.backgroundImage = `url('${wizardPhotoBase64}')`;
+        } else {
+            bannerDiv.style.backgroundImage = "none";
+        }
+
+        // Load specialties
+        currentSpecialties = myUniversity.specialties ? JSON.parse(JSON.stringify(myUniversity.specialties)) : [];
+    } else {
+        document.getElementById("editor-name").innerText = "";
+        document.getElementById("editor-slogan").innerText = "";
+        document.getElementById("editor-description").innerText = "";
+        document.getElementById("editor-country").value = "";
+        document.getElementById("editor-city").value = "";
+        document.getElementById("editor-website").value = "";
+        document.getElementById("editor-has-grant").checked = false;
+        document.getElementById("editor-grant-info").value = "";
+        document.getElementById("editor-has-scholarship").checked = false;
+        document.getElementById("editor-scholarship-info").value = "";
+        
+        wizardPhotoBase64 = "";
+        document.getElementById("editor-banner-div").style.backgroundImage = "none";
+        currentAdvantages = [];
+        currentSpecialties = [];
+    }
+
+    renderEditorAdvantages();
+    renderEditorSpecialties();
+    lucide.createIcons();
+}
+
+function renderEditorAdvantages() {
+    const container = document.getElementById("editor-advantages-container");
+    container.innerHTML = "";
+    currentAdvantages.forEach((adv, idx) => {
+        const row = document.createElement("div");
+        row.className = "editor-adv-row";
+        row.innerHTML = `
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+                <strong style="font-size:0.9rem;color:var(--primary);">Преимущество #${idx+1}</strong>
+                <button type="button" class="btn-link remove-adv-btn" data-idx="${idx}" style="color:#ff4d4f;border:none;background:none;cursor:pointer;font-size:0.85rem;">Удалить</button>
+            </div>
+            <input type="text" class="editor-spec-input adv-title-input" value="${adv.title || ''}" placeholder="Заголовок преимущества (например: 100% гранты)">
+            <textarea class="editor-spec-input adv-desc-input" rows="2" placeholder="Описание преимущества...">${adv.desc || ''}</textarea>
+        `;
+        container.appendChild(row);
+        
+        row.querySelector(".adv-title-input").addEventListener("input", (e) => {
+            currentAdvantages[idx].title = e.target.value;
+        });
+        row.querySelector(".adv-desc-input").addEventListener("input", (e) => {
+            currentAdvantages[idx].desc = e.target.value;
+        });
+        row.querySelector(".remove-adv-btn").addEventListener("click", () => {
+            currentAdvantages.splice(idx, 1);
+            renderEditorAdvantages();
+        });
+    });
+    document.getElementById("editor-add-adv-btn").style.display = currentAdvantages.length >= 3 ? "none" : "inline-block";
+}
+
+function renderEditorSpecialties() {
+    const container = document.getElementById("editor-specialties-container");
+    container.innerHTML = "";
+    currentSpecialties.forEach((spec, idx) => {
+        if (!spec.reqTags) {
+            spec.reqTags = spec.min_requirements ? spec.min_requirements.split(",").map(s => s.trim()).filter(Boolean) : ["IELTS 6.0"];
+        }
+        const row = document.createElement("div");
+        row.className = "editor-spec-row";
+        
+        const tagsHtml = spec.reqTags.map((tag, tIdx) => `
+            <span class="req-tag-chip" style="display: inline-flex; align-items: center; gap: 0.35rem; background: var(--card-bg); border: 1px solid var(--card-border); padding: 0.25rem 0.6rem; border-radius: 8px; font-size: 0.85rem; font-weight: 500;">
+                ${tag}
+                <button type="button" class="editor-remove-tag-btn" data-tag-idx="${tIdx}" style="background: none; border: none; cursor: pointer; color: var(--text-secondary); font-size: 1rem; line-height: 1; padding: 0 2px;">&times;</button>
+            </span>
+        `).join("");
+
+        row.innerHTML = `
+            <div class="editor-spec-header">
+                <strong style="color:var(--primary);font-size:0.95rem;">Специальность #${idx+1}</strong>
+                <button type="button" class="btn-link delete-spec-btn" style="color:#ff4d4f;border:none;background:none;cursor:pointer;font-size:0.85rem;">Удалить</button>
+            </div>
+            <div class="editor-spec-grid">
+                <div class="editor-spec-field">
+                    <label>Название направления</label>
+                    <input type="text" class="editor-spec-input spec-name" value="${spec.name || ''}" placeholder="Например: Бизнес администрирование">
+                </div>
+                <div class="editor-spec-field">
+                    <label>Стоимость ($ / год)</label>
+                    <input type="number" class="editor-spec-input spec-fee" value="${spec.tuition_fee || ''}" placeholder="4000">
+                </div>
+                <div class="editor-spec-field">
+                    <label>Форма обучения</label>
+                    <select class="editor-spec-input spec-format">
+                        <option value="Очный (Дневной)" ${(spec.format === 'Очный (Дневной)' || !spec.format) ? 'selected' : ''}>Очный (Дневной)</option>
+                        <option value="Дистанционный (Онлайн)" ${spec.format === 'Дистанционный (Онлайн)' ? 'selected' : ''}>Дистанционный (Онлайн)</option>
+                        <option value="Заочный" ${spec.format === 'Заочный' ? 'selected' : ''}>Заочный</option>
+                        <option value="Вечерний" ${spec.format === 'Вечерний' ? 'selected' : ''}>Вечерний</option>
+                        <option value="Гибридный" ${spec.format === 'Гибридный' ? 'selected' : ''}>Гибридный</option>
+                    </select>
+                </div>
+            </div>
+            <div class="editor-spec-grid" style="margin-top: -0.5rem;">
+                <div class="editor-spec-field">
+                    <label>Срок обучения</label>
+                    <input type="text" class="editor-spec-input spec-duration" value="${spec.duration || '4 года (Бакалавриат)'}">
+                </div>
+                <div class="editor-spec-field">
+                    <label>Язык обучения</label>
+                    <input type="text" class="editor-spec-input spec-language" value="${spec.language || 'Английский / Русский'}">
+                </div>
+            </div>
+            
+            <!-- Requirements Tag Editor -->
+            <div style="background:var(--card-bg);padding:1rem;border-radius:8px;border:1px dashed var(--card-border);display:flex;flex-direction:column;gap:0.5rem;">
+                <label style="font-size:0.8rem;font-weight:700;color:var(--text-primary);">Минимальные требования к абитуриенту</label>
+                <div class="editor-tags-list" style="display:flex;flex-wrap:wrap;gap:0.5rem;">
+                    ${tagsHtml || '<span style="font-size:0.8rem;color:var(--text-muted);">Требования не добавлены</span>'}
+                </div>
+                
+                <div style="display: flex; gap: 0.5rem; margin-top: 0.35rem;">
+                    <input type="text" class="editor-new-req-input editor-spec-input" placeholder="Введите новое требование (например: IELTS 6.5)..." style="flex: 1;">
+                    <button type="button" class="editor-add-tag-btn btn btn-outline btn-sm" style="white-space: nowrap;">+ Добавить</button>
+                </div>
+            </div>
+        `;
+        container.appendChild(row);
+
+        // Event Listeners for inputs
+        row.querySelector(".spec-name").addEventListener("input", (e) => { spec.name = e.target.value; });
+        row.querySelector(".spec-fee").addEventListener("input", (e) => { spec.tuition_fee = e.target.value; });
+        row.querySelector(".spec-format").addEventListener("change", (e) => { spec.format = e.target.value; });
+        row.querySelector(".spec-duration").addEventListener("input", (e) => { spec.duration = e.target.value; });
+        row.querySelector(".spec-language").addEventListener("input", (e) => { spec.language = e.target.value; });
+        
+        // Remove specialty
+        row.querySelector(".delete-spec-btn").addEventListener("click", () => {
+            currentSpecialties.splice(idx, 1);
+            renderEditorSpecialties();
+        });
+
+        // Add requirements tag
+        const newReqInput = row.querySelector(".editor-new-req-input");
+        const addTagBtn = row.querySelector(".editor-add-tag-btn");
+        const confirmAddTag = () => {
+            const val = newReqInput.value.trim();
+            if (val) {
+                spec.reqTags.push(val);
+                spec.min_requirements = spec.reqTags.join(", ");
+                newReqInput.value = "";
+                renderEditorSpecialties();
+            }
+        };
+        addTagBtn.addEventListener("click", confirmAddTag);
+        newReqInput.addEventListener("keypress", (e) => {
+            if (e.key === "Enter") {
+                e.preventDefault();
+                confirmAddTag();
+            }
+        });
+
+        // Remove requirements tag
+        row.querySelectorAll(".editor-remove-tag-btn").forEach(btn => {
+            btn.addEventListener("click", (e) => {
+                const tagIdx = parseInt(e.target.dataset.tagIdx);
+                spec.reqTags.splice(tagIdx, 1);
+                spec.min_requirements = spec.reqTags.join(", ");
+                renderEditorSpecialties();
+            });
+        });
+    });
+}
+
+async function saveWYSIWYGData() {
+    const nameVal = document.getElementById("editor-name").innerText.trim();
+    const sloganVal = document.getElementById("editor-slogan").innerText.trim();
+    const descriptionVal = document.getElementById("editor-description").innerText.trim();
+    const countryVal = document.getElementById("editor-country").value.trim();
+    const cityVal = document.getElementById("editor-city").value.trim();
+    const websiteVal = document.getElementById("editor-website").value.trim();
+    const hasGrant = document.getElementById("editor-has-grant").checked;
+    const grantInfo = document.getElementById("editor-grant-info").value.trim();
+    const hasScholarship = document.getElementById("editor-has-scholarship").checked;
+    const scholarshipInfo = document.getElementById("editor-scholarship-info").value.trim();
+
+    if (!nameVal || !countryVal || !cityVal) {
+        showToast("Пожалуйста, заполните название университета, страну и город", "danger");
+        return;
+    }
+
+    if (!currentSpecialties || currentSpecialties.length === 0) {
+        showToast("Пожалуйста, добавьте хотя бы одну специальность", "danger");
+        return;
+    }
+
+    const hasEmpty = currentSpecialties.some(s => !s.name || !s.name.trim() || !s.tuition_fee);
+    if (hasEmpty) {
+        showToast("Заполните название и стоимость для всех специальностей", "danger");
+        return;
+    }
+
+    // Auto-calculate IELTS and SAT
+    let calcIelts = [];
+    let calcSat = [];
+    currentSpecialties.forEach(s => {
+        if (s.min_requirements) {
+            const mI = s.min_requirements.match(/IELTS\s*([0-9\.]+)/i);
+            if (mI) calcIelts.push(parseFloat(mI[1]));
+            const mS = s.min_requirements.match(/SAT\s*([0-9]+)/i);
+            if (mS) calcSat.push(parseInt(mS[1]));
+        }
+    });
+
+    const payload = {
+        partner_id: currentPartner ? currentPartner.id : "partner-default",
+        name: nameVal,
+        country: countryVal,
+        city: cityVal,
+        website: websiteVal,
+        description: descriptionVal,
+        min_ielts: calcIelts.length > 0 ? Math.min(...calcIelts) : null,
+        min_sat: calcSat.length > 0 ? Math.min(...calcSat) : null,
+        slogan: sloganVal,
+        contact_info: myUniversity ? myUniversity.contact_info : "",
+        adv_1_title: currentAdvantages[0] ? currentAdvantages[0].title.trim() : "",
+        adv_1_desc: currentAdvantages[0] ? currentAdvantages[0].desc.trim() : "",
+        adv_2_title: currentAdvantages[1] ? currentAdvantages[1].title.trim() : "",
+        adv_2_desc: currentAdvantages[1] ? currentAdvantages[1].desc.trim() : "",
+        adv_3_title: currentAdvantages[2] ? currentAdvantages[2].title.trim() : "",
+        adv_3_desc: currentAdvantages[2] ? currentAdvantages[2].desc.trim() : "",
+        has_grant: hasGrant,
+        grant_info: grantInfo,
+        has_scholarship: hasScholarship,
+        scholarship_info: scholarshipInfo,
+        photo: wizardPhotoBase64,
+        specialties: currentSpecialties
+    };
+
+    try {
+        const saveBtn = document.getElementById("editor-save-btn");
+        saveBtn.disabled = true;
+        saveBtn.innerHTML = '<i data-lucide="loader" class="btn-icon animate-spin"></i> Сохранение...';
+        lucide.createIcons();
+
+        const res = await fetch(`${API_BASE}/api/v1/universities/profile`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+        });
+        
+        let data = {};
+        const contentType = res.headers.get("content-type");
+        if (contentType && contentType.includes("application/json")) {
+            data = await res.json();
+        } else {
+            throw new Error("Ошибка сервера при сохранении ВУЗа");
+        }
+
+        if (!res.ok) {
+            throw new Error(data.detail || "Ошибка сохранения профиля");
+        }
+
+        showToast("🎉 Профиль университета успешно сохранен и опубликован!", "success");
+        if (data.university) {
+            myUniversity = data.university;
+        }
+
+        document.getElementById("page-partner-editor").style.display = "none";
+        document.getElementById("partner-cabinet-block").style.display = "block";
+        document.getElementById("partner-dashboard-view").style.display = "block";
+        renderPartnerCabinet();
+    } catch (err) {
+        showToast(err.message || "Ошибка отправки профиля", "danger");
+    } finally {
+        const saveBtn = document.getElementById("editor-save-btn");
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = '<i data-lucide="save" class="btn-icon"></i> Сохранить изменения';
+        lucide.createIcons();
+    }
+}
+
+// Global Event Listeners setup for WYSIWYG editor elements
+document.addEventListener("DOMContentLoaded", () => {
+    const bannerUpload = document.getElementById("editor-banner-upload");
+    const bannerDiv = document.getElementById("editor-banner-div");
+    if (bannerDiv && bannerUpload) {
+        bannerDiv.addEventListener("click", () => {
+            bannerUpload.click();
+        });
+        bannerUpload.addEventListener("change", (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    wizardPhotoBase64 = event.target.result;
+                    bannerDiv.style.backgroundImage = `url('${wizardPhotoBase64}')`;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    }
+
+    const cancelBtn = document.getElementById("editor-cancel-btn");
+    if (cancelBtn) {
+        cancelBtn.addEventListener("click", () => {
+            document.getElementById("page-partner-editor").style.display = "none";
+            document.getElementById("partner-cabinet-block").style.display = "block";
+            document.getElementById("partner-dashboard-view").style.display = "block";
+        });
+    }
+
+    const saveBtn = document.getElementById("editor-save-btn");
+    if (saveBtn) {
+        saveBtn.addEventListener("click", saveWYSIWYGData);
+    }
+
+    const addAdvBtn = document.getElementById("editor-add-adv-btn");
+    if (addAdvBtn) {
+        addAdvBtn.addEventListener("click", () => {
+            if (currentAdvantages.length < 3) {
+                currentAdvantages.push({ title: "", desc: "" });
+                renderEditorAdvantages();
+            }
+        });
+    }
+
+    const addSpecBtn = document.getElementById("editor-add-spec-btn");
+    if (addSpecBtn) {
+        addSpecBtn.addEventListener("click", () => {
+            currentSpecialties.push({
+                name: "",
+                tuition_fee: "",
+                min_requirements: "IELTS 6.0",
+                reqTags: ["IELTS 6.0"],
+                format: "Очный (Дневной)",
+                duration: "4 года (Бакалавриат)",
+                language: "Английский / Русский"
+            });
+            renderEditorSpecialties();
+        });
+    }
+});
+
 

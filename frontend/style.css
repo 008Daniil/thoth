@@ -3041,4 +3041,172 @@ body.dark-theme .step-connector {
     border-color: rgba(255, 255, 255, 0.25);
 }
 
+/* WYSIWYG Partner Editor Styles */
+.editor-mode-bar {
+    position: sticky;
+    top: 80px;
+    z-index: 100;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(26, 15, 20, 0.95);
+    border: 1px solid var(--primary);
+    box-shadow: 0 4px 20px rgba(102, 2, 60, 0.2);
+    border-radius: 12px;
+    padding: 0.85rem 1.5rem;
+    margin-bottom: 2rem;
+    backdrop-filter: blur(10px);
+}
+.editor-mode-bar-left {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.95rem;
+    color: var(--text-primary);
+    font-weight: 500;
+}
+.editor-mode-bar-right {
+    display: flex;
+    gap: 0.75rem;
+}
+.editable-field {
+    border: 1px dashed transparent;
+    padding: 4px 8px;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    outline: none;
+}
+.editable-field:hover {
+    border-color: var(--primary);
+    background: rgba(255, 255, 255, 0.03);
+}
+.editable-field:focus {
+    border-color: var(--primary);
+    background: rgba(255, 255, 255, 0.05);
+    box-shadow: 0 0 0 2px rgba(102, 2, 60, 0.2);
+}
+.editable-field[data-placeholder]:empty:before {
+    content: attr(data-placeholder);
+    color: var(--text-muted);
+}
+.editor-h1 {
+    font-family: var(--font-heading);
+    font-size: 2.6rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    line-height: 1.2;
+}
+.editor-slogan-text {
+    font-size: 1.05rem;
+    color: var(--text-secondary);
+    font-style: italic;
+}
+.editor-description-text {
+    font-size: 0.95rem;
+    line-height: 1.5;
+    color: var(--text-secondary);
+}
+.editor-input-inline {
+    background: transparent;
+    border: 1px dashed rgba(255, 255, 255, 0.15);
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    font-family: inherit;
+    padding: 4px 8px;
+    border-radius: 6px;
+    width: 140px;
+    text-align: right;
+    outline: none;
+    transition: border-color 0.2s;
+}
+.editor-input-inline:hover, .editor-input-inline:focus {
+    border-color: var(--primary);
+    background: rgba(255, 255, 255, 0.03);
+}
+.editor-textarea {
+    width: 100%;
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid var(--card-border);
+    color: var(--text-primary);
+    border-radius: 8px;
+    padding: 0.6rem;
+    font-family: inherit;
+    font-size: 0.9rem;
+    outline: none;
+    resize: vertical;
+}
+.editor-textarea:focus {
+    border-color: var(--primary);
+}
+.editor-banner-hint {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.4);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    color: #fff;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+#editor-banner-div:hover .editor-banner-hint {
+    opacity: 1;
+}
+.editor-spec-row {
+    background: var(--bg-accent);
+    border: 1px solid var(--card-border);
+    border-radius: 12px;
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+.editor-spec-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.editor-spec-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+}
+.editor-spec-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+.editor-spec-field label {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    font-weight: 600;
+}
+.editor-spec-input {
+    background: rgba(0, 0, 0, 0.25);
+    border: 1px solid var(--card-border);
+    color: var(--text-primary);
+    padding: 0.5rem;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    outline: none;
+}
+.editor-spec-input:focus {
+    border-color: var(--primary);
+}
+.editor-adv-row {
+    background: var(--bg-accent);
+    border: 1px solid var(--card-border);
+    border-radius: 12px;
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+
 

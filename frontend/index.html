@@ -17,7 +17,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <!-- Main Style Sheet -->
-    <link rel="stylesheet" href="/frontend/style.css?v=19.0">
+    <link rel="stylesheet" href="/frontend/style.css?v=21.0">
 </head>
 <body>
 
@@ -1182,6 +1182,141 @@
         </section>
 
 
+        <!-- 5. PARTNER WYSIWYG EDITOR PAGE -->
+        <section id="page-partner-editor" class="page-section" style="display:none;">
+            <!-- Edit Mode Bar -->
+            <div class="editor-mode-bar" id="editor-mode-bar">
+                <div class="editor-mode-bar-left">
+                    <i data-lucide="edit-3" style="width:18px;height:18px;color:var(--primary);"></i>
+                    <span>Режим редактирования — изменения видны только вам</span>
+                </div>
+                <div class="editor-mode-bar-right">
+                    <button class="btn btn-outline btn-sm" id="editor-cancel-btn">
+                        <i data-lucide="x" class="btn-icon"></i>Отмена
+                    </button>
+                    <button class="btn btn-primary btn-sm" id="editor-save-btn">
+                        <i data-lucide="save" class="btn-icon"></i>Сохранить изменения
+                    </button>
+                </div>
+            </div>
+
+            <!-- Hidden file input for banner -->
+            <input type="file" id="editor-banner-upload" accept="image/*" style="display:none;">
+            <!-- Hidden file input for card photo -->
+            <input type="file" id="editor-photo-upload" accept="image/*" style="display:none;">
+
+            <!-- Banner (clickable to change photo) -->
+            <div id="editor-banner-div"
+                 class="wb-product-banner academic-banner-style"
+                 style="border-radius:20px; margin-bottom:2rem; height:380px; position:relative; overflow:hidden; background-size:cover; background-position:center; border:1px solid var(--card-border); cursor:pointer;"
+                 title="Нажмите чтобы изменить фото баннера">
+                <div class="editor-banner-hint">
+                    <i data-lucide="camera" style="width:28px;height:28px;"></i>
+                    <span>Нажмите чтобы изменить фото</span>
+                </div>
+            </div>
+
+            <!-- Title + Slogan -->
+            <div style="margin-bottom:2rem;">
+                <div contenteditable="true" id="editor-name"
+                     class="editable-field editor-h1"
+                     data-placeholder="Название университета">University Name</div>
+                <div contenteditable="true" id="editor-slogan"
+                     class="editable-field editor-slogan-text"
+                     data-placeholder="Слоган университета (необязательно)"></div>
+            </div>
+
+            <!-- Two Column Grid (same as student view) -->
+            <div class="uni-details-layout-grid">
+
+                <!-- Left Sidebar -->
+                <div class="uni-details-sidebar" style="display:flex;flex-direction:column;gap:1.5rem;">
+
+                    <!-- Quick Facts Card -->
+                    <div class="wb-specs-card glass-card" style="padding:1.5rem;border-radius:16px;border:1px solid var(--card-border);background:var(--card-bg);">
+                        <h3 style="font-size:1.1rem;font-weight:700;margin-bottom:1.25rem;color:var(--text-primary);">Характеристики</h3>
+                        <div class="wb-specs-list" style="display:flex;flex-direction:column;gap:0.9rem;">
+                            <div class="wb-spec-item">
+                                <span class="wb-spec-name">Страна</span>
+                                <input class="editor-input-inline" id="editor-country" type="text" placeholder="Страна">
+                            </div>
+                            <div class="wb-spec-item">
+                                <span class="wb-spec-name">Город</span>
+                                <input class="editor-input-inline" id="editor-city" type="text" placeholder="Город">
+                            </div>
+                            <div class="wb-spec-item">
+                                <span class="wb-spec-name">Сайт</span>
+                                <input class="editor-input-inline" id="editor-website" type="text" placeholder="https://...">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tuition Card -->
+                    <div class="wb-price-card glass-card" style="padding:1.5rem;border-radius:16px;border:1px solid var(--card-border);background:var(--card-bg);">
+                        <span style="font-size:0.8rem;font-weight:600;letter-spacing:0.05em;color:var(--text-muted);text-transform:uppercase;">Стоимость обучения</span>
+                        <div style="font-size:0.85rem;color:var(--text-secondary);margin-top:0.5rem;">Рассчитывается автоматически из специальностей</div>
+                        <button type="button" class="btn btn-primary btn-full" style="margin-top:1rem;pointer-events:none;opacity:0.6;">Подать документы</button>
+                    </div>
+                </div>
+
+                <!-- Right Main Content -->
+                <div style="display:flex;flex-direction:column;gap:2rem;">
+
+                    <!-- About -->
+                    <div class="glass-card" style="padding:1.75rem;border-radius:16px;border:1px solid var(--card-border);">
+                        <h3 style="font-size:1.2rem;font-weight:700;margin-bottom:1rem;color:var(--text-primary);">Об университете</h3>
+                        <div contenteditable="true" id="editor-description"
+                             class="editable-field editor-description-text"
+                             data-placeholder="Описание университета..."></div>
+                    </div>
+
+                    <!-- Key Advantages -->
+                    <div class="glass-card" style="padding:1.75rem;border-radius:16px;border:1px solid var(--card-border);">
+                        <h3 style="font-size:1.2rem;font-weight:700;margin-bottom:1.25rem;color:var(--text-primary);">Ключевые преимущества</h3>
+                        <div id="editor-advantages-container" style="display:flex;flex-direction:column;gap:1rem;"></div>
+                        <button type="button" id="editor-add-adv-btn" class="btn btn-outline btn-sm" style="margin-top:1rem;">
+                            <i data-lucide="plus" class="btn-icon"></i>Добавить преимущество
+                        </button>
+                    </div>
+
+                    <!-- Specialties -->
+                    <div class="glass-card" style="padding:1.75rem;border-radius:16px;border:1px solid var(--card-border);">
+                        <h3 style="font-size:1.2rem;font-weight:700;margin-bottom:1.25rem;color:var(--text-primary);">Направления и программы</h3>
+                        <div id="editor-specialties-container" style="display:flex;flex-direction:column;gap:0.75rem;"></div>
+                        <button type="button" id="editor-add-spec-btn" class="btn btn-outline btn-sm" style="margin-top:1rem;">
+                            <i data-lucide="plus" class="btn-icon"></i>Добавить специальность
+                        </button>
+                    </div>
+
+                    <!-- Grants & Scholarships -->
+                    <div class="glass-card" style="padding:1.75rem;border-radius:16px;border:1px solid var(--card-border);">
+                        <h3 style="font-size:1.2rem;font-weight:700;margin-bottom:1.25rem;color:var(--text-primary);">Гранты и стипендии</h3>
+                        <div style="display:flex;flex-direction:column;gap:1rem;">
+                            <div style="background:var(--bg-accent);border-radius:12px;padding:1.25rem;border:1px solid var(--card-border);">
+                                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem;">
+                                    <strong style="font-size:0.9rem;">Грант на обучение</strong>
+                                    <label style="font-size:0.8rem;cursor:pointer;display:flex;align-items:center;gap:0.4rem;">
+                                        <input type="checkbox" id="editor-has-grant"> Доступен
+                                    </label>
+                                </div>
+                                <textarea id="editor-grant-info" class="editor-textarea" rows="2" placeholder="Условия получения гранта..."></textarea>
+                            </div>
+                            <div style="background:var(--bg-accent);border-radius:12px;padding:1.25rem;border:1px solid var(--card-border);">
+                                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem;">
+                                    <strong style="font-size:0.9rem;">Академическая стипендия</strong>
+                                    <label style="font-size:0.8rem;cursor:pointer;display:flex;align-items:center;gap:0.4rem;">
+                                        <input type="checkbox" id="editor-has-scholarship"> Доступна
+                                    </label>
+                                </div>
+                                <textarea id="editor-scholarship-info" class="editor-textarea" rows="2" placeholder="Условия получения стипендии..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
     </main>
 
     <!-- Footer -->
@@ -1448,6 +1583,6 @@
     <script src="/frontend/grainient.js"></script>
     
     <!-- App Logic Script -->
-    <script src="/frontend/app.js?v=20.0"></script>
+    <script src="/frontend/app.js?v=21.0"></script>
 </body>
 </html>
