@@ -1365,7 +1365,7 @@ async function openQuickApplyModal(uniId, uniName, preselectedSpecId = null, def
             specs.forEach(spec => {
                 const opt = document.createElement("option");
                 opt.value = spec.id;
-                const feeStr = spec.tuition_fee ? ` — ${Number(spec.tuition_fee).toLocaleString("ru-RU")} сум/год` : "";
+                const feeStr = spec.tuition_fee ? ` — $${Number(spec.tuition_fee).toLocaleString("ru-RU")}/год` : "";
                 opt.textContent = `${spec.name}${feeStr}`;
                 if (preselectedSpecId && spec.id === preselectedSpecId) {
                     opt.selected = true;
@@ -1573,7 +1573,7 @@ async function loadUniversityDetails(id) {
                 const card = document.createElement("div");
                 card.className = "wb-spec-option glass-card";
                 
-                const tuitionDisplay = spec.tuition_fee ? `${parseInt(spec.tuition_fee).toLocaleString("ru-RU")} сум/год` : "Цена на модерации";
+                const tuitionDisplay = spec.tuition_fee ? `$${parseInt(spec.tuition_fee).toLocaleString("ru-RU")}/год` : "Цена на модерации";
                 const reqsDisplay = spec.min_requirements && spec.min_requirements.trim() ? spec.min_requirements : "Стандартные условия приёма (IELTS / Аттестат)";
                 const langDisplay = spec.language || "Английский / Русский";
                 const formatDisplay = spec.format || "Очный (Дневной)";
