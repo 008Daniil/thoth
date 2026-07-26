@@ -1274,10 +1274,10 @@ function renderUniversityCards(list) {
             <div class="uni-card-body">
                 <h3 class="uni-card-title">${uni.name}</h3>
                 <p class="uni-card-location"><i data-lucide="map-pin"></i> ${uni.city || 'Кампус'}, ${uni.country || 'Страна'}</p>
+                ${uni.slogan ? `<p style="font-size: 0.9rem; color: var(--text-secondary); font-style: italic; margin: 0.25rem 0 0.5rem 0; line-height: 1.4;">${uni.slogan}</p>` : ''}
                 <p class="uni-card-description">${uni.description || 'Официальный партнер THOTH.'}</p>
                 
                 <div class="uni-card-footer">
-                    <span class="uni-stat"><i data-lucide="globe"></i> ${uni.website || 'Нет сайта'}</span>
                     <div class="uni-card-actions">
                         <button class="btn btn-outline btn-sm" id="view-${uni.id}">Подробнее</button>
                         <button class="btn btn-primary btn-sm" id="apply-${uni.id}">Подать документы</button>
