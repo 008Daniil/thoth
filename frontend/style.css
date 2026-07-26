@@ -2913,9 +2913,9 @@ body.dark-theme .step-connector {
         min-height: 44px;
     }
 
-/* Permanent Mobile Bottom Navigation Bar (Always Visible at Bottom) */
+/* Permanent Mobile Bottom Navigation Bar (Visible only when show-mobile-nav is active on body) */
 #mobile-bottom-nav, .mobile-bottom-nav {
-    display: flex !important;
+    display: none !important; /* Hidden by default */
     position: fixed !important;
     bottom: 0 !important;
     left: 0 !important;
@@ -2934,10 +2934,10 @@ body.dark-theme .step-connector {
     visibility: visible !important;
 }
 
-/* Hide ONLY on desktop wide screens > 1200px */
-@media (min-width: 1201px) {
-    #mobile-bottom-nav, .mobile-bottom-nav {
-        display: none !important;
+@media (max-width: 1200px) {
+    body.show-mobile-nav #mobile-bottom-nav, 
+    body.show-mobile-nav .mobile-bottom-nav {
+        display: flex !important;
     }
 }
 

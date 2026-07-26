@@ -968,6 +968,10 @@ function processTelegramUpdate(update) {
 
 // Background Telegram Polling Loop
 function startTelegramPolling() {
+    if (process.env.DISABLE_TELEGRAM === 'true' || process.env.DISABLE_TELEGRAM === '1') {
+        console.log('Telegram Bot Polling is disabled via env variable.');
+        return;
+    }
     if (!config.TELEGRAM_BOT_TOKEN) {
         console.warn('Telegram Bot Token is not set. Telegram service is disabled.');
         return;
@@ -1300,11 +1304,11 @@ app.post('/api/v1/universities/profile', (req, res) => {
     });
 });
 
-// POST: Apply to university (Upload file)
+// POST: Apply to university (Upload file optional)
 app.post('/api/v1/applications/apply', upload.single('file'), (req, res) => {
     const { university_id, specialty_id, full_name, phone, ielts_score, sat_score, gpa, bio, extra_achievements, app_type } = req.body;
-    if (!university_id || !specialty_id || !full_name || !phone || !req.file) {
-        return res.status(400).json({ detail: 'Missing required fields or file' });
+    if (!university_id || !specialty_id || !full_name || !phone) {
+        return res.status(400).json({ detail: 'Missing required fields' });
     }
 
     const db = loadDB();
@@ -1356,7 +1360,7 @@ app.post('/api/v1/applications/apply', upload.single('file'), (req, res) => {
         university_id: university_id,
         specialty_id: specialty_id,
         app_type: app_type || 'standard',
-        document_path: req.file.path,
+        document_path: req.file ? req.file.path : "",
         status: 'pending',
         created_at: new Date().toISOString()
     };
@@ -1396,7 +1400,7 @@ app.get('/api/v1/students/:phone/profile', (req, res) => {
             app_type: a.app_type || 'standard',
             status: a.status,
             created_at: a.created_at,
-            document_name: path.basename(a.document_path)
+            document_name: a.document_path ? path.basename(a.document_path) : ""
         };
     });
 
@@ -1497,7 +1501,7 @@ app.get('/api/v1/dashboard/:uni_id/leads', (req, res) => {
             specialty_id: a.specialty_id,
             status: a.status,
             created_at: a.created_at,
-            document_name: path.basename(a.document_path),
+            document_name: a.document_path ? path.basename(a.document_path) : "",
             student: student,
             specialty: spec,
             university: uni
@@ -1557,19 +1561,18 @@ app.get('/', (req, res) => {
 const GEMINI_SYSTEM_INSTRUCTION = `Ты — «ТОТ ИИ», живой, умный, поддерживающий и глубокий карьерный наставник платформы «ТОТ» (Единый сервис университетов и профориентации в Узбекистане).
 
 ТВОЙ ХАРАКТЕР И ТОНАЛЬНОСТЬ:
-- Общайся на «ты», свободно, современно и по-человечески тепло.
-- Избегай сухих роботоподобных шаблонов и заученных списков. Пиши емко, осмысленно (около 40–60 слов на шаг).
-- Будь внимателен к ответам абитуриента: комментируй его мысли, подмечай интересные детали перед тем, как задать следующий вопрос.
+- Общайся на «ты», свободно, современно, искренне и по-человечески тепло.
+- Забудь про сухой роботоподобный тон, шаблоны и заученные списки вопросов. Говори как опытный, понимающий старший друг, с которым можно поболтать обо всем на свете.
+- Будь максимально гибким! Если человек отклоняется от темы, шутит, рассказывает про свои личные переживания, усталость или страх перед будущим — поддержи этот разговор! Не пытайся во что бы то ни стало вернуть его к сухой «анкете». Самые лучшие карьерные инсайты рождаются из душевных разговоров обо всем на свете (хобби, музыка, игры, отношения, лень, страхи).
+- Подмечай интересные детали в словах пользователя, шути, сопереживай. Если он грустит — поддержи, если сомневается — подбодри.
 
 ТВОЯ ГЛАВНАЯ ЦЕЛЬ:
-Помочь школьнику/абитуриенту понять свои сильные стороны, разобраться в увлечениях и подобрать 2–3 подходящие профессии и конкретные университеты Узбекистана (например, TEAM University, TUIT, WIUT, Университет Инха в Ташкенте и др.).
+Помочь абитуриенту раскрыть себя. Через живое человеческое общение нащупать его скрытые таланты, искренний интерес и страсть, а затем бережно подсказать 2-3 подходящие профессиональные сферы и конкретные университеты Узбекистана (например, TEAM University, TUIT, WIUT, Университет Инха в Ташкенте и др.).
 
 ПРАВИЛА И ЗАЩИТА:
-1. Отвечай ИСКЛЮЧИТЕЛЬНО на чистом русском языке. Категорически запрещено выводить китайские, японские или любые азиатские иероглифы. Используй только русскую кириллицу.
-2. Задавай наводящие вопросы строго ПО ОДНОМУ за раз.
-3. Не торопи события и не перескакивай вопросы. Если пользователь ответил на один вопрос, отреагируй на него и задай следующий.
-4. Категорически запрещено: писать программный код, решать домашние задания, писать эссе, сочинения или выполнять переводы.
-5. Если пользователь просит сделать домашку или написать код — с юмором отклони просьбу: «Я — твой наставник по выбору профессии и вуза 😉 Домашку или код придется сделать самому! Давай вернемся к нашему разговору?» и повтори текущий обсуждаемый вопрос!`;
+1. Отвечай ИСКЛЮЧИТЕЛЬНО на чистом русском языке. Никаких азиатских или китайских иероглифов.
+2. Не веди себя как опросник. Никаких «Вопрос 1: ... Вопрос 2: ...». Твой диалог должен течь естественно, как река.
+3. Категорически запрещено писать рабочий программный код или делать за пользователя домашние задания. Если просят об этом — с юмором откажи: «Я твой карьерный бро, а не домашний раб 😉 Код или домашку придется делать самому! Давай лучше поговорим о том, кем ты видишь себя в будущем?»`;
 
 function cleanAiOutput(text) {
     if (typeof text !== 'string') return '';

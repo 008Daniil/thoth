@@ -162,6 +162,13 @@ function handleRoute() {
         }
     });
 
+    // Show/hide mobile bottom navigation menu on student sections only
+    if (page === "home" || page === "profile" || page === "university") {
+        document.body.classList.add("show-mobile-nav");
+    } else {
+        document.body.classList.remove("show-mobile-nav");
+    }
+
     // Load specific pages
     if (page === "home") {
         document.getElementById("page-home").classList.add("active");
@@ -473,13 +480,6 @@ function setupEventListeners() {
                 return;
             }
 
-            if (!file) {
-                showToast("Пожалуйста, прикрепите скан аттестата или паспорта", "danger");
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = `<i data-lucide="send" class="btn-icon"></i>Отправить документы в ВУЗ`;
-                return;
-            }
-
             const appTypeElem = document.getElementById("quick-apply-app-type");
             const appType = appTypeElem ? appTypeElem.value : "standard";
 
@@ -491,7 +491,7 @@ function setupEventListeners() {
             formData.append("app_type", appType);
             if (ielts) formData.append("ielts_score", ielts);
             if (gpa) formData.append("gpa", gpa);
-            formData.append("file", file);
+            if (file) formData.append("file", file);
 
             try {
                 const res = await fetch(`${API_BASE}/api/v1/applications/apply`, {
@@ -1939,13 +1939,6 @@ async function handleApplicationSubmit(e) {
     submitBtn.innerHTML = `<i data-lucide="loader" class="btn-icon animate-spin"></i> Передача документов...`;
     lucide.createIcons();
 
-    if (!file) {
-        showToast("Пожалуйста, прикрепите скан аттестата или сертификата", "danger");
-        submitBtn.disabled = false;
-        updateProfileFormUI();
-        return;
-    }
-
     const formData = new FormData();
     formData.append("university_id", uniId);
     formData.append("specialty_id", specId);
@@ -1956,7 +1949,7 @@ async function handleApplicationSubmit(e) {
     if (gpa) formData.append("gpa", gpa);
     if (bio) formData.append("bio", bio);
     if (achievements) formData.append("extra_achievements", achievements);
-    formData.append("file", file);
+    if (file) formData.append("file", file);
 
     try {
         const res = await fetch(`${API_BASE}/api/v1/applications/apply`, {
@@ -3203,6 +3196,7 @@ function showOnboardingOverlay() {
     overlay.style.display = "flex";
     overlay.style.opacity = "1";
     
+    document.body.classList.remove("show-mobile-nav"); // Hide bottom nav on onboarding
     // Init Lucide icons in onboarding overlay if any
     lucide.createIcons();
 }
@@ -3215,6 +3209,13 @@ function hideOnboardingOverlay() {
     setTimeout(() => {
         overlay.style.display = "none";
     }, 500);
+
+    // Restore bottom nav if on student pages
+    const hash = window.location.hash.substring(1) || "home";
+    const page = hash.split("/")[0];
+    if (page === "home" || page === "profile" || page === "university") {
+        document.body.classList.add("show-mobile-nav");
+    }
 }
 
 function initStudentSession() {
