@@ -1407,12 +1407,14 @@ async function loadUniversityDetails(id) {
         document.getElementById("det-uni-name").textContent = uni.name;
         
         const sloganElem = document.getElementById("det-uni-slogan");
-        if (uni.slogan && uni.slogan.trim()) {
-            sloganElem.textContent = uni.slogan.trim();
-            sloganElem.style.display = "block";
-        } else {
-            sloganElem.textContent = "";
-            sloganElem.style.display = "none";
+        if (sloganElem) {
+            if (uni.slogan && uni.slogan.trim()) {
+                sloganElem.textContent = uni.slogan.trim();
+                sloganElem.style.display = "block";
+            } else {
+                sloganElem.textContent = "";
+                sloganElem.style.display = "none";
+            }
         }
         
         // Alias generation (first letters of words, e.g. MIT)
