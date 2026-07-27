@@ -1288,7 +1288,8 @@ app.post('/api/v1/universities/profile', (req, res) => {
                 duration: spec.duration || '4 года (Бакалавриат)',
                 has_grant: spec.has_grant === true || spec.has_grant === 'true' || false,
                 min_requirements: spec.min_requirements || '',
-                description: spec.description || ''
+                category: spec.category || '',
+                detail: spec.detail || { about: '', disciplines: '', career: '' }
             });
         });
     }

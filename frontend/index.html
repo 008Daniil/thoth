@@ -17,7 +17,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <!-- Main Style Sheet -->
-    <link rel="stylesheet" href="/frontend/style.css?v=29.0">
+    <link rel="stylesheet" href="/frontend/style.css?v=30.0">
 </head>
 <body>
 
@@ -1577,12 +1577,85 @@
         </div>
     </div>
 
+    <!-- ====== SPEC DETAIL MODAL ====== -->
+    <div id="spec-detail-modal" style="display:none; position:fixed; inset:0; z-index:9000; background:var(--bg); overflow-y:auto;">
+        <div style="max-width:900px; margin:0 auto; padding:2rem 1.5rem 4rem;">
+            <!-- Top bar -->
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2rem;">
+                <button id="spec-modal-back-btn" class="btn btn-back">
+                    <i data-lucide="arrow-left"></i> Назад
+                </button>
+                <!-- Save button only visible in edit mode -->
+                <button id="spec-modal-save-btn" class="btn btn-primary" style="display:none;">
+                    <i data-lucide="save" class="btn-icon"></i>Сохранить описание
+                </button>
+            </div>
+
+            <!-- Category badge + title -->
+            <div style="margin-bottom:0.5rem;">
+                <span id="spec-modal-category-badge" style="font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;background:var(--card-bg);border:1px solid var(--card-border);padding:0.3rem 0.8rem;border-radius:20px;color:var(--text-secondary);"></span>
+            </div>
+            <h1 id="spec-modal-name" style="font-size:2rem;font-weight:800;color:var(--text-primary);margin:0.5rem 0;font-family:var(--font-heading);"></h1>
+
+            <!-- Meta row -->
+            <div id="spec-modal-meta" style="display:flex;flex-wrap:wrap;gap:1rem;margin:1rem 0 1.5rem;color:var(--text-secondary);font-size:0.9rem;"></div>
+
+            <!-- Requirements chips -->
+            <div id="spec-modal-reqs" style="display:flex;flex-wrap:wrap;gap:0.5rem;margin-bottom:2rem;"></div>
+
+            <hr style="border:none;border-top:1px solid var(--card-border);margin-bottom:2rem;">
+
+            <!-- Tab navigation -->
+            <div style="display:flex;gap:0.5rem;margin-bottom:2rem;border-bottom:2px solid var(--card-border);padding-bottom:0;" id="spec-modal-tabs">
+                <button class="spec-tab-btn active" data-tab="about" style="background:none;border:none;padding:0.75rem 1.25rem;font-size:0.95rem;font-weight:600;cursor:pointer;color:var(--primary);border-bottom:2px solid var(--primary);margin-bottom:-2px;">О программе</button>
+                <button class="spec-tab-btn" data-tab="disciplines" style="background:none;border:none;padding:0.75rem 1.25rem;font-size:0.95rem;font-weight:600;cursor:pointer;color:var(--text-secondary);border-bottom:2px solid transparent;margin-bottom:-2px;">Дисциплины</button>
+                <button class="spec-tab-btn" data-tab="career" style="background:none;border:none;padding:0.75rem 1.25rem;font-size:0.95rem;font-weight:600;cursor:pointer;color:var(--text-secondary);border-bottom:2px solid transparent;margin-bottom:-2px;">Карьерные перспективы</button>
+            </div>
+
+            <!-- Tab panels - VIEW mode -->
+            <div id="spec-modal-content-view">
+                <div id="spec-tab-about" class="spec-tab-panel">
+                    <div id="spec-modal-about-text" style="font-size:1rem;line-height:1.8;color:var(--text-secondary);white-space:pre-wrap;"></div>
+                </div>
+                <div id="spec-tab-disciplines" class="spec-tab-panel" style="display:none;">
+                    <div id="spec-modal-disciplines-text" style="font-size:1rem;line-height:1.8;color:var(--text-secondary);white-space:pre-wrap;"></div>
+                </div>
+                <div id="spec-tab-career" class="spec-tab-panel" style="display:none;">
+                    <div id="spec-modal-career-text" style="font-size:1rem;line-height:1.8;color:var(--text-secondary);white-space:pre-wrap;"></div>
+                </div>
+            </div>
+
+            <!-- Tab panels - EDIT mode -->
+            <div id="spec-modal-content-edit" style="display:none;">
+                <div id="spec-tab-about-edit" class="spec-tab-panel-edit">
+                    <label style="font-size:0.8rem;font-weight:700;color:var(--text-muted);display:block;margin-bottom:0.5rem;">О программе — описание, особенности, подходы к обучению</label>
+                    <textarea id="spec-modal-about-input" rows="8" placeholder="Расскажите о программе, её особенностях, методах преподавания, уникальных курсах..." style="width:100%;font-size:0.95rem;line-height:1.7;padding:1rem;border-radius:12px;border:1px solid var(--card-border);background:var(--bg-accent);color:var(--text-primary);resize:vertical;font-family:var(--font-body);"></textarea>
+                </div>
+                <div id="spec-tab-disciplines-edit" class="spec-tab-panel-edit" style="display:none;">
+                    <label style="font-size:0.8rem;font-weight:700;color:var(--text-muted);display:block;margin-bottom:0.5rem;">Дисциплины — основные предметы и курсы программы</label>
+                    <textarea id="spec-modal-disciplines-input" rows="8" placeholder="Перечислите основные дисциплины, семестровые предметы, специализации (каждый с новой строки или через запятую)..." style="width:100%;font-size:0.95rem;line-height:1.7;padding:1rem;border-radius:12px;border:1px solid var(--card-border);background:var(--bg-accent);color:var(--text-primary);resize:vertical;font-family:var(--font-body);"></textarea>
+                </div>
+                <div id="spec-tab-career-edit" class="spec-tab-panel-edit" style="display:none;">
+                    <label style="font-size:0.8rem;font-weight:700;color:var(--text-muted);display:block;margin-bottom:0.5rem;">Карьерные перспективы — кем можно работать после окончания</label>
+                    <textarea id="spec-modal-career-input" rows="8" placeholder="Опишите возможные карьерные пути, профессии, отрасли, средние зарплаты и партнёров-работодателей..." style="width:100%;font-size:0.95rem;line-height:1.7;padding:1rem;border-radius:12px;border:1px solid var(--card-border);background:var(--bg-accent);color:var(--text-primary);resize:vertical;font-family:var(--font-body);"></textarea>
+                </div>
+            </div>
+
+            <!-- Empty state -->
+            <div id="spec-modal-empty" style="display:none;text-align:center;padding:3rem;color:var(--text-secondary);">
+                <i data-lucide="file-text" style="width:48px;height:48px;margin-bottom:1rem;color:var(--text-muted);"></i>
+                <p style="font-size:1rem;">Описание этой специальности ещё не добавлено.</p>
+            </div>
+        </div>
+    </div>
+    <!-- ====== END SPEC DETAIL MODAL ====== -->
 
 
     <!-- Grainient WebGL Background Script -->
     <script src="/frontend/grainient.js"></script>
     
     <!-- App Logic Script -->
-    <script src="/frontend/app.js?v=29.0"></script>
+    <script src="/frontend/app.js?v=30.0"></script>
 </body>
 </html>
+

@@ -3,6 +3,36 @@ const API_BASE = window.location.origin;
 // Fixed UUID for default university
 const DEFAULT_UNI_ID = "a0ea0000-0000-0000-0000-000000000000";
 
+// Specialty categories - mirrors filter-direction options
+const SPEC_CATEGORIES = [
+    { value: "it",           label: "Информационные технологии и ИИ" },
+    { value: "business",     label: "Бизнес, Финансы и Менеджмент" },
+    { value: "economics",    label: "Экономика, Учет и Налогообложение" },
+    { value: "engineering",  label: "Инженерия и Технологии" },
+    { value: "architecture", label: "Архитектура, Строительство и Дизайн" },
+    { value: "law",          label: "Право и Юриспруденция" },
+    { value: "medicine",     label: "Медицина, Здравоохранение и Фармация" },
+    { value: "marketing",    label: "Маркетинг, PR и Реклама" },
+    { value: "logistics",    label: "Логистика, Транспорт и Снабжение" },
+    { value: "languages",    label: "Языки, Филология и Перевод" },
+    { value: "journalism",   label: "Журналистика, Медиа и Связь" },
+    { value: "psychology",   label: "Психология и Социология" },
+    { value: "science",      label: "Естественные и Точные науки" },
+    { value: "social",       label: "Гуманитарные и Общественные науки" },
+    { value: "pedagogy",     label: "Педагогика и Образование" },
+    { value: "arts",         label: "Искусство, Мода и Креативные индустрии" },
+    { value: "tourism",      label: "Туризм, Гостеприимство и Сервис" },
+    { value: "ecology",      label: "Экология и Природопользование" },
+    { value: "mining",       label: "Горное дело и Энергетика" },
+    { value: "security",     label: "Безопасность и Военное дело" },
+    { value: "sports",       label: "Спорт и Физическая культура" },
+    { value: "food",         label: "Пищевые технологии и Агрономия" },
+];
+
+// Track which specialty is being edited in the detail modal
+let currentSpecDetailIdx = null;
+
+
 let chartInstance = null; // Store Chart.js instance to prevent memory leaks
 let bgGrainient = null; // WebGL shader background instance
 let wizardPhotoBase64 = ""; // Base64 string for university profile picture
@@ -931,6 +961,9 @@ function setupEventListeners() {
         editorSaveBtn.addEventListener("click", saveWYSIWYGData);
     }
 
+    // Initialize spec detail modal tabs and back button
+    setupSpecDetailModal();
+
     const editorAddAdvBtn = document.getElementById("editor-add-adv-btn");
     if (editorAddAdvBtn) {
         editorAddAdvBtn.addEventListener("click", () => {
@@ -1350,6 +1383,13 @@ function applyUniversityFilters() {
             return false;
         }
 
+        // Direction / category filter — check if uni has at least one spec with matching category
+        if (direction !== "all") {
+            if (!uni.specialties || !uni.specialties.some(s => s.category === direction)) {
+                return false;
+            }
+        }
+
         // Contract price slider filter
         if (uni.contract_price && Number(uni.contract_price) > maxPrice) {
             return false;
@@ -1731,18 +1771,37 @@ async function loadUniversityDetails(id) {
         
         if (uni.specialties && uni.specialties.length > 0) {
             uni.specialties.forEach(spec => {
-                const tag = document.createElement("span");
-                tag.className = "wb-spec-tag";
-                tag.textContent = spec.name;
-                tag.style.cursor = "pointer";
-                tag.onclick = () => {
+                const catObj = SPEC_CATEGORIES.find(c => c.value === spec.category);
+                const catLabel = catObj ? catObj.label : "";
+                const card = document.createElement("div");
+                card.className = "wb-spec-option glass-card";
+                card.style.cursor = "pointer";
+                const feeStr = spec.tuition_fee ? `$${parseInt(spec.tuition_fee).toLocaleString()}/год` : "По запросу";
+                card.innerHTML = `
+                    <div class="wb-spec-opt-header">
+                        <span class="wb-spec-opt-name">${spec.name || "Направление"}</span>
+                    </div>
+                    ${catLabel ? `<div style="font-size:0.75rem;color:var(--text-muted);margin:0.25rem 0 0.4rem;">${catLabel}</div>` : ""}
+                    <div class="wb-spec-opt-fee">${feeStr}</div>
+                    <div class="wb-spec-opt-action" style="margin-top:0.75rem;display:flex;justify-content:space-between;align-items:center;">
+                        <button class="btn btn-outline btn-sm spec-view-detail-btn" style="font-size:0.8rem;">Подробнее</button>
+                        <button class="btn btn-primary btn-sm spec-apply-btn" style="font-size:0.8rem;">Подать документы</button>
+                    </div>
+                `;
+                card.querySelector(".spec-view-detail-btn").addEventListener("click", (e) => {
+                    e.stopPropagation();
+                    openSpecDetailModal(spec, null, false);
+                });
+                card.querySelector(".spec-apply-btn").addEventListener("click", (e) => {
+                    e.stopPropagation();
                     openQuickApplyModal(uni.id, uni.name, spec.id);
-                };
-                specGrid.appendChild(tag);
+                });
+                specGrid.appendChild(card);
             });
         } else {
             specGrid.innerHTML = `<span style="color: var(--text-secondary); font-size: 0.95rem;">Специальности пока не добавлены или находятся на модерации.</span>`;
         }
+
 
         // Bind details page button
         const applyBtn = document.querySelector("#page-university .apply-now-btn");
@@ -4037,6 +4096,11 @@ function renderEditorSpecialties() {
             `;
         }).join("");
 
+        // Build category options
+        const categoryOptions = SPEC_CATEGORIES.map(cat =>
+            `<option value="${cat.value}" ${spec.category === cat.value ? 'selected' : ''}>${cat.label}</option>`
+        ).join("");
+
         row.innerHTML = `
             <div class="editor-spec-header">
                 <strong style="color:var(--primary);font-size:0.95rem;">Специальность #${idx+1}</strong>
@@ -4074,9 +4138,14 @@ function renderEditorSpecialties() {
                     </div>
                 </div>
             </div>
-            <div class="editor-spec-field" style="margin-top: 0.5rem; display: flex; flex-direction: column;">
-                <label style="font-size:0.75rem; margin-bottom:4px; font-weight:600; color:var(--text-muted);">Описание направления</label>
-                <textarea class="editor-spec-input spec-description" rows="2" placeholder="Опишите особенности программы, преподаваемые дисциплины..." style="width: 100%; min-height: 60px;">${spec.description || ''}</textarea>
+
+            <!-- Category selector -->
+            <div class="editor-spec-field" style="margin-top:0.5rem;">
+                <label style="font-size:0.75rem;margin-bottom:4px;font-weight:600;color:var(--text-muted);">Категория направления <span style="color:#ff4d4f">*</span></label>
+                <select class="editor-spec-input spec-category">
+                    <option value="" ${!spec.category ? 'selected' : ''}>— Выберите категорию —</option>
+                    ${categoryOptions}
+                </select>
             </div>
             
             <!-- Requirements Tag Editor -->
@@ -4091,6 +4160,13 @@ function renderEditorSpecialties() {
                     <button type="button" class="editor-add-tag-btn btn btn-outline btn-sm" style="white-space: nowrap;">+ Добавить</button>
                 </div>
             </div>
+
+            <!-- Next button to open detail page -->
+            <div style="display:flex;justify-content:flex-end;margin-top:0.75rem;">
+                <button type="button" class="editor-spec-next-btn btn btn-primary btn-sm">
+                    Описание программы <i data-lucide="chevron-right" style="width:16px;height:16px;vertical-align:middle;"></i>
+                </button>
+            </div>
         `;
         container.appendChild(row);
 
@@ -4099,7 +4175,12 @@ function renderEditorSpecialties() {
         row.querySelector(".spec-fee").addEventListener("input", (e) => { spec.tuition_fee = e.target.value; });
         row.querySelector(".spec-format").addEventListener("change", (e) => { spec.format = e.target.value; });
         row.querySelector(".spec-duration").addEventListener("input", (e) => { spec.duration = e.target.value; });
-        row.querySelector(".spec-description").addEventListener("input", (e) => { spec.description = e.target.value; });
+        row.querySelector(".spec-category").addEventListener("change", (e) => { spec.category = e.target.value; });
+
+        // Open spec detail modal in edit mode
+        row.querySelector(".editor-spec-next-btn").addEventListener("click", () => {
+            openSpecDetailModal(spec, idx, true);
+        });
 
         // Bind lang chip click listeners
         row.querySelectorAll(".lang-chip-btn").forEach(btn => {
@@ -4155,7 +4236,131 @@ function renderEditorSpecialties() {
     });
 }
 
+// ============================
+// SPEC DETAIL MODAL FUNCTIONS
+// ============================
+
+function openSpecDetailModal(spec, specIdx, isEditMode) {
+    const modal = document.getElementById("spec-detail-modal");
+    if (!modal) return;
+
+    currentSpecDetailIdx = specIdx;
+
+    // Fill static info
+    const catObj = SPEC_CATEGORIES.find(c => c.value === spec.category);
+    document.getElementById("spec-modal-category-badge").textContent = catObj ? catObj.label : "Направление";
+    document.getElementById("spec-modal-name").textContent = spec.name || "Специальность";
+
+    // Meta row
+    const metaEl = document.getElementById("spec-modal-meta");
+    const metaItems = [];
+    if (spec.duration) metaItems.push(`<span>📅 ${spec.duration}</span>`);
+    if (spec.format) metaItems.push(`<span>🏫 ${spec.format}</span>`);
+    if (spec.language) metaItems.push(`<span>🌐 ${spec.language}</span>`);
+    if (spec.tuition_fee) metaItems.push(`<span>💰 $${parseInt(spec.tuition_fee).toLocaleString()} / год</span>`);
+    metaEl.innerHTML = metaItems.join("");
+
+    // Requirements chips
+    const reqsEl = document.getElementById("spec-modal-reqs");
+    const tags = spec.reqTags || (spec.min_requirements ? spec.min_requirements.split(",").map(s => s.trim()).filter(Boolean) : []);
+    reqsEl.innerHTML = tags.map(t =>
+        `<span style="background:var(--card-bg);border:1px solid var(--card-border);padding:0.3rem 0.75rem;border-radius:20px;font-size:0.85rem;font-weight:600;">${t}</span>`
+    ).join("");
+
+    const detail = spec.detail || {};
+
+    if (isEditMode) {
+        // Edit mode
+        document.getElementById("spec-modal-content-view").style.display = "none";
+        document.getElementById("spec-modal-content-edit").style.display = "block";
+        document.getElementById("spec-modal-empty").style.display = "none";
+        document.getElementById("spec-modal-save-btn").style.display = "inline-flex";
+
+        document.getElementById("spec-modal-about-input").value = detail.about || "";
+        document.getElementById("spec-modal-disciplines-input").value = detail.disciplines || "";
+        document.getElementById("spec-modal-career-input").value = detail.career || "";
+
+        // Save button saves to spec object
+        document.getElementById("spec-modal-save-btn").onclick = () => {
+            spec.detail = {
+                about: document.getElementById("spec-modal-about-input").value.trim(),
+                disciplines: document.getElementById("spec-modal-disciplines-input").value.trim(),
+                career: document.getElementById("spec-modal-career-input").value.trim(),
+            };
+            showToast("Описание сохранено! Не забудьте нажать «Сохранить изменения».", "success");
+        };
+    } else {
+        // View mode
+        document.getElementById("spec-modal-save-btn").style.display = "none";
+        const hasContent = detail.about || detail.disciplines || detail.career;
+        if (hasContent) {
+            document.getElementById("spec-modal-content-view").style.display = "block";
+            document.getElementById("spec-modal-content-edit").style.display = "none";
+            document.getElementById("spec-modal-empty").style.display = "none";
+            document.getElementById("spec-modal-about-text").textContent = detail.about || "Информация не добавлена.";
+            document.getElementById("spec-modal-disciplines-text").textContent = detail.disciplines || "Информация не добавлена.";
+            document.getElementById("spec-modal-career-text").textContent = detail.career || "Информация не добавлена.";
+        } else {
+            document.getElementById("spec-modal-content-view").style.display = "none";
+            document.getElementById("spec-modal-content-edit").style.display = "none";
+            document.getElementById("spec-modal-empty").style.display = "block";
+        }
+    }
+
+    // Reset to first tab
+    activateSpecModalTab("about", isEditMode);
+
+    modal.style.display = "block";
+    modal.scrollTop = 0;
+    lucide.createIcons();
+}
+
+function activateSpecModalTab(tabName, isEditMode) {
+    // Update tab button styles
+    document.querySelectorAll(".spec-tab-btn").forEach(btn => {
+        const isActive = btn.dataset.tab === tabName;
+        btn.style.color = isActive ? "var(--primary)" : "var(--text-secondary)";
+        btn.style.borderBottom = isActive ? "2px solid var(--primary)" : "2px solid transparent";
+    });
+
+    // Show/hide view panels
+    document.querySelectorAll(".spec-tab-panel").forEach(panel => {
+        panel.style.display = "none";
+    });
+    const viewPanel = document.getElementById(`spec-tab-${tabName}`);
+    if (viewPanel) viewPanel.style.display = "block";
+
+    // Show/hide edit panels
+    document.querySelectorAll(".spec-tab-panel-edit").forEach(panel => {
+        panel.style.display = "none";
+    });
+    const editPanel = document.getElementById(`spec-tab-${tabName}-edit`);
+    if (editPanel) editPanel.style.display = "block";
+}
+
+function setupSpecDetailModal() {
+    const modal = document.getElementById("spec-detail-modal");
+    if (!modal) return;
+
+    // Back button
+    const backBtn = document.getElementById("spec-modal-back-btn");
+    if (backBtn) {
+        backBtn.addEventListener("click", () => {
+            modal.style.display = "none";
+        });
+    }
+
+    // Tab buttons
+    document.querySelectorAll(".spec-tab-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+            const isEditMode = document.getElementById("spec-modal-content-edit").style.display !== "none";
+            activateSpecModalTab(btn.dataset.tab, isEditMode);
+        });
+    });
+}
+
 async function saveWYSIWYGData() {
+
     const nameVal = document.getElementById("editor-name").innerText.trim();
     const sloganVal = document.getElementById("editor-slogan").innerText.trim();
     const descriptionVal = document.getElementById("editor-description").innerText.trim();
