@@ -917,13 +917,14 @@ function setupEventListeners() {
     }
 
     const editorCancelBtn = document.getElementById("editor-cancel-btn");
-    if (editorCancelBtn) {
-        editorCancelBtn.addEventListener("click", () => {
-            document.getElementById("page-partner-editor").style.display = "none";
-            document.getElementById("partner-cabinet-block").style.display = "block";
-            document.getElementById("partner-dashboard-view").style.display = "block";
-        });
-    }
+    const editorTopBackBtn = document.getElementById("editor-top-back-btn");
+    const closeEditor = () => {
+        document.getElementById("page-partner-editor").style.display = "none";
+        document.getElementById("partner-cabinet-block").style.display = "block";
+        document.getElementById("partner-dashboard-view").style.display = "block";
+    };
+    if (editorCancelBtn) editorCancelBtn.addEventListener("click", closeEditor);
+    if (editorTopBackBtn) editorTopBackBtn.addEventListener("click", closeEditor);
 
     const editorSaveBtn = document.getElementById("editor-save-btn");
     if (editorSaveBtn) {
