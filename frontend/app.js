@@ -929,6 +929,28 @@ function setupEventListeners() {
         });
     }
 
+    // AI Orientation Modal Event Listeners
+    const aiFab = document.getElementById("ai-orientation-fab");
+    const aiModal = document.getElementById("ai-orientation-modal");
+    const closeAiModalBtn = document.getElementById("close-ai-modal-btn");
+
+    if (aiFab && aiModal) {
+        aiFab.addEventListener("click", () => {
+            aiModal.style.display = "flex";
+            setTimeout(() => aiModal.classList.add("show"), 10);
+            if (aiChatHistory.length === 0) {
+                startAiChat();
+            }
+        });
+    }
+
+    if (closeAiModalBtn && aiModal) {
+        closeAiModalBtn.addEventListener("click", () => {
+            aiModal.classList.remove("show");
+            aiModal.style.display = "none";
+        });
+    }
+
     // Partner Settings button & modal
     const dashSettingsBtn = document.getElementById("dash-settings-btn");
     const settingsModal = document.getElementById("partner-settings-modal");
@@ -951,7 +973,7 @@ function setupEventListeners() {
     const closeSettings = () => {
         if (!settingsModal) return;
         settingsModal.classList.remove("show");
-        setTimeout(() => settingsModal.style.display = "none", 200);
+        settingsModal.style.display = "none";
     };
 
     if (closeSettingsBtn) closeSettingsBtn.onclick = closeSettings;
@@ -1477,9 +1499,7 @@ function closeQuickApplyModal() {
     const modal = document.getElementById("quick-apply-modal");
     if (!modal) return;
     modal.classList.remove("show");
-    setTimeout(() => {
-        modal.style.display = "none";
-    }, 200);
+    modal.style.display = "none";
 }
 
 // 2. Load university details
@@ -2582,9 +2602,7 @@ function closeLeadStudentModal() {
     const modal = document.getElementById("student-profile-modal");
     if (!modal) return;
     modal.classList.remove("show");
-    setTimeout(() => {
-        modal.style.display = "none";
-    }, 200);
+    modal.style.display = "none";
 }
 
 async function updateLeadApplicationStatus(appId, newStatus, leadObj) {
@@ -3270,9 +3288,7 @@ function hideOnboardingOverlay() {
     if (!overlay) return;
 
     overlay.style.opacity = "0";
-    setTimeout(() => {
-        overlay.style.display = "none";
-    }, 500);
+    overlay.style.display = "none";
 
     // Restore AI fab ONLY if we ended up on the profile page
     const hash = window.location.hash.substring(1) || "home";
