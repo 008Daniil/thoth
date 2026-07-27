@@ -331,7 +331,15 @@ function setupEventListeners() {
     const backToHomeBtn = document.getElementById("back-to-home-btn");
     if (backToHomeBtn) {
         backToHomeBtn.addEventListener("click", () => {
-            if (window.isPartnerPreview) {
+            const editor = document.getElementById("page-partner-editor");
+            const editorVisible = editor && editor.style.display === "block";
+            if (editorVisible) {
+                editor.style.display = "none";
+                const cab = document.getElementById("partner-cabinet-block");
+                if (cab) cab.style.display = "block";
+                const dash = document.getElementById("partner-dashboard-view");
+                if (dash) dash.style.display = "block";
+            } else if (window.isPartnerPreview) {
                 window.isPartnerPreview = false;
                 window.location.hash = "partner";
             } else {
