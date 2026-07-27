@@ -60,9 +60,153 @@ window.handleOpenStudentSpecDetail = function(event, specId) {
 
 let chartInstance = null; // Store Chart.js instance to prevent memory leaks
 let bgGrainient = null; // WebGL shader background instance
-let wizardPhotoBase64 = ""; // Base64 string for university profile picture
+let wizardPhotoBase64 = ""; // Base64 string for university card photo (home page)
+let wizardBannerBase64 = ""; // Base64 string for university header banner
 let loadedLeads = []; // Store currently fetched applications for sorting
 let currentAdvantages = []; // Store current university profile advantages (0-3)
+
+// Image Scaling & Crop Editor State
+let cropState = {
+    img: null,
+    scale: 1,
+    offsetX: 0,
+    offsetY: 0,
+    isDragging: false,
+    startX: 0,
+    startY: 0,
+    onSave: null
+};
+
+function openImageCropModal(imgSrc, onSaveCallback) {
+    let modal = document.getElementById("image-crop-modal");
+    if (!modal) return;
+
+    if (modal.parentNode !== document.body) {
+        document.body.appendChild(modal);
+    }
+
+    cropState.onSave = onSaveCallback;
+    cropState.scale = 1;
+    cropState.offsetX = 0;
+    cropState.offsetY = 0;
+
+    const rangeInput = document.getElementById("crop-scale-range");
+    if (rangeInput) rangeInput.value = 1;
+
+    const img = new Image();
+    img.onload = () => {
+        cropState.img = img;
+        modal.style.display = "flex";
+        setTimeout(() => modal.classList.add("show"), 10);
+        renderCropCanvas();
+    };
+    img.src = imgSrc;
+}
+
+function closeImageCropModal() {
+    const modal = document.getElementById("image-crop-modal");
+    if (modal) {
+        modal.classList.remove("show");
+        modal.style.display = "none";
+    }
+}
+
+function renderCropCanvas() {
+    const canvas = document.getElementById("crop-canvas");
+    const wrapper = document.getElementById("crop-canvas-wrapper");
+    if (!canvas || !wrapper || !cropState.img) return;
+
+    const ctx = canvas.getContext("2d");
+    const wWidth = wrapper.clientWidth || 600;
+    const wHeight = wrapper.clientHeight || 340;
+
+    canvas.width = wWidth;
+    canvas.height = wHeight;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    const img = cropState.img;
+    const scale = cropState.scale;
+
+    const imgRatio = img.width / img.height;
+    let drawW = canvas.width;
+    let drawH = canvas.width / imgRatio;
+
+    if (drawH < canvas.height) {
+        drawH = canvas.height;
+        drawW = canvas.height * imgRatio;
+    }
+
+    drawW *= scale;
+    drawH *= scale;
+
+    const x = (canvas.width - drawW) / 2 + cropState.offsetX;
+    const y = (canvas.height - drawH) / 2 + cropState.offsetY;
+
+    ctx.drawImage(img, x, y, drawW, drawH);
+}
+
+function setupImageCropModal() {
+    const wrapper = document.getElementById("crop-canvas-wrapper");
+    if (!wrapper) return;
+
+    wrapper.addEventListener("mousedown", (e) => {
+        cropState.isDragging = true;
+        cropState.startX = e.clientX - cropState.offsetX;
+        cropState.startY = e.clientY - cropState.offsetY;
+        wrapper.style.cursor = "grabbing";
+    });
+
+    window.addEventListener("mousemove", (e) => {
+        if (!cropState.isDragging) return;
+        cropState.offsetX = e.clientX - cropState.startX;
+        cropState.offsetY = e.clientY - cropState.startY;
+        renderCropCanvas();
+    });
+
+    window.addEventListener("mouseup", () => {
+        cropState.isDragging = false;
+        if (wrapper) wrapper.style.cursor = "grab";
+    });
+
+    const rangeInput = document.getElementById("crop-scale-range");
+    if (rangeInput) {
+        rangeInput.addEventListener("input", (e) => {
+            cropState.scale = parseFloat(e.target.value) || 1;
+            renderCropCanvas();
+        });
+    }
+
+    const zoomIn = document.getElementById("crop-zoom-in");
+    if (zoomIn) {
+        zoomIn.addEventListener("click", () => {
+            cropState.scale = Math.min(3, cropState.scale + 0.15);
+            if (rangeInput) rangeInput.value = cropState.scale;
+            renderCropCanvas();
+        });
+    }
+
+    const zoomOut = document.getElementById("crop-zoom-out");
+    if (zoomOut) {
+        zoomOut.addEventListener("click", () => {
+            cropState.scale = Math.max(0.5, cropState.scale - 0.15);
+            if (rangeInput) rangeInput.value = cropState.scale;
+            renderCropCanvas();
+        });
+    }
+
+    const saveBtn = document.getElementById("crop-save-btn");
+    if (saveBtn) {
+        saveBtn.addEventListener("click", () => {
+            const canvas = document.getElementById("crop-canvas");
+            if (canvas && cropState.onSave) {
+                const croppedData = canvas.toDataURL("image/jpeg", 0.9);
+                cropState.onSave(croppedData);
+            }
+            closeImageCropModal();
+        });
+    }
+}
 
 
 // Default student details from user sketch for ease of testing
@@ -951,7 +1095,7 @@ function setupEventListeners() {
         });
     }
 
-    // Visual Editor Event Listeners
+    // Visual Editor Event Listeners (Banner & Card Photo with Crop Modal)
     const editorBannerUpload = document.getElementById("editor-banner-upload");
     const editorBannerDiv = document.getElementById("editor-banner-div");
     if (editorBannerDiv && editorBannerUpload) {
@@ -963,13 +1107,42 @@ function setupEventListeners() {
             if (file) {
                 const reader = new FileReader();
                 reader.onload = (event) => {
-                    wizardPhotoBase64 = event.target.result;
-                    editorBannerDiv.style.backgroundImage = `url('${wizardPhotoBase64}')`;
+                    openImageCropModal(event.target.result, (croppedResult) => {
+                        wizardBannerBase64 = croppedResult;
+                        editorBannerDiv.style.backgroundImage = `url('${croppedResult}')`;
+                    });
                 };
                 reader.readAsDataURL(file);
             }
         });
     }
+
+    const editorPhotoUpload = document.getElementById("editor-photo-upload");
+    const editorPhotoDiv = document.getElementById("editor-photo-div");
+    if (editorPhotoDiv && editorPhotoUpload) {
+        editorPhotoDiv.addEventListener("click", () => {
+            editorPhotoUpload.click();
+        });
+        editorPhotoUpload.addEventListener("change", (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    openImageCropModal(event.target.result, (croppedResult) => {
+                        wizardPhotoBase64 = croppedResult;
+                        editorPhotoDiv.style.backgroundImage = `url('${croppedResult}')`;
+                        editorPhotoDiv.style.backgroundSize = "cover";
+                        editorPhotoDiv.style.backgroundPosition = "center";
+                        editorPhotoDiv.innerHTML = `<div style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.65);color:#fff;font-size:0.75rem;padding:4px;text-align:center;">Изменить фото</div>`;
+                    });
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    }
+
+    // Initialize Image Crop Modal events
+    setupImageCropModal();
 
     const editorCancelBtn = document.getElementById("editor-cancel-btn");
     const editorTopBackBtn = document.getElementById("editor-top-back-btn");
@@ -1653,8 +1826,9 @@ async function loadUniversityDetails(id) {
 
         const detailBanner = document.querySelector(".wb-product-banner");
         if (detailBanner) {
-            if (uni.photo && uni.photo.startsWith("data:image/")) {
-                detailBanner.style.backgroundImage = `url('${uni.photo}')`;
+            const bannerImg = (uni.banner && uni.banner.startsWith("data:image/")) ? uni.banner : uni.photo;
+            if (bannerImg && bannerImg.startsWith("data:image/")) {
+                detailBanner.style.backgroundImage = `url('${bannerImg}')`;
                 detailBanner.style.backgroundSize = "cover";
                 detailBanner.style.backgroundPosition = "center";
                 document.getElementById("det-uni-alias").style.display = "none";
@@ -4064,11 +4238,29 @@ function openWYSIWYGEditor() {
 
         // Load photo / banner
         wizardPhotoBase64 = myUniversity.photo || "";
+        wizardBannerBase64 = myUniversity.banner || "";
+
         const bannerDiv = document.getElementById("editor-banner-div");
-        if (wizardPhotoBase64) {
-            bannerDiv.style.backgroundImage = `url('${wizardPhotoBase64}')`;
-        } else {
-            bannerDiv.style.backgroundImage = "none";
+        if (bannerDiv) {
+            if (wizardBannerBase64) {
+                bannerDiv.style.backgroundImage = `url('${wizardBannerBase64}')`;
+            } else {
+                bannerDiv.style.backgroundImage = "none";
+            }
+        }
+
+        const photoDiv = document.getElementById("editor-photo-div");
+        if (photoDiv) {
+            if (wizardPhotoBase64) {
+                photoDiv.style.backgroundImage = `url('${wizardPhotoBase64}')`;
+                photoDiv.style.backgroundSize = "cover";
+                photoDiv.style.backgroundPosition = "center";
+                photoDiv.innerHTML = `<div style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.65);color:#fff;font-size:0.75rem;padding:4px;text-align:center;">Изменить фото</div>`;
+            } else {
+                photoDiv.style.backgroundImage = "none";
+                photoDiv.innerHTML = `<i data-lucide="image" style="width:32px;height:32px;color:var(--primary);margin-bottom:0.5rem;"></i><span style="font-size:0.85rem; font-weight:600; color:var(--text-primary);">Фото для карточки</span><span style="font-size:0.75rem; color:var(--text-muted); margin-top:0.25rem;">Нажмите чтобы изменить</span>`;
+                if (window.lucide) lucide.createIcons();
+            }
         }
 
         // Load specialties
@@ -4555,6 +4747,7 @@ async function saveWYSIWYGData() {
         has_scholarship: hasScholarship,
         scholarship_info: scholarshipInfo,
         photo: wizardPhotoBase64,
+        banner: wizardBannerBase64,
         specialties: currentSpecialties
     };
 

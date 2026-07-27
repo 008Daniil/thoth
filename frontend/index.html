@@ -17,7 +17,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <!-- Main Style Sheet -->
-    <link rel="stylesheet" href="/frontend/style.css?v=38.0">
+    <link rel="stylesheet" href="/frontend/style.css?v=39.0">
 </head>
 <body>
 
@@ -1205,14 +1205,36 @@
             <!-- Hidden file input for card photo -->
             <input type="file" id="editor-photo-upload" accept="image/*" style="display:none;">
 
-            <!-- Banner (clickable to change photo) -->
-            <div id="editor-banner-div"
-                 class="wb-product-banner academic-banner-style"
-                 style="border-radius:20px; margin-bottom:2rem; height:380px; position:relative; overflow:hidden; background-size:cover; background-position:center; border:1px solid var(--card-border); cursor:pointer;"
-                 title="Нажмите чтобы изменить фото баннера">
-                <div class="editor-banner-hint">
-                    <i data-lucide="camera" style="width:28px;height:28px;"></i>
-                    <span>Нажмите чтобы изменить фото</span>
+            <!-- Two Photos Section: Banner (Header) & Card Photo (Home Page) -->
+            <div style="display:grid; grid-template-columns: 2fr 1fr; gap:1.5rem; margin-bottom:2rem;">
+                <!-- Banner photo for detail page -->
+                <div>
+                    <label style="font-size:0.85rem; font-weight:700; color:var(--text-secondary); display:block; margin-bottom:0.5rem;">
+                        Шапка / Баннер страницы ВУЗа
+                    </label>
+                    <div id="editor-banner-div"
+                         class="wb-product-banner academic-banner-style"
+                         style="border-radius:16px; height:240px; position:relative; overflow:hidden; background-size:cover; background-position:center; border:1px solid var(--card-border); cursor:pointer;"
+                         title="Нажмите чтобы изменить и замасштабировать баннер">
+                        <div class="editor-banner-hint">
+                            <i data-lucide="camera" style="width:24px;height:24px;"></i>
+                            <span>Загрузить / Масштабировать баннер</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Logo / Card Photo for main home page -->
+                <div>
+                    <label style="font-size:0.85rem; font-weight:700; color:var(--text-secondary); display:block; margin-bottom:0.5rem;">
+                        Фото для карточки ВУЗа (на главной)
+                    </label>
+                    <div id="editor-photo-div"
+                         style="border-radius:16px; height:240px; position:relative; overflow:hidden; background-size:cover; background-position:center; border:1px dashed var(--card-border); background:var(--card-bg); cursor:pointer; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:1rem;"
+                         title="Нажмите чтобы изменить и замасштабировать фото карточки">
+                        <i data-lucide="image" style="width:32px;height:32px;color:var(--primary);margin-bottom:0.5rem;"></i>
+                        <span style="font-size:0.85rem; font-weight:600; color:var(--text-primary);">Фото для карточки</span>
+                        <span style="font-size:0.75rem; color:var(--text-muted); margin-top:0.25rem;">Нажмите чтобы изменить</span>
+                    </div>
                 </div>
             </div>
 
@@ -1579,7 +1601,7 @@
 
     <!-- ====== SPEC DETAIL MODAL ====== -->
     <div id="spec-detail-modal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; z-index:999999999; background:var(--bg); overflow-y:auto;">
-        <div style="max-width:900px; margin:0 auto; padding:2rem 1.5rem 4rem;">
+        <div style="max-width:1200px; margin:0 auto; padding:2rem 2rem 5rem;">
             
             <!-- Mode bar (high contrast in both light and dark theme) -->
             <div id="spec-modal-mode-bar" style="display:none; margin-bottom:1.5rem; padding:0.85rem 1.25rem; background:var(--bg-accent); border:1.5px solid var(--primary); border-radius:12px; font-size:0.9rem; font-weight:700; color:var(--primary); box-shadow:0 4px 15px rgba(var(--primary-rgb, 102, 2, 60), 0.12);">
@@ -1589,7 +1611,7 @@
             <!-- Top bar -->
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2rem;">
                 <button id="spec-modal-back-btn" class="btn btn-back" onclick="closeSpecDetailModal();">
-                    Назад
+                    <i data-lucide="arrow-left" class="btn-icon"></i> Назад
                 </button>
                 <!-- Save button only visible in edit mode -->
                 <button id="spec-modal-save-btn" class="btn btn-primary" style="display:none;">
@@ -1601,17 +1623,17 @@
             <div style="margin-bottom:0.5rem;">
                 <span id="spec-modal-category-badge" style="font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;background:var(--card-bg);border:1px solid var(--card-border);padding:0.35rem 0.85rem;border-radius:20px;color:var(--text-secondary);"></span>
             </div>
-            <h1 id="spec-modal-name" style="font-size:2.2rem;font-weight:800;color:var(--text-primary);margin:0.5rem 0 1rem;font-family:var(--font-heading);line-height:1.2;"></h1>
+            <h1 id="spec-modal-name" style="font-size:2.4rem;font-weight:800;color:var(--text-primary);margin:0.5rem 0 1rem;font-family:var(--font-heading);line-height:1.2;"></h1>
 
             <!-- Meta row -->
-            <div id="spec-modal-meta" style="display:flex;flex-wrap:wrap;gap:0.75rem;align-items:center;margin:1rem 0 1.5rem;color:var(--text-secondary);font-size:0.92rem;font-weight:500;"></div>
+            <div id="spec-modal-meta" style="display:flex;flex-wrap:wrap;gap:0.75rem;align-items:center;margin:1rem 0 1.5rem;color:var(--text-secondary);font-size:0.95rem;font-weight:500;"></div>
 
             <!-- Requirements chips -->
             <div id="spec-modal-reqs" style="display:flex;flex-wrap:wrap;gap:0.5rem;margin-bottom:2rem;"></div>
 
             <!-- Student Apply Button (only visible in view mode) -->
             <div id="spec-modal-student-apply-container" style="display:none; margin-bottom:2rem;">
-                <button id="spec-modal-apply-btn" class="btn btn-primary" style="padding:0.85rem 1.75rem; font-size:1rem; font-weight:700; width:100%; border-radius:12px;">
+                <button id="spec-modal-apply-btn" class="btn btn-primary" style="padding:0.95rem 2rem; font-size:1.05rem; font-weight:700; width:100%; border-radius:14px;">
                     Подать документы на эту специальность
                 </button>
             </div>
@@ -1620,56 +1642,87 @@
 
             <!-- Tab navigation -->
             <div style="display:flex;gap:0.5rem;margin-bottom:2rem;border-bottom:2px solid var(--card-border);padding-bottom:0;" id="spec-modal-tabs">
-                <button class="spec-tab-btn active" data-tab="about" style="background:none;border:none;padding:0.75rem 1.25rem;font-size:0.95rem;font-weight:600;cursor:pointer;color:var(--primary);border-bottom:2px solid var(--primary);margin-bottom:-2px;">О программе</button>
-                <button class="spec-tab-btn" data-tab="disciplines" style="background:none;border:none;padding:0.75rem 1.25rem;font-size:0.95rem;font-weight:600;cursor:pointer;color:var(--text-secondary);border-bottom:2px solid transparent;margin-bottom:-2px;">Дисциплины</button>
-                <button class="spec-tab-btn" data-tab="career" style="background:none;border:none;padding:0.75rem 1.25rem;font-size:0.95rem;font-weight:600;cursor:pointer;color:var(--text-secondary);border-bottom:2px solid transparent;margin-bottom:-2px;">Карьерные перспективы</button>
+                <button class="spec-tab-btn active" data-tab="about" style="background:none;border:none;padding:0.75rem 1.5rem;font-size:1rem;font-weight:600;cursor:pointer;color:var(--primary);border-bottom:2px solid var(--primary);margin-bottom:-2px;">О программе</button>
+                <button class="spec-tab-btn" data-tab="disciplines" style="background:none;border:none;padding:0.75rem 1.5rem;font-size:1rem;font-weight:600;cursor:pointer;color:var(--text-secondary);border-bottom:2px solid transparent;margin-bottom:-2px;">Дисциплины</button>
+                <button class="spec-tab-btn" data-tab="career" style="background:none;border:none;padding:0.75rem 1.5rem;font-size:1rem;font-weight:600;cursor:pointer;color:var(--text-secondary);border-bottom:2px solid transparent;margin-bottom:-2px;">Карьерные перспективы</button>
             </div>
 
             <!-- Tab panels - VIEW mode -->
             <div id="spec-modal-content-view">
                 <div id="spec-tab-about" class="spec-tab-panel">
-                    <div id="spec-modal-about-text" style="font-size:1.02rem;line-height:1.8;color:var(--text-primary);white-space:pre-wrap;background:var(--card-bg);padding:1.75rem;border-radius:16px;border:1px solid var(--card-border);box-shadow:0 4px 20px rgba(0,0,0,0.03);"></div>
+                    <div id="spec-modal-about-text" style="font-size:1.05rem;line-height:1.85;color:var(--text-primary);white-space:pre-wrap;background:var(--card-bg);padding:2rem;border-radius:18px;border:1px solid var(--card-border);box-shadow:0 4px 20px rgba(0,0,0,0.03);"></div>
                 </div>
                 <div id="spec-tab-disciplines" class="spec-tab-panel" style="display:none;">
-                    <div id="spec-modal-disciplines-text" style="font-size:1.02rem;line-height:1.8;color:var(--text-primary);white-space:pre-wrap;background:var(--card-bg);padding:1.75rem;border-radius:16px;border:1px solid var(--card-border);box-shadow:0 4px 20px rgba(0,0,0,0.03);"></div>
+                    <div id="spec-modal-disciplines-text" style="font-size:1.05rem;line-height:1.85;color:var(--text-primary);white-space:pre-wrap;background:var(--card-bg);padding:2rem;border-radius:18px;border:1px solid var(--card-border);box-shadow:0 4px 20px rgba(0,0,0,0.03);"></div>
                 </div>
                 <div id="spec-tab-career" class="spec-tab-panel" style="display:none;">
-                    <div id="spec-modal-career-text" style="font-size:1.02rem;line-height:1.8;color:var(--text-primary);white-space:pre-wrap;background:var(--card-bg);padding:1.75rem;border-radius:16px;border:1px solid var(--card-border);box-shadow:0 4px 20px rgba(0,0,0,0.03);"></div>
+                    <div id="spec-modal-career-text" style="font-size:1.05rem;line-height:1.85;color:var(--text-primary);white-space:pre-wrap;background:var(--card-bg);padding:2rem;border-radius:18px;border:1px solid var(--card-border);box-shadow:0 4px 20px rgba(0,0,0,0.03);"></div>
                 </div>
             </div>
 
             <!-- Tab panels - EDIT mode -->
             <div id="spec-modal-content-edit" style="display:none;">
-                <div id="spec-tab-about-edit" class="spec-tab-panel-edit" style="background:var(--card-bg);border:1px solid var(--card-border);padding:1.75rem;border-radius:16px;box-shadow:0 4px 20px rgba(0,0,0,0.03);">
-                    <label style="font-size:0.9rem;font-weight:700;color:var(--text-primary);display:block;margin-bottom:0.75rem;">О программе — описание направления, особенности обучения и ключевые преимущества</label>
-                    <textarea id="spec-modal-about-input" rows="9" placeholder="Расскажите о программе, её особенностях, методах преподавания, уникальных практиках..." style="width:100%;font-size:0.98rem;line-height:1.7;padding:1.25rem;border-radius:12px;border:1px solid var(--card-border);background:var(--bg);color:var(--text-primary);resize:vertical;font-family:var(--font-body);outline:none;box-sizing:border-box;"></textarea>
+                <div id="spec-tab-about-edit" class="spec-tab-panel-edit" style="background:var(--card-bg);border:1px solid var(--card-border);padding:2rem;border-radius:18px;box-shadow:0 4px 20px rgba(0,0,0,0.03);">
+                    <label style="font-size:0.95rem;font-weight:700;color:var(--text-primary);display:block;margin-bottom:0.85rem;">О программе — описание направления, особенности обучения и ключевые преимущества</label>
+                    <textarea id="spec-modal-about-input" rows="10" placeholder="Расскажите о программе, её особенностях, методах преподавания, уникальных практиках..." style="width:100%;font-size:1rem;line-height:1.75;padding:1.35rem;border-radius:14px;border:1px solid var(--card-border);background:var(--bg);color:var(--text-primary);resize:vertical;font-family:var(--font-body);outline:none;box-sizing:border-box;"></textarea>
                 </div>
-                <div id="spec-tab-disciplines-edit" class="spec-tab-panel-edit" style="display:none;background:var(--card-bg);border:1px solid var(--card-border);padding:1.75rem;border-radius:16px;box-shadow:0 4px 20px rgba(0,0,0,0.03);">
-                    <label style="font-size:0.9rem;font-weight:700;color:var(--text-primary);display:block;margin-bottom:0.75rem;">Дисциплины — основные предметы и профильные курсы</label>
-                    <textarea id="spec-modal-disciplines-input" rows="9" placeholder="Перечислите ключевые предметы, изучаемые технологии, лаборатории и курсы..." style="width:100%;font-size:0.98rem;line-height:1.7;padding:1.25rem;border-radius:12px;border:1px solid var(--card-border);background:var(--bg);color:var(--text-primary);resize:vertical;font-family:var(--font-body);outline:none;box-sizing:border-box;"></textarea>
+                <div id="spec-tab-disciplines-edit" class="spec-tab-panel-edit" style="display:none;background:var(--card-bg);border:1px solid var(--card-border);padding:2rem;border-radius:18px;box-shadow:0 4px 20px rgba(0,0,0,0.03);">
+                    <label style="font-size:0.95rem;font-weight:700;color:var(--text-primary);display:block;margin-bottom:0.85rem;">Дисциплины — основные предметы и профильные курсы</label>
+                    <textarea id="spec-modal-disciplines-input" rows="10" placeholder="Перечислите ключевые предметы, изучаемые технологии, лаборатории и курсы..." style="width:100%;font-size:1rem;line-height:1.75;padding:1.35rem;border-radius:14px;border:1px solid var(--card-border);background:var(--bg);color:var(--text-primary);resize:vertical;font-family:var(--font-body);outline:none;box-sizing:border-box;"></textarea>
                 </div>
-                <div id="spec-tab-career-edit" class="spec-tab-panel-edit" style="display:none;background:var(--card-bg);border:1px solid var(--card-border);padding:1.75rem;border-radius:16px;box-shadow:0 4px 20px rgba(0,0,0,0.03);">
-                    <label style="font-size:0.9rem;font-weight:700;color:var(--text-primary);display:block;margin-bottom:0.75rem;">Карьерные перспективы — профессии, средние зарплаты и трудоустройство</label>
-                    <textarea id="spec-modal-career-input" rows="9" placeholder="Опишите возможные должности, сферы работы, компании-партнёры и перспективы..." style="width:100%;font-size:0.98rem;line-height:1.7;padding:1.25rem;border-radius:12px;border:1px solid var(--card-border);background:var(--bg);color:var(--text-primary);resize:vertical;font-family:var(--font-body);outline:none;box-sizing:border-box;"></textarea>
+                <div id="spec-tab-career-edit" class="spec-tab-panel-edit" style="display:none;background:var(--card-bg);border:1px solid var(--card-border);padding:2rem;border-radius:18px;box-shadow:0 4px 20px rgba(0,0,0,0.03);">
+                    <label style="font-size:0.95rem;font-weight:700;color:var(--text-primary);display:block;margin-bottom:0.85rem;">Карьерные перспективы — профессии, средние зарплаты и трудоустройство</label>
+                    <textarea id="spec-modal-career-input" rows="10" placeholder="Опишите возможные должности, сферы работы, компании-партнёры и перспективы..." style="width:100%;font-size:1rem;line-height:1.75;padding:1.35rem;border-radius:14px;border:1px solid var(--card-border);background:var(--bg);color:var(--text-primary);resize:vertical;font-family:var(--font-body);outline:none;box-sizing:border-box;"></textarea>
                 </div>
             </div>
 
             <!-- Empty state -->
-            <div id="spec-modal-empty" style="display:none;text-align:center;padding:3rem;color:var(--text-secondary);background:var(--card-bg);border-radius:16px;border:1px dashed var(--card-border);">
-                <p style="font-size:1rem;margin:0;color:var(--text-secondary);">Описание этой специальности ещё не заполнено университетом.</p>
+            <div id="spec-modal-empty" style="display:none;text-align:center;padding:3.5rem;color:var(--text-secondary);background:var(--card-bg);border-radius:18px;border:1px dashed var(--card-border);">
+                <p style="font-size:1.05rem;margin:0;color:var(--text-secondary);">Описание этой специальности ещё не заполнено университетом.</p>
             </div>
         </div>
     </div>
     <!-- ====== END SPEC DETAIL MODAL ====== -->
-    <!-- ====== END SPEC DETAIL MODAL ====== -->
-    <!-- ====== END SPEC DETAIL MODAL ====== -->
+
+    <!-- ====== IMAGE CROP & SCALE MODAL ====== -->
+    <div id="image-crop-modal" class="modal-overlay" style="display:none; z-index:9999999999;">
+        <div class="modal-card glass-card" style="max-width:680px; width:92%; padding:1.75rem; border-radius:20px; box-shadow:0 20px 60px rgba(0,0,0,0.4);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.25rem;">
+                <h3 style="font-size:1.2rem; font-weight:700; color:var(--text-primary); margin:0;" id="crop-modal-title">Редактор масштаба и кадрирования</h3>
+                <button type="button" class="btn btn-back btn-sm" onclick="closeImageCropModal();">Отмена</button>
+            </div>
+
+            <!-- Canvas Container -->
+            <div id="crop-canvas-wrapper" style="width:100%; height:340px; background:#0e0e14; border-radius:14px; overflow:hidden; position:relative; cursor:grab; display:flex; align-items:center; justify-content:center; border:1px solid var(--card-border); user-select:none;">
+                <canvas id="crop-canvas" style="display:block; max-width:100%; max-height:100%;"></canvas>
+                <div style="position:absolute; bottom:12px; left:50%; transform:translateX(-50%); background:rgba(0,0,0,0.7); color:#fff; padding:5px 14px; border-radius:20px; font-size:0.75rem; pointer-events:none; backdrop-filter:blur(6px);">
+                    Зажмите и перетаскивайте мышью для перемещения
+                </div>
+            </div>
+
+            <!-- Controls: Scale Slider -->
+            <div style="margin-top:1.25rem; display:flex; align-items:center; gap:1rem;">
+                <span style="font-size:0.85rem; font-weight:600; color:var(--text-secondary); white-space:nowrap;">Масштаб:</span>
+                <button type="button" class="btn btn-outline btn-sm" id="crop-zoom-out" style="padding:0.35rem 0.75rem; font-weight:700;">-</button>
+                <input type="range" id="crop-scale-range" min="0.5" max="3" step="0.05" value="1" style="flex:1; cursor:pointer;">
+                <button type="button" class="btn btn-outline btn-sm" id="crop-zoom-in" style="padding:0.35rem 0.75rem; font-weight:700;">+</button>
+            </div>
+
+            <!-- Actions -->
+            <div style="display:flex; justify-content:flex-end; gap:0.75rem; margin-top:1.5rem;">
+                <button type="button" class="btn btn-outline" onclick="closeImageCropModal();">Отмена</button>
+                <button type="button" class="btn btn-primary" id="crop-save-btn">Сохранить фото</button>
+            </div>
+        </div>
+    </div>
+    <!-- ====== END IMAGE CROP & SCALE MODAL ====== -->
 
 
     <!-- Grainient WebGL Background Script -->
     <script src="/frontend/grainient.js"></script>
     
     <!-- App Logic Script -->
-    <script src="/frontend/app.js?v=38.0"></script>
+    <script src="/frontend/app.js?v=39.0"></script>
 </body>
 </html>
 

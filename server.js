@@ -1205,7 +1205,7 @@ app.post('/api/v1/students/profile', (req, res) => {
 app.post('/api/v1/universities/profile', (req, res) => {
     const { 
         partner_id, name, country, city, website, description, min_ielts, min_sat, specialties,
-        slogan, adv_1_title, adv_1_desc, adv_2_title, adv_2_desc, adv_3_title, adv_3_desc, photo 
+        slogan, adv_1_title, adv_1_desc, adv_2_title, adv_2_desc, adv_3_title, adv_3_desc, photo, banner 
     } = req.body;
     
     if (!partner_id || !name || !country || !city || !description) {
@@ -1238,6 +1238,7 @@ app.post('/api/v1/universities/profile', (req, res) => {
         uni.scholarship_info = req.body.scholarship_info || '';
         uni.contact_info = req.body.contact_info || '';
         uni.photo = photo || '';
+        uni.banner = banner || req.body.banner || '';
         uni.status = 'approved'; // Instantly publish university
     } else {
         uni = {
@@ -1263,6 +1264,7 @@ app.post('/api/v1/universities/profile', (req, res) => {
             scholarship_info: req.body.scholarship_info || '',
             contact_info: req.body.contact_info || '',
             photo: photo || '',
+            banner: banner || req.body.banner || '',
             status: 'approved',
             views: 0,
             created_at: new Date().toISOString()
