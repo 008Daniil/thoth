@@ -155,7 +155,7 @@ function renderCropCanvas() {
     const cropX = (canvas.width - cropW) / 2;
     const cropY = (canvas.height - cropH) / 2;
 
-    // Base dimensions required so image ALWAYS covers crop box 100%
+    // Base dimensions fitting inside crop box
     let baseW = cropW;
     let baseH = cropW / imgRatio;
 
@@ -164,25 +164,28 @@ function renderCropCanvas() {
         baseW = cropH * imgRatio;
     }
 
-    // Lock minimum scale to 1.0 (covering crop box completely)
-    if (cropState.scale < 1) {
-        cropState.scale = 1;
-        const rangeInput = document.getElementById("crop-scale-range");
-        if (rangeInput) rangeInput.value = 1;
+    const scale = cropState.scale || 1;
+    const drawW = baseW * scale;
+    const drawH = baseH * scale;
+
+    let imgX, imgY;
+    if (drawW <= cropW) {
+        cropState.offsetX = 0;
+        imgX = cropX + (cropW - drawW) / 2;
+    } else {
+        const maxOffsetX = (drawW - cropW) / 2;
+        cropState.offsetX = Math.min(maxOffsetX, Math.max(-maxOffsetX, cropState.offsetX));
+        imgX = (canvas.width - drawW) / 2 + cropState.offsetX;
     }
 
-    const drawW = baseW * cropState.scale;
-    const drawH = baseH * cropState.scale;
-
-    // Clamp drag offsets to keep image 100% covering crop box (no empty spaces!)
-    const maxOffsetX = Math.max(0, (drawW - cropW) / 2);
-    const maxOffsetY = Math.max(0, (drawH - cropH) / 2);
-
-    cropState.offsetX = Math.min(maxOffsetX, Math.max(-maxOffsetX, cropState.offsetX));
-    cropState.offsetY = Math.min(maxOffsetY, Math.max(-maxOffsetY, cropState.offsetY));
-
-    const imgX = (canvas.width - drawW) / 2 + cropState.offsetX;
-    const imgY = (canvas.height - drawH) / 2 + cropState.offsetY;
+    if (drawH <= cropH) {
+        cropState.offsetY = 0;
+        imgY = cropY + (cropH - drawH) / 2;
+    } else {
+        const maxOffsetY = (drawH - cropH) / 2;
+        cropState.offsetY = Math.min(maxOffsetY, Math.max(-maxOffsetY, cropState.offsetY));
+        imgY = (canvas.height - drawH) / 2 + cropState.offsetY;
+    }
 
     cropState.cropRect = {
         x: cropX, y: cropY, w: cropW, h: cropH,
@@ -237,16 +240,6 @@ function getCroppedBase64() {
     const img = cropState.img;
     const r = cropState.cropRect;
 
-    const nw = r.nw;
-    const nh = r.nh;
-
-    const scaleX = nw / r.drawW;
-    const scaleY = nh / r.drawH;
-
-    const sx = Math.max(0, (r.x - r.imgX) * scaleX);
-    const sy = Math.max(0, (r.y - r.imgY) * scaleY);
-    const sw = Math.min(nw - sx, r.w * scaleX);
-    const sh = Math.min(nh - sy, r.h * scaleY);
 
     const targetW = cropState.cropType === "banner" ? 1200 : 800;
     const targetH = Math.round(targetW / cropState.aspectRatio);
@@ -304,7 +297,7 @@ function setupImageCropModal() {
     const zoomOut = document.getElementById("crop-zoom-out");
     if (zoomOut) {
         zoomOut.addEventListener("click", () => {
-            cropState.scale = Math.max(0.5, cropState.scale - 0.15);
+            cropState.scale = Math.max(0.2, cropState.scale - 0.15);
             if (rangeInput) rangeInput.value = cropState.scale;
             renderCropCanvas();
         });
