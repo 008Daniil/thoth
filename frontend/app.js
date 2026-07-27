@@ -1776,7 +1776,8 @@ async function loadUniversityDetails(id) {
                 const card = document.createElement("div");
                 card.className = "wb-spec-option glass-card";
                 card.style.cursor = "pointer";
-                const feeStr = spec.tuition_fee ? `$${parseInt(spec.tuition_fee).toLocaleString()}/год` : "По запросу";
+                const feeNum = parseInt(spec.tuition_fee);
+                const feeStr = (!isNaN(feeNum) && feeNum > 0) ? `$${feeNum.toLocaleString()}/год` : (spec.tuition_fee || "По запросу");
                 card.innerHTML = `
                     <div class="wb-spec-opt-header">
                         <span class="wb-spec-opt-name">${spec.name || "Направление"}</span>
@@ -1784,18 +1785,32 @@ async function loadUniversityDetails(id) {
                     ${catLabel ? `<div style="font-size:0.75rem;color:var(--text-muted);margin:0.25rem 0 0.4rem;">${catLabel}</div>` : ""}
                     <div class="wb-spec-opt-fee">${feeStr}</div>
                     <div class="wb-spec-opt-action" style="margin-top:0.75rem;display:flex;justify-content:space-between;align-items:center;">
-                        <button class="btn btn-outline btn-sm spec-view-detail-btn" style="font-size:0.8rem;">Подробнее</button>
-                        <button class="btn btn-primary btn-sm spec-apply-btn" style="font-size:0.8rem;">Подать документы</button>
+                        <button type="button" class="btn btn-outline btn-sm spec-view-detail-btn" style="font-size:0.8rem;">Подробнее</button>
+                        <button type="button" class="btn btn-primary btn-sm spec-apply-btn" style="font-size:0.8rem;">Подать документы</button>
                     </div>
                 `;
-                card.querySelector(".spec-view-detail-btn").addEventListener("click", (e) => {
-                    e.stopPropagation();
+
+                // Clicking anywhere on card (except Apply button) opens spec detail modal
+                card.addEventListener("click", () => {
                     openSpecDetailModal(spec, null, false);
                 });
-                card.querySelector(".spec-apply-btn").addEventListener("click", (e) => {
-                    e.stopPropagation();
-                    openQuickApplyModal(uni.id, uni.name, spec.id);
-                });
+
+                const viewBtn = card.querySelector(".spec-view-detail-btn");
+                if (viewBtn) {
+                    viewBtn.addEventListener("click", (e) => {
+                        e.stopPropagation();
+                        openSpecDetailModal(spec, null, false);
+                    });
+                }
+
+                const applyBtn = card.querySelector(".spec-apply-btn");
+                if (applyBtn) {
+                    applyBtn.addEventListener("click", (e) => {
+                        e.stopPropagation();
+                        openQuickApplyModal(uni.id, uni.name, spec.id);
+                    });
+                }
+
                 specGrid.appendChild(card);
             });
         } else {
@@ -4179,6 +4194,7 @@ function renderEditorSpecialties() {
 
         // Open spec detail modal in edit mode
         row.querySelector(".editor-spec-next-btn").addEventListener("click", () => {
+            console.log("[SpecModal] Next btn clicked. spec:", spec);
             openSpecDetailModal(spec, idx, true);
         });
 
@@ -4241,8 +4257,12 @@ function renderEditorSpecialties() {
 // ============================
 
 function openSpecDetailModal(spec, specIdx, isEditMode) {
+    console.log("[SpecModal] Opening modal. spec:", spec, "isEditMode:", isEditMode);
     const modal = document.getElementById("spec-detail-modal");
-    if (!modal) return;
+    if (!modal) {
+        console.error("[SpecModal] Modal element not found!");
+        return;
+    }
 
     currentSpecDetailIdx = specIdx;
 
@@ -4257,7 +4277,11 @@ function openSpecDetailModal(spec, specIdx, isEditMode) {
     if (spec.duration) metaItems.push(`<span>📅 ${spec.duration}</span>`);
     if (spec.format) metaItems.push(`<span>🏫 ${spec.format}</span>`);
     if (spec.language) metaItems.push(`<span>🌐 ${spec.language}</span>`);
-    if (spec.tuition_fee) metaItems.push(`<span>💰 $${parseInt(spec.tuition_fee).toLocaleString()} / год</span>`);
+    if (spec.tuition_fee) {
+        const feeNum = parseInt(spec.tuition_fee);
+        const feeFormatted = (!isNaN(feeNum) && feeNum > 0) ? feeNum.toLocaleString() : spec.tuition_fee;
+        metaItems.push(`<span>💰 $${feeFormatted} / год</span>`);
+    }
     metaEl.innerHTML = metaItems.join("");
 
     // Requirements chips
