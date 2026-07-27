@@ -4257,86 +4257,121 @@ function renderEditorSpecialties() {
 // ============================
 
 function openSpecDetailModal(spec, specIdx, isEditMode) {
-    console.log("[SpecModal] Opening modal. spec:", spec, "isEditMode:", isEditMode);
+    if (!spec) spec = {};
     const modal = document.getElementById("spec-detail-modal");
     if (!modal) {
-        console.error("[SpecModal] Modal element not found!");
+        console.error("[SpecModal] Fatal: #spec-detail-modal not found in DOM");
         return;
     }
 
-    currentSpecDetailIdx = specIdx;
-
-    // Fill static info
-    const catObj = SPEC_CATEGORIES.find(c => c.value === spec.category);
-    document.getElementById("spec-modal-category-badge").textContent = catObj ? catObj.label : "Направление";
-    document.getElementById("spec-modal-name").textContent = spec.name || "Специальность";
-
-    // Meta row
-    const metaEl = document.getElementById("spec-modal-meta");
-    const metaItems = [];
-    if (spec.duration) metaItems.push(`<span>📅 ${spec.duration}</span>`);
-    if (spec.format) metaItems.push(`<span>🏫 ${spec.format}</span>`);
-    if (spec.language) metaItems.push(`<span>🌐 ${spec.language}</span>`);
-    if (spec.tuition_fee) {
-        const feeNum = parseInt(spec.tuition_fee);
-        const feeFormatted = (!isNaN(feeNum) && feeNum > 0) ? feeNum.toLocaleString() : spec.tuition_fee;
-        metaItems.push(`<span>💰 $${feeFormatted} / год</span>`);
-    }
-    metaEl.innerHTML = metaItems.join("");
-
-    // Requirements chips
-    const reqsEl = document.getElementById("spec-modal-reqs");
-    const tags = spec.reqTags || (spec.min_requirements ? spec.min_requirements.split(",").map(s => s.trim()).filter(Boolean) : []);
-    reqsEl.innerHTML = tags.map(t =>
-        `<span style="background:var(--card-bg);border:1px solid var(--card-border);padding:0.3rem 0.75rem;border-radius:20px;font-size:0.85rem;font-weight:600;">${t}</span>`
-    ).join("");
-
-    const detail = spec.detail || {};
-
-    if (isEditMode) {
-        // Edit mode
-        document.getElementById("spec-modal-content-view").style.display = "none";
-        document.getElementById("spec-modal-content-edit").style.display = "block";
-        document.getElementById("spec-modal-empty").style.display = "none";
-        document.getElementById("spec-modal-save-btn").style.display = "inline-flex";
-
-        document.getElementById("spec-modal-about-input").value = detail.about || "";
-        document.getElementById("spec-modal-disciplines-input").value = detail.disciplines || "";
-        document.getElementById("spec-modal-career-input").value = detail.career || "";
-
-        // Save button saves to spec object
-        document.getElementById("spec-modal-save-btn").onclick = () => {
-            spec.detail = {
-                about: document.getElementById("spec-modal-about-input").value.trim(),
-                disciplines: document.getElementById("spec-modal-disciplines-input").value.trim(),
-                career: document.getElementById("spec-modal-career-input").value.trim(),
-            };
-            showToast("Описание сохранено! Не забудьте нажать «Сохранить изменения».", "success");
-        };
-    } else {
-        // View mode
-        document.getElementById("spec-modal-save-btn").style.display = "none";
-        const hasContent = detail.about || detail.disciplines || detail.career;
-        if (hasContent) {
-            document.getElementById("spec-modal-content-view").style.display = "block";
-            document.getElementById("spec-modal-content-edit").style.display = "none";
-            document.getElementById("spec-modal-empty").style.display = "none";
-            document.getElementById("spec-modal-about-text").textContent = detail.about || "Информация не добавлена.";
-            document.getElementById("spec-modal-disciplines-text").textContent = detail.disciplines || "Информация не добавлена.";
-            document.getElementById("spec-modal-career-text").textContent = detail.career || "Информация не добавлена.";
-        } else {
-            document.getElementById("spec-modal-content-view").style.display = "none";
-            document.getElementById("spec-modal-content-edit").style.display = "none";
-            document.getElementById("spec-modal-empty").style.display = "block";
-        }
-    }
-
-    // Reset to first tab
-    activateSpecModalTab("about", isEditMode);
-
+    // Force display block first so the modal opens regardless of minor DOM filling errors
     modal.style.display = "block";
     modal.scrollTop = 0;
-    lucide.createIcons();
+
+    try {
+        currentSpecDetailIdx = specIdx;
+
+        // Fill static info
+        const catObj = SPEC_CATEGORIES.find(c => c.value === spec.category);
+        const badgeEl = document.getElementById("spec-modal-category-badge");
+        if (badgeEl) badgeEl.textContent = catObj ? catObj.label : (spec.category || "Направление");
+
+        const nameEl = document.getElementById("spec-modal-name");
+        if (nameEl) nameEl.textContent = spec.name || "Название программы не указано";
+
+        // Meta row
+        const metaEl = document.getElementById("spec-modal-meta");
+        if (metaEl) {
+            const metaItems = [];
+            if (spec.duration) metaItems.push(`<span>📅 ${spec.duration}</span>`);
+            if (spec.format) metaItems.push(`<span>🏫 ${spec.format}</span>`);
+            if (spec.language) metaItems.push(`<span>🌐 ${spec.language}</span>`);
+            if (spec.tuition_fee) {
+                const feeNum = parseInt(spec.tuition_fee);
+                const feeFormatted = (!isNaN(feeNum) && feeNum > 0) ? feeNum.toLocaleString() : spec.tuition_fee;
+                metaItems.push(`<span>💰 $${feeFormatted} / год</span>`);
+            }
+            metaEl.innerHTML = metaItems.join("");
+        }
+
+        // Requirements chips
+        const reqsEl = document.getElementById("spec-modal-reqs");
+        if (reqsEl) {
+            const tags = spec.reqTags || (spec.min_requirements ? spec.min_requirements.split(",").map(s => s.trim()).filter(Boolean) : []);
+            reqsEl.innerHTML = tags.map(t =>
+                `<span style="background:var(--card-bg);border:1px solid var(--card-border);padding:0.3rem 0.75rem;border-radius:20px;font-size:0.85rem;font-weight:600;">${t}</span>`
+            ).join("");
+        }
+
+        const detail = spec.detail || {};
+
+        if (isEditMode) {
+            // Edit mode
+            const viewCont = document.getElementById("spec-modal-content-view");
+            const editCont = document.getElementById("spec-modal-content-edit");
+            const emptyCont = document.getElementById("spec-modal-empty");
+            const saveBtn = document.getElementById("spec-modal-save-btn");
+
+            if (viewCont) viewCont.style.display = "none";
+            if (editCont) editCont.style.display = "block";
+            if (emptyCont) emptyCont.style.display = "none";
+            if (saveBtn) saveBtn.style.display = "inline-flex";
+
+            const aboutInp = document.getElementById("spec-modal-about-input");
+            const discInp = document.getElementById("spec-modal-disciplines-input");
+            const careerInp = document.getElementById("spec-modal-career-input");
+
+            if (aboutInp) aboutInp.value = detail.about || "";
+            if (discInp) discInp.value = detail.disciplines || "";
+            if (careerInp) careerInp.value = detail.career || "";
+
+            if (saveBtn) {
+                saveBtn.onclick = (e) => {
+                    e.preventDefault();
+                    spec.detail = {
+                        about: aboutInp ? aboutInp.value.trim() : "",
+                        disciplines: discInp ? discInp.value.trim() : "",
+                        career: careerInp ? careerInp.value.trim() : "",
+                    };
+                    showToast("Описание сохранено! Не забудьте нажать «Сохранить изменения».", "success");
+                };
+            }
+        } else {
+            // View mode
+            const saveBtn = document.getElementById("spec-modal-save-btn");
+            if (saveBtn) saveBtn.style.display = "none";
+
+            const viewCont = document.getElementById("spec-modal-content-view");
+            const editCont = document.getElementById("spec-modal-content-edit");
+            const emptyCont = document.getElementById("spec-modal-empty");
+
+            const hasContent = detail.about || detail.disciplines || detail.career;
+            if (hasContent) {
+                if (viewCont) viewCont.style.display = "block";
+                if (editCont) editCont.style.display = "none";
+                if (emptyCont) emptyCont.style.display = "none";
+
+                const aboutText = document.getElementById("spec-modal-about-text");
+                const discText = document.getElementById("spec-modal-disciplines-text");
+                const careerText = document.getElementById("spec-modal-career-text");
+
+                if (aboutText) aboutText.textContent = detail.about || "Информация не добавлена.";
+                if (discText) discText.textContent = detail.disciplines || "Информация не добавлена.";
+                if (careerText) careerText.textContent = detail.career || "Информация не добавлена.";
+            } else {
+                if (viewCont) viewCont.style.display = "none";
+                if (editCont) editCont.style.display = "none";
+                if (emptyCont) emptyCont.style.display = "block";
+            }
+        }
+
+        // Reset to first tab
+        activateSpecModalTab("about", isEditMode);
+    } catch (err) {
+        console.error("[SpecModal] Error rendering modal content:", err);
+    }
+
+    if (window.lucide) lucide.createIcons();
 }
 
 function activateSpecModalTab(tabName, isEditMode) {
