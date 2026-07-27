@@ -105,12 +105,15 @@ function openImageCropModal(imgSrc, cropType, onSaveCallback) {
     const rangeInput = document.getElementById("crop-scale-range");
     if (rangeInput) rangeInput.value = 1;
 
+    modal.style.display = "flex";
+    setTimeout(() => modal.classList.add("show"), 10);
+
     const img = new Image();
     img.onload = () => {
         cropState.img = img;
-        modal.style.display = "flex";
-        setTimeout(() => modal.classList.add("show"), 10);
-        renderCropCanvas();
+        requestAnimationFrame(() => {
+            renderCropCanvas();
+        });
     };
     img.src = imgSrc;
 }
@@ -240,6 +243,7 @@ function getCroppedBase64() {
     const img = cropState.img;
     const r = cropState.cropRect;
 
+    if (!r.w || !r.h || r.w <= 0 || r.h <= 0) return "";
 
     const targetW = cropState.cropType === "banner" ? 1200 : 800;
     const targetH = Math.round(targetW / cropState.aspectRatio);
@@ -249,9 +253,38 @@ function getCroppedBase64() {
     tempCanvas.height = targetH;
 
     const tCtx = tempCanvas.getContext("2d");
-    tCtx.drawImage(img, sx, sy, sw, sh, 0, 0, targetW, targetH);
 
-    return tempCanvas.toDataURL("image/jpeg", 0.92);
+    // Clean background fill (white for card, dark for banner)
+    tCtx.fillStyle = cropState.cropType === "banner" ? "#111111" : "#ffffff";
+    tCtx.fillRect(0, 0, targetW, targetH);
+
+    // Scale ratio from crop frame to target output canvas
+    const cropScale = targetW / r.w;
+
+    // Destination coordinates on target canvas
+    const destX = (r.imgX - r.x) * cropScale;
+    const destY = (r.imgY - r.y) * cropScale;
+    const destW = r.drawW * cropScale;
+    const destH = r.drawH * cropScale;
+
+    if (!isFinite(destX) || !isFinite(destY) || !isFinite(destW) || !isFinite(destH) || destW <= 0 || destH <= 0) {
+        return "";
+    }
+
+    try {
+        tCtx.save();
+        tCtx.beginPath();
+        tCtx.rect(0, 0, targetW, targetH);
+        tCtx.clip();
+
+        tCtx.drawImage(img, destX, destY, destW, destH);
+        tCtx.restore();
+
+        return tempCanvas.toDataURL("image/jpeg", 0.92);
+    } catch (e) {
+        console.error("[Crop] Error rendering cropped base64:", e);
+        return "";
+    }
 }
 
 function setupImageCropModal() {
