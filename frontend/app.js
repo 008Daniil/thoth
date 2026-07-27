@@ -2564,22 +2564,20 @@ function renderLeadsTable() {
 
         tr.querySelector(".delete-lead-btn").addEventListener("click", async (e) => {
             e.stopPropagation();
-            if (confirm(`Вы действительно хотите удалить заявку абитуриента ${studentName}?`)) {
-                try {
-                    const res = await fetch(`${API_BASE}/api/v1/applications/${lead.id}`, {
-                        method: "DELETE"
-                    });
-                    if (res.ok) {
-                        showToast("Заявка успешно удалена", "success");
-                        if (myUniversity) {
-                            loadPartnerDashboardData(myUniversity.id);
-                        }
-                    } else {
-                        throw new Error("Не удалось удалить заявку");
+            try {
+                const res = await fetch(`${API_BASE}/api/v1/applications/${lead.id}`, {
+                    method: "DELETE"
+                });
+                if (res.ok) {
+                    showToast("Заявка успешно удалена", "success");
+                    if (myUniversity) {
+                        loadPartnerDashboardData(myUniversity.id);
                     }
-                } catch (err) {
-                    showToast(err.message, "danger");
+                } else {
+                    throw new Error("Не удалось удалить заявку");
                 }
+            } catch (err) {
+                showToast(err.message, "danger");
             }
         });
 
