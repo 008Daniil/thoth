@@ -1796,20 +1796,35 @@ function renderUniversityCards(list) {
             ? `background-image: url('${uni.photo}'); background-size: cover; background-position: center;`
             : `background: var(--bg-accent);`;
 
+        const priceText = uni.contract_price ? `от $${Number(uni.contract_price).toLocaleString()} / год` : 'от $1,500 / год';
+        const ieltsVal = uni.min_ielts ? `IELTS ${uni.min_ielts}+` : 'IELTS 5.5+';
+        const satVal = uni.min_sat ? ` / SAT ${uni.min_sat}+` : ' / SAT 1200+';
+        const reqText = `${ieltsVal}${satVal}`;
+
         card.innerHTML = `
             <div class="uni-card-top-content">
                 <div class="uni-card-main-info">
-                    <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.6rem;">
-                        <span style="background: var(--primary); color: var(--bg); font-size:0.75rem; font-weight:700; padding:0.25rem 0.65rem; border-radius:6px;">${isDefault ? 'ТОП ВУЗ' : 'ПАРТНЕР'}</span>
-                    </div>
                     <h3 class="uni-card-title">${uni.name}</h3>
                     <p class="uni-card-location"><i data-lucide="map-pin"></i> ${uni.city || 'Кампус'}, ${uni.country || 'Страна'}</p>
-                    ${uni.slogan ? `<p style="font-size: 0.88rem; color: var(--text-secondary); font-style: italic; margin: 0.35rem 0 0.5rem 0; line-height: 1.4;">${uni.slogan}</p>` : ''}
+                    ${uni.slogan ? `<p style="font-size: 0.9rem; color: var(--text-secondary); font-style: italic; margin: 0.25rem 0 0.5rem 0; line-height: 1.4;">${uni.slogan}</p>` : ''}
+                    
+                    <!-- Middle Meta Block: Price & Requirements -->
+                    <div style="margin: 0.65rem 0 0.9rem 0; padding: 0.65rem 1rem; background: var(--bg-accent); border-radius: 12px; border: 1px solid var(--card-border); display: flex; flex-wrap: wrap; align-items: center; gap: 1.25rem;">
+                        <div>
+                            <span style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; display: block; margin-bottom: 2px;">Стоимость:</span>
+                            <span style="font-size: 0.95rem; font-weight: 700; color: var(--primary);">${priceText}</span>
+                        </div>
+                        <div style="border-left: 1px solid var(--card-border); padding-left: 1.25rem;">
+                            <span style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; display: block; margin-bottom: 2px;">Требования:</span>
+                            <span style="font-size: 0.95rem; font-weight: 700; color: var(--text-primary);">${reqText}</span>
+                        </div>
+                    </div>
+
                     <p class="uni-card-description">${uni.description || 'Официальный партнер THOTH.'}</p>
                 </div>
 
                 <div class="uni-card-right-corner-photo" style="${photoStyle}">
-                    ${hasPhoto ? '' : `<span style="color: var(--text-muted); font-size: 1.4rem; font-weight: 800;">${alias}</span>`}
+                    ${hasPhoto ? '' : `<span style="color: var(--text-muted); font-size: 1.5rem; font-weight: 800;">${alias}</span>`}
                 </div>
             </div>
 

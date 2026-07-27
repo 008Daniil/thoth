@@ -871,14 +871,12 @@ body.dark-theme .price-range-display {
 }
 
 .uni-card-right-corner-photo {
-    flex: 1 1 50%;
-    min-width: 320px;
-    align-self: stretch;
+    width: 360px;
+    height: 230px;
+    align-self: center;
     flex-shrink: 0;
-    border-top-right-radius: 19px;
-    border-top-left-radius: 20px;
-    border-bottom-left-radius: 20px;
-    margin: 0.85rem 0.85rem 0.85rem 0;
+    border-radius: 18px;
+    margin: 1.25rem 1.25rem 1.25rem 0;
     overflow: hidden;
     background: var(--bg-accent);
     background-size: cover !important;
@@ -888,6 +886,7 @@ body.dark-theme .price-range-display {
     display: flex;
     align-items: center;
     justify-content: center;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.14);
 }
 
 .uni-card-footer-bar {
