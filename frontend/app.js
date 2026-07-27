@@ -215,20 +215,44 @@ function updateLivePreview() {
 function getCroppedBase64() {
     if (!cropState.img || !cropState.cropRect) return "";
 
-    const tempCanvas = document.createElement("canvas");
-    const targetW = cropState.cropType === "banner" ? 1200 : 640;
+    const img = cropState.img;
+    const r = cropState.cropRect; // { x, y, w, h, imgX, imgY, drawW, drawH }
+
+    // Natural dimensions of original uploaded image
+    const nw = img.naturalWidth || img.width;
+    const nh = img.naturalHeight || img.height;
+
+    if (!nw || !nh || !r.drawW || !r.drawH) return "";
+
+    // Scale ratio between canvas draw size and natural image resolution
+    const scaleX = nw / r.drawW;
+    const scaleY = nh / r.drawH;
+
+    // Crop box coordinates mapped to natural image space
+    let sx = (r.x - r.imgX) * scaleX;
+    let sy = (r.y - r.imgY) * scaleY;
+    let sw = r.w * scaleX;
+    let sh = r.h * scaleY;
+
+    // Clamp coordinates to natural image boundaries
+    if (sx < 0) { sw += sx; sx = 0; }
+    if (sy < 0) { sh += sy; sy = 0; }
+    if (sx + sw > nw) { sw = nw - sx; }
+    if (sy + sh > nh) { sh = nh - sy; }
+
+    const targetW = cropState.cropType === "banner" ? 1200 : 800;
     const targetH = Math.round(targetW / cropState.aspectRatio);
 
+    const tempCanvas = document.createElement("canvas");
     tempCanvas.width = targetW;
     tempCanvas.height = targetH;
 
     const tCtx = tempCanvas.getContext("2d");
-    const mainCanvas = document.getElementById("crop-canvas");
+    tCtx.fillStyle = "#ffffff";
+    tCtx.fillRect(0, 0, targetW, targetH);
 
-    if (!mainCanvas) return "";
-
-    const r = cropState.cropRect;
-    tCtx.drawImage(mainCanvas, r.x, r.y, r.w, r.h, 0, 0, targetW, targetH);
+    // Draw directly from original image source, clean without any black overlays or borders!
+    tCtx.drawImage(img, sx, sy, sw, sh, 0, 0, targetW, targetH);
 
     return tempCanvas.toDataURL("image/jpeg", 0.92);
 }
