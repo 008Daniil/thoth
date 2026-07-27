@@ -32,6 +32,31 @@ const SPEC_CATEGORIES = [
 // Track which specialty is being edited in the detail modal
 let currentSpecDetailIdx = null;
 
+// Global helper for opening specialty detail modal from partner editor
+window.handleOpenEditorSpecDetail = function(event, idx) {
+    if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+    }
+    if (typeof currentSpecialties !== "undefined" && currentSpecialties && currentSpecialties[idx]) {
+        openSpecDetailModal(currentSpecialties[idx], idx, true);
+    }
+};
+
+// Global helper for opening specialty detail modal from student view
+window.handleOpenStudentSpecDetail = function(event, specId) {
+    if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+    }
+    if (window.currentLoadedUniversity && window.currentLoadedUniversity.specialties) {
+        const spec = window.currentLoadedUniversity.specialties.find(s => String(s.id) === String(specId) || s.name === specId);
+        if (spec) {
+            openSpecDetailModal(spec, null, false);
+            return;
+        }
+    }
+};
 
 let chartInstance = null; // Store Chart.js instance to prevent memory leaks
 let bgGrainient = null; // WebGL shader background instance
@@ -964,6 +989,24 @@ function setupEventListeners() {
     // Initialize spec detail modal tabs and back button
     setupSpecDetailModal();
 
+    // Global Event Delegation for Specialty Detail Modals
+    document.addEventListener("click", (e) => {
+        const nextBtn = e.target.closest(".editor-spec-next-btn");
+        if (nextBtn) {
+            e.preventDefault();
+            e.stopPropagation();
+            const row = nextBtn.closest(".editor-spec-row");
+            if (row) {
+                const allRows = Array.from(document.querySelectorAll(".editor-spec-row"));
+                const idx = allRows.indexOf(row);
+                if (idx !== -1 && currentSpecialties && currentSpecialties[idx]) {
+                    openSpecDetailModal(currentSpecialties[idx], idx, true);
+                    return;
+                }
+            }
+        }
+    });
+
     const editorAddAdvBtn = document.getElementById("editor-add-adv-btn");
     if (editorAddAdvBtn) {
         editorAddAdvBtn.addEventListener("click", () => {
@@ -1578,6 +1621,7 @@ async function loadUniversityDetails(id) {
         if (!res.ok) throw new Error("Failed to load details");
         
         const uni = await res.json();
+        window.currentLoadedUniversity = uni;
         
         // 1. Title, Alias & Slogan
         document.getElementById("det-uni-name").textContent = uni.name;
@@ -1785,22 +1829,24 @@ async function loadUniversityDetails(id) {
                     ${catLabel ? `<div style="font-size:0.75rem;color:var(--text-muted);margin:0.25rem 0 0.4rem;">${catLabel}</div>` : ""}
                     <div class="wb-spec-opt-fee">${feeStr}</div>
                     <div class="wb-spec-opt-action" style="margin-top:0.75rem;display:flex;justify-content:space-between;align-items:center;">
-                        <button type="button" class="btn btn-outline btn-sm spec-view-detail-btn" style="font-size:0.8rem;">Подробнее</button>
+                        <button type="button" class="btn btn-outline btn-sm spec-view-detail-btn" onclick="handleOpenStudentSpecDetail(event, '${spec.id}')" style="font-size:0.8rem;">Подробнее</button>
                         <button type="button" class="btn btn-primary btn-sm spec-apply-btn" style="font-size:0.8rem;">Подать документы</button>
                     </div>
                 `;
 
                 // Clicking anywhere on card (except Apply button) opens spec detail modal
-                card.addEventListener("click", () => {
-                    openSpecDetailModal(spec, null, false);
-                });
+                card.onclick = (e) => {
+                    if (!e.target.closest('.spec-apply-btn')) {
+                        openSpecDetailModal(spec, null, false);
+                    }
+                };
 
                 const viewBtn = card.querySelector(".spec-view-detail-btn");
                 if (viewBtn) {
-                    viewBtn.addEventListener("click", (e) => {
+                    viewBtn.onclick = (e) => {
                         e.stopPropagation();
                         openSpecDetailModal(spec, null, false);
-                    });
+                    };
                 }
 
                 const applyBtn = card.querySelector(".spec-apply-btn");
@@ -4178,8 +4224,8 @@ function renderEditorSpecialties() {
 
             <!-- Next button to open detail page -->
             <div style="display:flex;justify-content:flex-end;margin-top:0.75rem;">
-                <button type="button" class="editor-spec-next-btn btn btn-primary btn-sm">
-                    Описание программы <i data-lucide="chevron-right" style="width:16px;height:16px;vertical-align:middle;"></i>
+                <button type="button" class="editor-spec-next-btn btn btn-primary btn-sm" onclick="handleOpenEditorSpecDetail(event, ${idx})">
+                    Описание программы
                 </button>
             </div>
         `;
@@ -4252,19 +4298,29 @@ function renderEditorSpecialties() {
     });
 }
 
-// ============================
-// SPEC DETAIL MODAL FUNCTIONS
-// ============================
+function closeSpecDetailModal() {
+    const modal = document.getElementById("spec-detail-modal");
+    if (modal) {
+        modal.style.display = "none";
+        document.body.style.overflow = "";
+    }
+}
 
 function openSpecDetailModal(spec, specIdx, isEditMode) {
     if (!spec) spec = {};
-    const modal = document.getElementById("spec-detail-modal");
+    let modal = document.getElementById("spec-detail-modal");
     if (!modal) {
         console.error("[SpecModal] Fatal: #spec-detail-modal not found in DOM");
         return;
     }
 
-    // Force display block first so the modal opens regardless of minor DOM filling errors
+    // Move modal to body level to break out of any parent CSS transform stacking context
+    if (modal.parentNode !== document.body) {
+        document.body.appendChild(modal);
+    }
+
+    // Lock background page scroll and show modal
+    document.body.style.overflow = "hidden";
     modal.style.display = "block";
     modal.scrollTop = 0;
 
@@ -4283,15 +4339,15 @@ function openSpecDetailModal(spec, specIdx, isEditMode) {
         const metaEl = document.getElementById("spec-modal-meta");
         if (metaEl) {
             const metaItems = [];
-            if (spec.duration) metaItems.push(`<span>📅 ${spec.duration}</span>`);
-            if (spec.format) metaItems.push(`<span>🏫 ${spec.format}</span>`);
-            if (spec.language) metaItems.push(`<span>🌐 ${spec.language}</span>`);
+            if (spec.duration) metaItems.push(`<span>${spec.duration}</span>`);
+            if (spec.format) metaItems.push(`<span>${spec.format}</span>`);
+            if (spec.language) metaItems.push(`<span>${spec.language}</span>`);
             if (spec.tuition_fee) {
                 const feeNum = parseInt(spec.tuition_fee);
                 const feeFormatted = (!isNaN(feeNum) && feeNum > 0) ? feeNum.toLocaleString() : spec.tuition_fee;
-                metaItems.push(`<span>💰 $${feeFormatted} / год</span>`);
+                metaItems.push(`<span>$${feeFormatted} / год</span>`);
             }
-            metaEl.innerHTML = metaItems.join("");
+            metaEl.innerHTML = metaItems.join('<span style="opacity:0.35;margin:0 0.35rem;">•</span>');
         }
 
         // Requirements chips
@@ -4304,8 +4360,13 @@ function openSpecDetailModal(spec, specIdx, isEditMode) {
         }
 
         const detail = spec.detail || {};
+        const modeBar = document.getElementById("spec-modal-mode-bar");
+        const studentApplyCont = document.getElementById("spec-modal-student-apply-container");
 
         if (isEditMode) {
+            if (modeBar) modeBar.style.display = "flex";
+            if (studentApplyCont) studentApplyCont.style.display = "none";
+
             // Edit mode
             const viewCont = document.getElementById("spec-modal-content-view");
             const editCont = document.getElementById("spec-modal-content-edit");
@@ -4337,6 +4398,19 @@ function openSpecDetailModal(spec, specIdx, isEditMode) {
                 };
             }
         } else {
+            if (modeBar) modeBar.style.display = "none";
+            if (studentApplyCont) studentApplyCont.style.display = "block";
+
+            const applyBtn = document.getElementById("spec-modal-apply-btn");
+            if (applyBtn) {
+                applyBtn.onclick = () => {
+                    modal.style.display = "none";
+                    const uId = window.currentLoadedUniversity ? window.currentLoadedUniversity.id : DEFAULT_UNI_ID;
+                    const uName = window.currentLoadedUniversity ? window.currentLoadedUniversity.name : "Университет";
+                    openQuickApplyModal(uId, uName, spec.id);
+                };
+            }
+
             // View mode
             const saveBtn = document.getElementById("spec-modal-save-btn");
             if (saveBtn) saveBtn.style.display = "none";
