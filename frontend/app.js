@@ -1792,26 +1792,31 @@ function renderUniversityCards(list) {
         const alias = uni.name.split(" ").map(w => w[0]).join("").substring(0, 4);
 
         const hasPhoto = uni.photo && uni.photo.startsWith("data:image/");
-        const placeholderStyle = hasPhoto 
-            ? `background-image: url('${uni.photo}'); background-size: cover; background-position: center; border-bottom: 1px solid var(--card-border);`
-            : `background: var(--bg-accent); border-bottom: 1px solid var(--card-border);`;
+        const photoStyle = hasPhoto 
+            ? `background-image: url('${uni.photo}'); background-size: cover; background-position: center;`
+            : `background: var(--bg-accent);`;
 
         card.innerHTML = `
-            <div class="uni-card-img-placeholder" style="${placeholderStyle}">
-                <div class="uni-card-tag" style="background: var(--primary); color: var(--bg);">${isDefault ? 'ТОП ВУЗ' : 'ПАРТНЕР'}</div>
-                ${hasPhoto ? '' : `<span class="uni-card-alias" style="color: var(--text-muted);">${alias}</span>`}
-            </div>
-            <div class="uni-card-body">
-                <h3 class="uni-card-title">${uni.name}</h3>
-                <p class="uni-card-location"><i data-lucide="map-pin"></i> ${uni.city || 'Кампус'}, ${uni.country || 'Страна'}</p>
-                ${uni.slogan ? `<p style="font-size: 0.9rem; color: var(--text-secondary); font-style: italic; margin: 0.25rem 0 0.5rem 0; line-height: 1.4;">${uni.slogan}</p>` : ''}
-                <p class="uni-card-description">${uni.description || 'Официальный партнер THOTH.'}</p>
-                
-                <div class="uni-card-footer">
-                    <div class="uni-card-actions">
-                        <button class="btn btn-outline btn-sm" id="view-${uni.id}">Подробнее</button>
-                        <button class="btn btn-primary btn-sm" id="apply-${uni.id}">Подать документы</button>
+            <div class="uni-card-content-layout">
+                <div class="uni-card-main-info">
+                    <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.6rem;">
+                        <span style="background: var(--primary); color: var(--bg); font-size:0.75rem; font-weight:700; padding:0.25rem 0.65rem; border-radius:6px;">${isDefault ? 'ТОП ВУЗ' : 'ПАРТНЕР'}</span>
                     </div>
+                    <h3 class="uni-card-title">${uni.name}</h3>
+                    <p class="uni-card-location"><i data-lucide="map-pin"></i> ${uni.city || 'Кампус'}, ${uni.country || 'Страна'}</p>
+                    ${uni.slogan ? `<p style="font-size: 0.88rem; color: var(--text-secondary); font-style: italic; margin: 0.35rem 0 0.5rem 0; line-height: 1.4;">${uni.slogan}</p>` : ''}
+                    <p class="uni-card-description">${uni.description || 'Официальный партнер THOTH.'}</p>
+                    
+                    <div class="uni-card-footer" style="margin-top: 1.25rem;">
+                        <div class="uni-card-actions">
+                            <button class="btn btn-outline btn-sm" id="view-${uni.id}">Подробнее</button>
+                            <button class="btn btn-primary btn-sm" id="apply-${uni.id}">Подать документы</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="uni-card-right-photo" style="${photoStyle}">
+                    ${hasPhoto ? '' : `<span style="color: var(--text-muted); font-size: 1.2rem; font-weight: 800;">${alias}</span>`}
                 </div>
             </div>
         `;
@@ -4924,6 +4929,7 @@ async function saveWYSIWYGData() {
         document.getElementById("partner-cabinet-block").style.display = "block";
         document.getElementById("partner-dashboard-view").style.display = "block";
         renderPartnerCabinet();
+        loadUniversities();
     } catch (err) {
         showToast(err.message || "Ошибка отправки профиля", "danger");
     } finally {
