@@ -1804,9 +1804,6 @@ function renderUniversityCards(list) {
         card.innerHTML = `
             <div class="uni-card-top-content">
                 <div class="uni-card-main-info">
-                    <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.6rem;">
-                        <span style="background: var(--primary); color: var(--bg); font-size:0.75rem; font-weight:700; padding:0.25rem 0.65rem; border-radius:6px;">${isDefault ? 'ТОП ВУЗ' : 'ПАРТНЕР'}</span>
-                    </div>
                     <h3 class="uni-card-title">${uni.name}</h3>
                     <p class="uni-card-location"><i data-lucide="map-pin"></i> ${uni.city || 'Кампус'}, ${uni.country || 'Страна'}</p>
                     ${uni.slogan ? `<p style="font-size: 0.88rem; color: var(--text-secondary); font-style: italic; margin: 0.35rem 0 0.5rem 0; line-height: 1.4;">${uni.slogan}</p>` : ''}
