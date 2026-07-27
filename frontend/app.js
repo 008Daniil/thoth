@@ -148,6 +148,20 @@ function handleRoute() {
         param = hash.split("/")[1];
     }
 
+    // Hide visual editor and restore dashboard blocks on any navigation
+    const partnerEditor = document.getElementById("page-partner-editor");
+    if (partnerEditor) {
+        partnerEditor.style.display = "none";
+    }
+    const partnerCabinetBlock = document.getElementById("partner-cabinet-block");
+    if (partnerCabinetBlock) {
+        partnerCabinetBlock.style.display = "block";
+    }
+    const partnerDashboardView = document.getElementById("partner-dashboard-view");
+    if (partnerDashboardView) {
+        partnerDashboardView.style.display = "block";
+    }
+
     // Hide all sections first
     document.querySelectorAll(".page-section").forEach(sec => {
         sec.classList.remove("active");
@@ -4006,9 +4020,9 @@ function renderEditorSpecialties() {
         const activeLangs = spec.language ? spec.language.split("/").map(s => s.trim()) : ["Английский", "Русский"];
         const langButtons = langs.map(lang => {
             const isActive = activeLangs.includes(lang);
-            const bg = isActive ? "var(--primary)" : "var(--card-bg)";
+            const bg = isActive ? "var(--primary)" : "var(--bg-accent)";
             const border = isActive ? "1px solid var(--primary)" : "1px solid var(--card-border)";
-            const color = isActive ? "#fff" : "var(--text-secondary)";
+            const color = isActive ? "var(--bg)" : "var(--text-secondary)";
             return `
                 <button type="button" class="lang-chip-btn" data-lang="${lang}" style="background:${bg}; border:${border}; color:${color}; padding: 0.35rem 0.75rem; border-radius: 8px; font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: all 0.2s; outline: none; border-style: solid;">
                     ${lang}
