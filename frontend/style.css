@@ -2328,6 +2328,8 @@ body.dark-theme .wb-spec-opt-action {
     cursor: pointer;
     line-height: 1;
     transition: var(--transition);
+    z-index: 100;
+    pointer-events: auto;
 }
 
 .modal-close-btn:hover {

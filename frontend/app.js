@@ -299,36 +299,52 @@ function setupEventListeners() {
     }
 
     // Navigation hooks
-    document.getElementById("logo-btn").addEventListener("click", (e) => {
-        e.preventDefault();
-        window.location.hash = "home";
-    });
+    const logoBtn = document.getElementById("logo-btn");
+    if (logoBtn) {
+        logoBtn.addEventListener("click", (e) => {
+            e.preventDefault();
+            window.location.hash = "home";
+        });
+    }
     
-    document.getElementById("header-profile-btn").addEventListener("click", () => {
-        window.location.hash = "profile";
-    });
+    const headerProfileBtn = document.getElementById("header-profile-btn");
+    if (headerProfileBtn) {
+        headerProfileBtn.addEventListener("click", () => {
+            window.location.hash = "profile";
+        });
+    }
 
-    document.getElementById("back-to-home-btn").addEventListener("click", () => {
-        window.location.hash = "home";
-    });
+    const backToHomeBtn = document.getElementById("back-to-home-btn");
+    if (backToHomeBtn) {
+        backToHomeBtn.addEventListener("click", () => {
+            window.location.hash = "home";
+        });
+    }
 
-    document.getElementById("footer-partner-link").addEventListener("click", (e) => {
-        e.preventDefault();
-        window.location.hash = "partner";
-    });
+    const footerPartnerLink = document.getElementById("footer-partner-link");
+    if (footerPartnerLink) {
+        footerPartnerLink.addEventListener("click", (e) => {
+            e.preventDefault();
+            window.location.hash = "partner";
+        });
+    }
 
     // File input changes preview UI
     const fileInput = document.getElementById("form-file");
-    fileInput.addEventListener("change", (e) => {
-        const preview = document.getElementById("file-name-preview");
-        if (e.target.files.length > 0) {
-            preview.textContent = `Выбран: ${e.target.files[0].name}`;
-            preview.style.color = "#10B981";
-        } else {
-            preview.textContent = "Файл не выбран";
-            preview.style.color = "";
-        }
-    });
+    if (fileInput) {
+        fileInput.addEventListener("change", (e) => {
+            const preview = document.getElementById("file-name-preview");
+            if (preview) {
+                if (e.target.files.length > 0) {
+                    preview.textContent = `Выбран: ${e.target.files[0].name}`;
+                    preview.style.color = "#10B981";
+                } else {
+                    preview.textContent = "Файл не выбран";
+                    preview.style.color = "";
+                }
+            }
+        });
+    }
 
     // Live Search and Filters Binding
     const searchBtn = document.getElementById("search-btn");
@@ -396,18 +412,20 @@ function setupEventListeners() {
     // Search filter dropdown toggle
     const filterBtn = document.getElementById("filter-btn");
     const filterMenu = document.getElementById("filter-menu");
-    filterBtn.addEventListener("click", (e) => {
-        e.stopPropagation();
-        filterMenu.classList.toggle("show");
-    });
-    
-    document.addEventListener("click", () => {
-        filterMenu.classList.remove("show");
-    });
-    
-    filterMenu.addEventListener("click", (e) => {
-        e.stopPropagation();
-    });
+    if (filterBtn && filterMenu) {
+        filterBtn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            filterMenu.classList.toggle("show");
+        });
+        
+        document.addEventListener("click", () => {
+            filterMenu.classList.remove("show");
+        });
+        
+        filterMenu.addEventListener("click", (e) => {
+            e.stopPropagation();
+        });
+    }
 
     // Quick Apply Modal Close Listeners
     const closeApplyModalBtn = document.getElementById("close-apply-modal-btn");
@@ -530,14 +548,17 @@ function setupEventListeners() {
     }
 
     // Authorization in passport view
-    document.getElementById("load-profile-btn").addEventListener("click", () => {
-        const phone = document.getElementById("auth-phone-input").value;
-        if (!phone.trim()) {
-            showToast("Пожалуйста, введите телефон для загрузки профиля", "danger");
-            return;
-        }
-        loadStudentProfile(phone, true);
-    });
+    const loadProfileBtn = document.getElementById("load-profile-btn");
+    if (loadProfileBtn) {
+        loadProfileBtn.addEventListener("click", () => {
+            const phone = document.getElementById("auth-phone-input").value;
+            if (!phone.trim()) {
+                showToast("Пожалуйста, введите телефон для загрузки профиля", "danger");
+                return;
+            }
+            loadStudentProfile(phone, true);
+        });
+    }
 
     // Student Logout Button
     const studentLogoutBtn = document.getElementById("student-logout-btn");
@@ -780,7 +801,9 @@ function setupEventListeners() {
 
     // Student Application Form submission
     const applyForm = document.getElementById("apply-form");
-    applyForm.addEventListener("submit", handleApplicationSubmit);
+    if (applyForm) {
+        applyForm.addEventListener("submit", handleApplicationSubmit);
+    }
 
     // Auth Tab toggles
     const tabLoginBtn = document.getElementById("tab-login-btn");
@@ -843,6 +866,66 @@ function setupEventListeners() {
     if (editProfileBtn) {
         editProfileBtn.addEventListener("click", () => {
             openWYSIWYGEditor();
+        });
+    }
+
+    // Visual Editor Event Listeners
+    const editorBannerUpload = document.getElementById("editor-banner-upload");
+    const editorBannerDiv = document.getElementById("editor-banner-div");
+    if (editorBannerDiv && editorBannerUpload) {
+        editorBannerDiv.addEventListener("click", () => {
+            editorBannerUpload.click();
+        });
+        editorBannerUpload.addEventListener("change", (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    wizardPhotoBase64 = event.target.result;
+                    editorBannerDiv.style.backgroundImage = `url('${wizardPhotoBase64}')`;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    }
+
+    const editorCancelBtn = document.getElementById("editor-cancel-btn");
+    if (editorCancelBtn) {
+        editorCancelBtn.addEventListener("click", () => {
+            document.getElementById("page-partner-editor").style.display = "none";
+            document.getElementById("partner-cabinet-block").style.display = "block";
+            document.getElementById("partner-dashboard-view").style.display = "block";
+        });
+    }
+
+    const editorSaveBtn = document.getElementById("editor-save-btn");
+    if (editorSaveBtn) {
+        editorSaveBtn.addEventListener("click", saveWYSIWYGData);
+    }
+
+    const editorAddAdvBtn = document.getElementById("editor-add-adv-btn");
+    if (editorAddAdvBtn) {
+        editorAddAdvBtn.addEventListener("click", () => {
+            if (currentAdvantages.length < 3) {
+                currentAdvantages.push({ title: "", desc: "" });
+                renderEditorAdvantages();
+            }
+        });
+    }
+
+    const editorAddSpecBtn = document.getElementById("editor-add-spec-btn");
+    if (editorAddSpecBtn) {
+        editorAddSpecBtn.addEventListener("click", () => {
+            currentSpecialties.push({
+                name: "",
+                tuition_fee: "",
+                min_requirements: "IELTS 6.0",
+                reqTags: ["IELTS 6.0"],
+                format: "Очный (Дневной)",
+                duration: "4 года (Бакалавриат)",
+                language: "Английский / Русский"
+            });
+            renderEditorSpecialties();
         });
     }
 
@@ -1369,16 +1452,20 @@ async function openQuickApplyModal(uniId, uniName, preselectedSpecId = null, def
                 opt.value = spec.id;
                 const feeStr = spec.tuition_fee ? ` — $${Number(spec.tuition_fee).toLocaleString("ru-RU")}/год` : "";
                 opt.textContent = `${spec.name}${feeStr}`;
-                if (preselectedSpecId && spec.id === preselectedSpecId) {
+                if (preselectedSpecId && String(spec.id) === String(preselectedSpecId)) {
                     opt.selected = true;
                 }
                 specSelect.appendChild(opt);
             });
             specSelect.disabled = false;
+        } else {
+            specSelect.innerHTML = `<option value="" disabled selected>Ошибка загрузки специальностей</option>`;
+            specSelect.disabled = false;
         }
     } catch (e) {
         console.error("Error loading modal specialties:", e);
         specSelect.innerHTML = `<option value="" disabled selected>Ошибка загрузки направлений</option>`;
+        specSelect.disabled = false;
     }
 
     modal.style.display = "flex";
@@ -4066,67 +4153,5 @@ async function saveWYSIWYGData() {
         lucide.createIcons();
     }
 }
-
-// Global Event Listeners setup for WYSIWYG editor elements
-document.addEventListener("DOMContentLoaded", () => {
-    const bannerUpload = document.getElementById("editor-banner-upload");
-    const bannerDiv = document.getElementById("editor-banner-div");
-    if (bannerDiv && bannerUpload) {
-        bannerDiv.addEventListener("click", () => {
-            bannerUpload.click();
-        });
-        bannerUpload.addEventListener("change", (e) => {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = (event) => {
-                    wizardPhotoBase64 = event.target.result;
-                    bannerDiv.style.backgroundImage = `url('${wizardPhotoBase64}')`;
-                };
-                reader.readAsDataURL(file);
-            }
-        });
-    }
-
-    const cancelBtn = document.getElementById("editor-cancel-btn");
-    if (cancelBtn) {
-        cancelBtn.addEventListener("click", () => {
-            document.getElementById("page-partner-editor").style.display = "none";
-            document.getElementById("partner-cabinet-block").style.display = "block";
-            document.getElementById("partner-dashboard-view").style.display = "block";
-        });
-    }
-
-    const saveBtn = document.getElementById("editor-save-btn");
-    if (saveBtn) {
-        saveBtn.addEventListener("click", saveWYSIWYGData);
-    }
-
-    const addAdvBtn = document.getElementById("editor-add-adv-btn");
-    if (addAdvBtn) {
-        addAdvBtn.addEventListener("click", () => {
-            if (currentAdvantages.length < 3) {
-                currentAdvantages.push({ title: "", desc: "" });
-                renderEditorAdvantages();
-            }
-        });
-    }
-
-    const addSpecBtn = document.getElementById("editor-add-spec-btn");
-    if (addSpecBtn) {
-        addSpecBtn.addEventListener("click", () => {
-            currentSpecialties.push({
-                name: "",
-                tuition_fee: "",
-                min_requirements: "IELTS 6.0",
-                reqTags: ["IELTS 6.0"],
-                format: "Очный (Дневной)",
-                duration: "4 года (Бакалавриат)",
-                language: "Английский / Русский"
-            });
-            renderEditorSpecialties();
-        });
-    }
-});
 
 
