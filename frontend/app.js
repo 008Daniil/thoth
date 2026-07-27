@@ -138,54 +138,73 @@ function renderCropCanvas() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     const img = cropState.img;
-    const scale = cropState.scale;
+    const nw = img.naturalWidth || img.width;
+    const nh = img.naturalHeight || img.height;
+    const imgRatio = nw / nh;
 
-    const imgRatio = img.width / img.height;
-    let drawW = canvas.width;
-    let drawH = canvas.width / imgRatio;
-
-    if (drawH < canvas.height) {
-        drawH = canvas.height;
-        drawW = canvas.height * imgRatio;
-    }
-
-    drawW *= scale;
-    drawH *= scale;
-
-    const imgX = (canvas.width - drawW) / 2 + cropState.offsetX;
-    const imgY = (canvas.height - drawH) / 2 + cropState.offsetY;
-
-    // Draw main photo
-    ctx.drawImage(img, imgX, imgY, drawW, drawH);
-
-    // Calculate crop rectangle inside canvas
+    // Calculate crop rectangle dimensions inside canvas
     const targetRatio = cropState.aspectRatio;
-    let cropW = canvas.width * 0.88;
+    let cropW = canvas.width * 0.86;
     let cropH = cropW / targetRatio;
 
-    if (cropH > canvas.height * 0.82) {
-        cropH = canvas.height * 0.82;
+    if (cropH > canvas.height * 0.80) {
+        cropH = canvas.height * 0.80;
         cropW = cropH * targetRatio;
     }
 
     const cropX = (canvas.width - cropW) / 2;
     const cropY = (canvas.height - cropH) / 2;
 
-    cropState.cropRect = { x: cropX, y: cropY, w: cropW, h: cropH, imgX, imgY, drawW, drawH };
+    // Base dimensions required so image ALWAYS covers crop box 100%
+    let baseW = cropW;
+    let baseH = cropW / imgRatio;
 
-    // Dark vignette outside crop box
-    ctx.fillStyle = "rgba(0, 0, 0, 0.65)";
+    if (baseH < cropH) {
+        baseH = cropH;
+        baseW = cropH * imgRatio;
+    }
+
+    // Lock minimum scale to 1.0 (covering crop box completely)
+    if (cropState.scale < 1) {
+        cropState.scale = 1;
+        const rangeInput = document.getElementById("crop-scale-range");
+        if (rangeInput) rangeInput.value = 1;
+    }
+
+    const drawW = baseW * cropState.scale;
+    const drawH = baseH * cropState.scale;
+
+    // Clamp drag offsets to keep image 100% covering crop box (no empty spaces!)
+    const maxOffsetX = Math.max(0, (drawW - cropW) / 2);
+    const maxOffsetY = Math.max(0, (drawH - cropH) / 2);
+
+    cropState.offsetX = Math.min(maxOffsetX, Math.max(-maxOffsetX, cropState.offsetX));
+    cropState.offsetY = Math.min(maxOffsetY, Math.max(-maxOffsetY, cropState.offsetY));
+
+    const imgX = (canvas.width - drawW) / 2 + cropState.offsetX;
+    const imgY = (canvas.height - drawH) / 2 + cropState.offsetY;
+
+    cropState.cropRect = {
+        x: cropX, y: cropY, w: cropW, h: cropH,
+        imgX, imgY, drawW, drawH, nw, nh
+    };
+
+    // 1. Draw source photo
+    ctx.drawImage(img, imgX, imgY, drawW, drawH);
+
+    // 2. Dark vignette mask outside crop box
+    ctx.fillStyle = "rgba(0, 0, 0, 0.70)";
     ctx.fillRect(0, 0, canvas.width, cropY);
     ctx.fillRect(0, cropY + cropH, canvas.width, canvas.height - (cropY + cropH));
     ctx.fillRect(0, cropY, cropX, cropH);
     ctx.fillRect(cropX + cropW, cropY, canvas.width - (cropX + cropW), cropH);
 
-    // Crisp White Crop Rectangle Border
-    ctx.strokeStyle = "rgba(255, 255, 255, 0.9)";
+    // 3. Crisp White Crop Rectangle Border
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.95)";
     ctx.lineWidth = 2;
     ctx.strokeRect(cropX, cropY, cropW, cropH);
 
-    // Corner Accents
+    // 4. Corner Handles
     const cornerSize = 14;
     ctx.strokeStyle = "#ffffff";
     ctx.lineWidth = 4;
@@ -216,29 +235,18 @@ function getCroppedBase64() {
     if (!cropState.img || !cropState.cropRect) return "";
 
     const img = cropState.img;
-    const r = cropState.cropRect; // { x, y, w, h, imgX, imgY, drawW, drawH }
+    const r = cropState.cropRect;
 
-    // Natural dimensions of original uploaded image
-    const nw = img.naturalWidth || img.width;
-    const nh = img.naturalHeight || img.height;
+    const nw = r.nw;
+    const nh = r.nh;
 
-    if (!nw || !nh || !r.drawW || !r.drawH) return "";
-
-    // Scale ratio between canvas draw size and natural image resolution
     const scaleX = nw / r.drawW;
     const scaleY = nh / r.drawH;
 
-    // Crop box coordinates mapped to natural image space
-    let sx = (r.x - r.imgX) * scaleX;
-    let sy = (r.y - r.imgY) * scaleY;
-    let sw = r.w * scaleX;
-    let sh = r.h * scaleY;
-
-    // Clamp coordinates to natural image boundaries
-    if (sx < 0) { sw += sx; sx = 0; }
-    if (sy < 0) { sh += sy; sy = 0; }
-    if (sx + sw > nw) { sw = nw - sx; }
-    if (sy + sh > nh) { sh = nh - sy; }
+    const sx = Math.max(0, (r.x - r.imgX) * scaleX);
+    const sy = Math.max(0, (r.y - r.imgY) * scaleY);
+    const sw = Math.min(nw - sx, r.w * scaleX);
+    const sh = Math.min(nh - sy, r.h * scaleY);
 
     const targetW = cropState.cropType === "banner" ? 1200 : 800;
     const targetH = Math.round(targetW / cropState.aspectRatio);
@@ -248,10 +256,6 @@ function getCroppedBase64() {
     tempCanvas.height = targetH;
 
     const tCtx = tempCanvas.getContext("2d");
-    tCtx.fillStyle = "#ffffff";
-    tCtx.fillRect(0, 0, targetW, targetH);
-
-    // Draw directly from original image source, clean without any black overlays or borders!
     tCtx.drawImage(img, sx, sy, sw, sh, 0, 0, targetW, targetH);
 
     return tempCanvas.toDataURL("image/jpeg", 0.92);
