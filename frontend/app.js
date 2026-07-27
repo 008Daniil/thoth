@@ -74,10 +74,13 @@ let cropState = {
     isDragging: false,
     startX: 0,
     startY: 0,
+    cropType: "banner",
+    aspectRatio: 16 / 7,
+    cropRect: null,
     onSave: null
 };
 
-function openImageCropModal(imgSrc, onSaveCallback) {
+function openImageCropModal(imgSrc, cropType, onSaveCallback) {
     let modal = document.getElementById("image-crop-modal");
     if (!modal) return;
 
@@ -85,10 +88,19 @@ function openImageCropModal(imgSrc, onSaveCallback) {
         document.body.appendChild(modal);
     }
 
+    cropState.cropType = cropType || "banner";
+    cropState.aspectRatio = (cropType === "banner") ? (16 / 7) : (16 / 10);
     cropState.onSave = onSaveCallback;
     cropState.scale = 1;
     cropState.offsetX = 0;
     cropState.offsetY = 0;
+
+    const subtitleEl = document.getElementById("crop-modal-subtitle");
+    if (subtitleEl) {
+        subtitleEl.textContent = (cropType === "banner")
+            ? "Режим: Шапка профиля ВУЗа (горизонтальный баннер)"
+            : "Режим: Карточка ВУЗа на главной странице";
+    }
 
     const rangeInput = document.getElementById("crop-scale-range");
     if (rangeInput) rangeInput.value = 1;
@@ -117,7 +129,7 @@ function renderCropCanvas() {
     if (!canvas || !wrapper || !cropState.img) return;
 
     const ctx = canvas.getContext("2d");
-    const wWidth = wrapper.clientWidth || 600;
+    const wWidth = wrapper.clientWidth || 640;
     const wHeight = wrapper.clientHeight || 340;
 
     canvas.width = wWidth;
@@ -140,10 +152,85 @@ function renderCropCanvas() {
     drawW *= scale;
     drawH *= scale;
 
-    const x = (canvas.width - drawW) / 2 + cropState.offsetX;
-    const y = (canvas.height - drawH) / 2 + cropState.offsetY;
+    const imgX = (canvas.width - drawW) / 2 + cropState.offsetX;
+    const imgY = (canvas.height - drawH) / 2 + cropState.offsetY;
 
-    ctx.drawImage(img, x, y, drawW, drawH);
+    // Draw main photo
+    ctx.drawImage(img, imgX, imgY, drawW, drawH);
+
+    // Calculate crop rectangle inside canvas
+    const targetRatio = cropState.aspectRatio;
+    let cropW = canvas.width * 0.88;
+    let cropH = cropW / targetRatio;
+
+    if (cropH > canvas.height * 0.82) {
+        cropH = canvas.height * 0.82;
+        cropW = cropH * targetRatio;
+    }
+
+    const cropX = (canvas.width - cropW) / 2;
+    const cropY = (canvas.height - cropH) / 2;
+
+    cropState.cropRect = { x: cropX, y: cropY, w: cropW, h: cropH, imgX, imgY, drawW, drawH };
+
+    // Dark vignette outside crop box
+    ctx.fillStyle = "rgba(0, 0, 0, 0.65)";
+    ctx.fillRect(0, 0, canvas.width, cropY);
+    ctx.fillRect(0, cropY + cropH, canvas.width, canvas.height - (cropY + cropH));
+    ctx.fillRect(0, cropY, cropX, cropH);
+    ctx.fillRect(cropX + cropW, cropY, canvas.width - (cropX + cropW), cropH);
+
+    // Crisp White Crop Rectangle Border
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.9)";
+    ctx.lineWidth = 2;
+    ctx.strokeRect(cropX, cropY, cropW, cropH);
+
+    // Corner Accents
+    const cornerSize = 14;
+    ctx.strokeStyle = "#ffffff";
+    ctx.lineWidth = 4;
+    // Top-left
+    ctx.beginPath(); ctx.moveTo(cropX, cropY + cornerSize); ctx.lineTo(cropX, cropY); ctx.lineTo(cropX + cornerSize, cropY); ctx.stroke();
+    // Top-right
+    ctx.beginPath(); ctx.moveTo(cropX + cropW - cornerSize, cropY); ctx.lineTo(cropX + cropW, cropY); ctx.lineTo(cropX + cropW, cropY + cornerSize); ctx.stroke();
+    // Bottom-left
+    ctx.beginPath(); ctx.moveTo(cropX, cropY + cropH - cornerSize); ctx.lineTo(cropX, cropY + cropH); ctx.lineTo(cropX + cornerSize, cropY + cropH); ctx.stroke();
+    // Bottom-right
+    ctx.beginPath(); ctx.moveTo(cropX + cropW - cornerSize, cropY + cropH); ctx.lineTo(cropX + cropW, cropY + cropH); ctx.lineTo(cropX + cropW, cropY + cropH - cornerSize); ctx.stroke();
+
+    // Update real-time online preview
+    updateLivePreview();
+}
+
+function updateLivePreview() {
+    const liveCard = document.getElementById("crop-live-preview-card");
+    if (!liveCard || !cropState.cropRect) return;
+
+    const croppedBase64 = getCroppedBase64();
+    if (croppedBase64) {
+        liveCard.style.backgroundImage = `url('${croppedBase64}')`;
+    }
+}
+
+function getCroppedBase64() {
+    if (!cropState.img || !cropState.cropRect) return "";
+
+    const tempCanvas = document.createElement("canvas");
+    const targetW = cropState.cropType === "banner" ? 1200 : 640;
+    const targetH = Math.round(targetW / cropState.aspectRatio);
+
+    tempCanvas.width = targetW;
+    tempCanvas.height = targetH;
+
+    const tCtx = tempCanvas.getContext("2d");
+    const mainCanvas = document.getElementById("crop-canvas");
+
+    if (!mainCanvas) return "";
+
+    const r = cropState.cropRect;
+    tCtx.drawImage(mainCanvas, r.x, r.y, r.w, r.h, 0, 0, targetW, targetH);
+
+    return tempCanvas.toDataURL("image/jpeg", 0.92);
 }
 
 function setupImageCropModal() {
@@ -198,9 +285,8 @@ function setupImageCropModal() {
     const saveBtn = document.getElementById("crop-save-btn");
     if (saveBtn) {
         saveBtn.addEventListener("click", () => {
-            const canvas = document.getElementById("crop-canvas");
-            if (canvas && cropState.onSave) {
-                const croppedData = canvas.toDataURL("image/jpeg", 0.9);
+            const croppedData = getCroppedBase64();
+            if (croppedData && cropState.onSave) {
                 cropState.onSave(croppedData);
             }
             closeImageCropModal();
