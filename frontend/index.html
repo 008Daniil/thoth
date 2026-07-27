@@ -17,7 +17,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <!-- Main Style Sheet -->
-    <link rel="stylesheet" href="/frontend/style.css?v=37.0">
+    <link rel="stylesheet" href="/frontend/style.css?v=38.0">
 </head>
 <body>
 
@@ -1581,8 +1581,8 @@
     <div id="spec-detail-modal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; z-index:999999999; background:var(--bg); overflow-y:auto;">
         <div style="max-width:900px; margin:0 auto; padding:2rem 1.5rem 4rem;">
             
-            <!-- Mode bar (only in edit mode, static positioning above top bar) -->
-            <div id="spec-modal-mode-bar" style="display:none; margin-bottom:1.5rem; padding:0.85rem 1.25rem; background:var(--card-bg); border:1px solid var(--primary); border-radius:12px; font-size:0.9rem; font-weight:600; color:var(--text-primary);">
+            <!-- Mode bar (high contrast in both light and dark theme) -->
+            <div id="spec-modal-mode-bar" style="display:none; margin-bottom:1.5rem; padding:0.85rem 1.25rem; background:var(--bg-accent); border:1.5px solid var(--primary); border-radius:12px; font-size:0.9rem; font-weight:700; color:var(--primary); box-shadow:0 4px 15px rgba(var(--primary-rgb, 102, 2, 60), 0.12);">
                 Режим редактирования — описание программы специальности
             </div>
 
@@ -1628,38 +1628,39 @@
             <!-- Tab panels - VIEW mode -->
             <div id="spec-modal-content-view">
                 <div id="spec-tab-about" class="spec-tab-panel">
-                    <div id="spec-modal-about-text" style="font-size:1rem;line-height:1.8;color:var(--text-secondary);white-space:pre-wrap;background:var(--bg-accent);padding:1.5rem;border-radius:14px;border:1px solid var(--card-border);"></div>
+                    <div id="spec-modal-about-text" style="font-size:1.02rem;line-height:1.8;color:var(--text-primary);white-space:pre-wrap;background:var(--card-bg);padding:1.75rem;border-radius:16px;border:1px solid var(--card-border);box-shadow:0 4px 20px rgba(0,0,0,0.03);"></div>
                 </div>
                 <div id="spec-tab-disciplines" class="spec-tab-panel" style="display:none;">
-                    <div id="spec-modal-disciplines-text" style="font-size:1rem;line-height:1.8;color:var(--text-secondary);white-space:pre-wrap;background:var(--bg-accent);padding:1.5rem;border-radius:14px;border:1px solid var(--card-border);"></div>
+                    <div id="spec-modal-disciplines-text" style="font-size:1.02rem;line-height:1.8;color:var(--text-primary);white-space:pre-wrap;background:var(--card-bg);padding:1.75rem;border-radius:16px;border:1px solid var(--card-border);box-shadow:0 4px 20px rgba(0,0,0,0.03);"></div>
                 </div>
                 <div id="spec-tab-career" class="spec-tab-panel" style="display:none;">
-                    <div id="spec-modal-career-text" style="font-size:1rem;line-height:1.8;color:var(--text-secondary);white-space:pre-wrap;background:var(--bg-accent);padding:1.5rem;border-radius:14px;border:1px solid var(--card-border);"></div>
+                    <div id="spec-modal-career-text" style="font-size:1.02rem;line-height:1.8;color:var(--text-primary);white-space:pre-wrap;background:var(--card-bg);padding:1.75rem;border-radius:16px;border:1px solid var(--card-border);box-shadow:0 4px 20px rgba(0,0,0,0.03);"></div>
                 </div>
             </div>
 
             <!-- Tab panels - EDIT mode -->
             <div id="spec-modal-content-edit" style="display:none;">
-                <div id="spec-tab-about-edit" class="spec-tab-panel-edit">
-                    <label style="font-size:0.85rem;font-weight:700;color:var(--text-primary);display:block;margin-bottom:0.75rem;">О программе — описание направления, особенности обучения и ключевые преимущества</label>
-                    <textarea id="spec-modal-about-input" rows="8" placeholder="Расскажите о программе, её особенностях, методах преподавания, уникальных практиках..." style="width:100%;font-size:0.95rem;line-height:1.7;padding:1.25rem;border-radius:14px;border:1px solid var(--card-border);background:var(--bg-accent);color:var(--text-primary);resize:vertical;font-family:var(--font-body);outline:none;"></textarea>
+                <div id="spec-tab-about-edit" class="spec-tab-panel-edit" style="background:var(--card-bg);border:1px solid var(--card-border);padding:1.75rem;border-radius:16px;box-shadow:0 4px 20px rgba(0,0,0,0.03);">
+                    <label style="font-size:0.9rem;font-weight:700;color:var(--text-primary);display:block;margin-bottom:0.75rem;">О программе — описание направления, особенности обучения и ключевые преимущества</label>
+                    <textarea id="spec-modal-about-input" rows="9" placeholder="Расскажите о программе, её особенностях, методах преподавания, уникальных практиках..." style="width:100%;font-size:0.98rem;line-height:1.7;padding:1.25rem;border-radius:12px;border:1px solid var(--card-border);background:var(--bg);color:var(--text-primary);resize:vertical;font-family:var(--font-body);outline:none;box-sizing:border-box;"></textarea>
                 </div>
-                <div id="spec-tab-disciplines-edit" class="spec-tab-panel-edit" style="display:none;">
-                    <label style="font-size:0.85rem;font-weight:700;color:var(--text-primary);display:block;margin-bottom:0.75rem;">Дисциплины — основные предмета и профильные курсы</label>
-                    <textarea id="spec-modal-disciplines-input" rows="8" placeholder="Перечислите ключевые предметы, изучаемые технологии, лаборатории и курсы..." style="width:100%;font-size:0.95rem;line-height:1.7;padding:1.25rem;border-radius:14px;border:1px solid var(--card-border);background:var(--bg-accent);color:var(--text-primary);resize:vertical;font-family:var(--font-body);outline:none;"></textarea>
+                <div id="spec-tab-disciplines-edit" class="spec-tab-panel-edit" style="display:none;background:var(--card-bg);border:1px solid var(--card-border);padding:1.75rem;border-radius:16px;box-shadow:0 4px 20px rgba(0,0,0,0.03);">
+                    <label style="font-size:0.9rem;font-weight:700;color:var(--text-primary);display:block;margin-bottom:0.75rem;">Дисциплины — основные предметы и профильные курсы</label>
+                    <textarea id="spec-modal-disciplines-input" rows="9" placeholder="Перечислите ключевые предметы, изучаемые технологии, лаборатории и курсы..." style="width:100%;font-size:0.98rem;line-height:1.7;padding:1.25rem;border-radius:12px;border:1px solid var(--card-border);background:var(--bg);color:var(--text-primary);resize:vertical;font-family:var(--font-body);outline:none;box-sizing:border-box;"></textarea>
                 </div>
-                <div id="spec-tab-career-edit" class="spec-tab-panel-edit" style="display:none;">
-                    <label style="font-size:0.85rem;font-weight:700;color:var(--text-primary);display:block;margin-bottom:0.75rem;">Карьерные перспективы — профессии, средние зарплаты и трудоустройство</label>
-                    <textarea id="spec-modal-career-input" rows="8" placeholder="Опишите возможные должности, сферы работы, компании-партнёры и перспективы..." style="width:100%;font-size:0.95rem;line-height:1.7;padding:1.25rem;border-radius:14px;border:1px solid var(--card-border);background:var(--bg-accent);color:var(--text-primary);resize:vertical;font-family:var(--font-body);outline:none;"></textarea>
+                <div id="spec-tab-career-edit" class="spec-tab-panel-edit" style="display:none;background:var(--card-bg);border:1px solid var(--card-border);padding:1.75rem;border-radius:16px;box-shadow:0 4px 20px rgba(0,0,0,0.03);">
+                    <label style="font-size:0.9rem;font-weight:700;color:var(--text-primary);display:block;margin-bottom:0.75rem;">Карьерные перспективы — профессии, средние зарплаты и трудоустройство</label>
+                    <textarea id="spec-modal-career-input" rows="9" placeholder="Опишите возможные должности, сферы работы, компании-партнёры и перспективы..." style="width:100%;font-size:0.98rem;line-height:1.7;padding:1.25rem;border-radius:12px;border:1px solid var(--card-border);background:var(--bg);color:var(--text-primary);resize:vertical;font-family:var(--font-body);outline:none;box-sizing:border-box;"></textarea>
                 </div>
             </div>
 
             <!-- Empty state -->
-            <div id="spec-modal-empty" style="display:none;text-align:center;padding:3rem;color:var(--text-secondary);background:var(--bg-accent);border-radius:14px;border:1px dashed var(--card-border);">
-                <p style="font-size:1rem;margin:0;">Описание этой специальности ещё не заполнено университетом.</p>
+            <div id="spec-modal-empty" style="display:none;text-align:center;padding:3rem;color:var(--text-secondary);background:var(--card-bg);border-radius:16px;border:1px dashed var(--card-border);">
+                <p style="font-size:1rem;margin:0;color:var(--text-secondary);">Описание этой специальности ещё не заполнено университетом.</p>
             </div>
         </div>
     </div>
+    <!-- ====== END SPEC DETAIL MODAL ====== -->
     <!-- ====== END SPEC DETAIL MODAL ====== -->
     <!-- ====== END SPEC DETAIL MODAL ====== -->
 
@@ -1668,7 +1669,7 @@
     <script src="/frontend/grainient.js"></script>
     
     <!-- App Logic Script -->
-    <script src="/frontend/app.js?v=37.0"></script>
+    <script src="/frontend/app.js?v=38.0"></script>
 </body>
 </html>
 
