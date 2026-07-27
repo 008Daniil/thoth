@@ -317,7 +317,12 @@ function setupEventListeners() {
     const backToHomeBtn = document.getElementById("back-to-home-btn");
     if (backToHomeBtn) {
         backToHomeBtn.addEventListener("click", () => {
-            window.location.hash = "home";
+            if (window.isPartnerPreview) {
+                window.isPartnerPreview = false;
+                window.location.hash = "partner";
+            } else {
+                window.location.hash = "home";
+            }
         });
     }
 
@@ -1091,6 +1096,7 @@ function setupEventListeners() {
     if (dashPreviewBtn) {
         dashPreviewBtn.addEventListener("click", () => {
             if (myUniversity) {
+                window.isPartnerPreview = true;
                 window.location.hash = `university/${myUniversity.id}`;
             }
         });
@@ -1512,6 +1518,15 @@ async function loadUniversityDetails(id) {
         
         // 1. Title, Alias & Slogan
         document.getElementById("det-uni-name").textContent = uni.name;
+
+        const backBtn = document.getElementById("back-to-home-btn");
+        if (backBtn) {
+            if (window.isPartnerPreview) {
+                backBtn.innerHTML = `<i data-lucide="arrow-left" class="btn-icon"></i>Назад`;
+            } else {
+                backBtn.innerHTML = `<i data-lucide="arrow-left" class="btn-icon"></i>Назад к списку ВУЗов`;
+            }
+        }
         
         const sloganElem = document.getElementById("det-uni-slogan");
         if (sloganElem) {
@@ -2514,13 +2529,13 @@ function renderLeadsTable() {
                 <br>${appTypeBadge}
             </td>
             <td style="font-weight: 500; color: var(--primary);">${statsBadge}</td>
-            <td>
-                <a href="${API_BASE}/api/v1/applications/download/${lead.id}" class="download-link" target="_blank" onclick="event.stopPropagation();">
-                    <i data-lucide="download"></i> Скачать
-                </a>
-            </td>
             <td onclick="event.stopPropagation();">${statusSelectHtml}</td>
             <td style="font-size: 0.85rem; color: var(--text-secondary);">${formattedDate}</td>
+            <td onclick="event.stopPropagation();">
+                <button type="button" class="btn btn-outline btn-sm delete-lead-btn" style="padding: 0.35rem 0.75rem; border-color: rgba(255,77,79,0.3); color: #ff4d4f; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 0.35rem;" title="Удалить заявку">
+                    <i data-lucide="trash-2" style="width:14px; height:14px;"></i> Удалить
+                </button>
+            </td>
         `;
 
         tr.addEventListener("click", () => {
@@ -2531,6 +2546,27 @@ function renderLeadsTable() {
             e.stopPropagation();
             const newStatus = e.target.value;
             await updateLeadApplicationStatus(lead.id, newStatus, lead);
+        });
+
+        tr.querySelector(".delete-lead-btn").addEventListener("click", async (e) => {
+            e.stopPropagation();
+            if (confirm(`Вы действительно хотите удалить заявку абитуриента ${studentName}?`)) {
+                try {
+                    const res = await fetch(`${API_BASE}/api/v1/applications/${lead.id}`, {
+                        method: "DELETE"
+                    });
+                    if (res.ok) {
+                        showToast("Заявка успешно удалена", "success");
+                        if (myUniversity) {
+                            loadPartnerDashboardData(myUniversity.id);
+                        }
+                    } else {
+                        throw new Error("Не удалось удалить заявку");
+                    }
+                } catch (err) {
+                    showToast(err.message, "danger");
+                }
+            }
         });
 
         tableBody.appendChild(tr);
@@ -3966,6 +4002,20 @@ function renderEditorSpecialties() {
             </span>
         `).join("");
 
+        const langs = ["Английский", "Русский", "Узбекский", "Каракалпакский"];
+        const activeLangs = spec.language ? spec.language.split("/").map(s => s.trim()) : ["Английский", "Русский"];
+        const langButtons = langs.map(lang => {
+            const isActive = activeLangs.includes(lang);
+            const bg = isActive ? "var(--primary)" : "var(--card-bg)";
+            const border = isActive ? "1px solid var(--primary)" : "1px solid var(--card-border)";
+            const color = isActive ? "#fff" : "var(--text-secondary)";
+            return `
+                <button type="button" class="lang-chip-btn" data-lang="${lang}" style="background:${bg}; border:${border}; color:${color}; padding: 0.35rem 0.75rem; border-radius: 8px; font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: all 0.2s; outline: none; border-style: solid;">
+                    ${lang}
+                </button>
+            `;
+        }).join("");
+
         row.innerHTML = `
             <div class="editor-spec-header">
                 <strong style="color:var(--primary);font-size:0.95rem;">Специальность #${idx+1}</strong>
@@ -3991,19 +4041,25 @@ function renderEditorSpecialties() {
                     </select>
                 </div>
             </div>
-            <div class="editor-spec-grid" style="margin-top: -0.5rem;">
+            <div class="editor-spec-grid" style="margin-top: -0.5rem; grid-template-columns: 1fr 2fr;">
                 <div class="editor-spec-field">
                     <label>Срок обучения</label>
                     <input type="text" class="editor-spec-input spec-duration" value="${spec.duration || '4 года (Бакалавриат)'}">
                 </div>
                 <div class="editor-spec-field">
-                    <label>Язык обучения</label>
-                    <input type="text" class="editor-spec-input spec-language" value="${spec.language || 'Английский / Русский'}">
+                    <label style="margin-bottom: 6px;">Язык обучения</label>
+                    <div style="display: flex; gap: 0.4rem; flex-wrap: wrap;">
+                        ${langButtons}
+                    </div>
                 </div>
+            </div>
+            <div class="editor-spec-field" style="margin-top: 0.5rem; display: flex; flex-direction: column;">
+                <label style="font-size:0.75rem; margin-bottom:4px; font-weight:600; color:var(--text-muted);">Описание направления</label>
+                <textarea class="editor-spec-input spec-description" rows="2" placeholder="Опишите особенности программы, преподаваемые дисциплины..." style="width: 100%; min-height: 60px;">${spec.description || ''}</textarea>
             </div>
             
             <!-- Requirements Tag Editor -->
-            <div style="background:var(--card-bg);padding:1rem;border-radius:8px;border:1px dashed var(--card-border);display:flex;flex-direction:column;gap:0.5rem;">
+            <div style="background:var(--card-bg);padding:1rem;border-radius:8px;border:1px dashed var(--card-border);display:flex;flex-direction:column;gap:0.5rem;margin-top:0.5rem;">
                 <label style="font-size:0.8rem;font-weight:700;color:var(--text-primary);">Минимальные требования к абитуриенту</label>
                 <div class="editor-tags-list" style="display:flex;flex-wrap:wrap;gap:0.5rem;">
                     ${tagsHtml || '<span style="font-size:0.8rem;color:var(--text-muted);">Требования не добавлены</span>'}
@@ -4022,7 +4078,23 @@ function renderEditorSpecialties() {
         row.querySelector(".spec-fee").addEventListener("input", (e) => { spec.tuition_fee = e.target.value; });
         row.querySelector(".spec-format").addEventListener("change", (e) => { spec.format = e.target.value; });
         row.querySelector(".spec-duration").addEventListener("input", (e) => { spec.duration = e.target.value; });
-        row.querySelector(".spec-language").addEventListener("input", (e) => { spec.language = e.target.value; });
+        row.querySelector(".spec-description").addEventListener("input", (e) => { spec.description = e.target.value; });
+
+        // Bind lang chip click listeners
+        row.querySelectorAll(".lang-chip-btn").forEach(btn => {
+            btn.addEventListener("click", (e) => {
+                e.preventDefault();
+                const clickedLang = btn.dataset.lang;
+                let activeLangs = spec.language ? spec.language.split("/").map(s => s.trim()).filter(Boolean) : [];
+                if (activeLangs.includes(clickedLang)) {
+                    activeLangs = activeLangs.filter(l => l !== clickedLang);
+                } else {
+                    activeLangs.push(clickedLang);
+                }
+                spec.language = activeLangs.join(" / ");
+                renderEditorSpecialties();
+            });
+        });
         
         // Remove specialty
         row.querySelector(".delete-spec-btn").addEventListener("click", () => {
@@ -4053,7 +4125,7 @@ function renderEditorSpecialties() {
         // Remove requirements tag
         row.querySelectorAll(".editor-remove-tag-btn").forEach(btn => {
             btn.addEventListener("click", (e) => {
-                const tagIdx = parseInt(e.target.dataset.tagIdx);
+                const tagIdx = parseInt(btn.dataset.tagIdx);
                 spec.reqTags.splice(tagIdx, 1);
                 spec.min_requirements = spec.reqTags.join(", ");
                 renderEditorSpecialties();

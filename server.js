@@ -1287,7 +1287,8 @@ app.post('/api/v1/universities/profile', (req, res) => {
                 format: spec.format || 'Очный (Дневной)',
                 duration: spec.duration || '4 года (Бакалавриат)',
                 has_grant: spec.has_grant === true || spec.has_grant === 'true' || false,
-                min_requirements: spec.min_requirements || ''
+                min_requirements: spec.min_requirements || '',
+                description: spec.description || ''
             });
         });
     }
@@ -1527,6 +1528,19 @@ app.post('/api/v1/applications/:app_id/status', (req, res) => {
     appItem.status = status;
     saveDB(db);
     res.json({ status: 'success', message: `Application status updated to ${status}` });
+});
+
+// DELETE: Delete Application
+app.delete('/api/v1/applications/:app_id', (req, res) => {
+    const db = loadDB();
+    const appIndex = db.applications.findIndex(a => a.id === req.params.app_id);
+    if (appIndex === -1) {
+        return res.status(404).json({ detail: 'Application lead not found' });
+    }
+
+    db.applications.splice(appIndex, 1);
+    saveDB(db);
+    res.json({ status: 'success', message: 'Application deleted successfully' });
 });
 
 // GET: Download applicant document
