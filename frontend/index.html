@@ -17,7 +17,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <!-- Main Style Sheet -->
-    <link rel="stylesheet" href="/frontend/style.css?v=52.0">
+    <link rel="stylesheet" href="/frontend/style.css?v=59.0">
 </head>
 <body>
 
@@ -1207,6 +1207,12 @@
 
             <!-- Two Photos Section: Banner (Header) & Card Photo (Home Page) -->
             <div style="display:grid; grid-template-columns: 2fr 1fr; gap:1.5rem; margin-bottom:2rem;">
+            <!-- Media Upload Section (Banner, Logo Avatar, Campus Photos Collection) -->
+            <input type="file" id="editor-banner-upload" accept="image/*" style="display:none;">
+            <input type="file" id="editor-logo-upload" accept="image/*" style="display:none;">
+            <input type="file" id="editor-campus-upload" accept="image/*" style="display:none;">
+
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1.5rem; margin-bottom:2rem;">
                 <!-- Banner photo for detail page -->
                 <div>
                     <label style="font-size:0.85rem; font-weight:700; color:var(--text-secondary); display:block; margin-bottom:0.5rem;">
@@ -1214,38 +1220,48 @@
                     </label>
                     <div id="editor-banner-div"
                          class="wb-product-banner academic-banner-style"
-                         style="border-radius:16px; height:240px; position:relative; overflow:hidden; background-size:cover; background-position:center; border:1px solid var(--card-border); cursor:pointer;"
-                         title="Нажмите чтобы изменить и замасштабировать баннер">
+                         style="border-radius:16px; height:180px; position:relative; overflow:hidden; background-size:cover; background-position:center; border:1px solid var(--card-border); cursor:pointer;"
+                         title="Нажмите чтобы изменить баннер">
                         <div class="editor-banner-hint">
                             <i data-lucide="camera" style="width:24px;height:24px;"></i>
-                            <span>Загрузить / Масштабировать баннер</span>
+                            <span>Изменить баннер</span>
                         </div>
                     </div>
                 </div>
 
-                <!-- Logo / Card Photo for main home page -->
+                <!-- Campus Photos Collection (Slides for right card view) -->
                 <div>
-                    <label style="font-size:0.85rem; font-weight:700; color:var(--text-secondary); display:block; margin-bottom:0.5rem;">
-                        Фото для карточки ВУЗа (на главной)
-                    </label>
-                    <div id="editor-photo-div"
-                         style="border-radius:16px; height:240px; position:relative; overflow:hidden; background-size:cover; background-position:center; border:1px dashed var(--card-border); background:var(--card-bg); cursor:pointer; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:1rem;"
-                         title="Нажмите чтобы изменить и замасштабировать фото карточки">
-                        <i data-lucide="image" style="width:32px;height:32px;color:var(--primary);margin-bottom:0.5rem;"></i>
-                        <span style="font-size:0.85rem; font-weight:600; color:var(--text-primary);">Фото для карточки</span>
-                        <span style="font-size:0.75rem; color:var(--text-muted); margin-top:0.25rem;">Нажмите чтобы изменить</span>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
+                        <label style="font-size:0.85rem; font-weight:700; color:var(--text-secondary);">
+                            Презентационные снимки кампуса
+                        </label>
+                        <button type="button" class="btn btn-outline btn-sm" id="editor-add-photo-btn" style="padding:0.2rem 0.65rem; font-size:0.75rem;">
+                            + Добавить снимок
+                        </button>
+                    </div>
+                    
+                    <div id="editor-campus-photos-grid" style="display:flex; gap:0.75rem; overflow-x:auto; padding:0.5rem; background:var(--card-bg); border-radius:16px; border:1px dashed var(--card-border); min-height:180px; align-items:center;">
+                        <!-- Mini thumb items added here dynamically -->
                     </div>
                 </div>
             </div>
 
-            <!-- Title + Slogan -->
-            <div style="margin-bottom:2rem;">
-                <div contenteditable="true" id="editor-name"
-                     class="editable-field editor-h1"
-                     data-placeholder="Название университета">University Name</div>
-                <div contenteditable="true" id="editor-slogan"
-                     class="editable-field editor-slogan-text"
-                     data-placeholder="Слоган университета (необязательно)"></div>
+            <!-- Title + Logo Avatar -->
+            <div style="margin-bottom:2rem; display:flex; align-items:center; gap:1.25rem;">
+                <div id="editor-logo-div"
+                     style="width:72px; height:72px; border-radius:18px; flex-shrink:0; overflow:hidden; background-size:cover; background-position:center; border:2px dashed var(--primary); background:var(--card-bg); cursor:pointer; display:flex; flex-direction:column; align-items:center; justify-content:center; position:relative;"
+                     title="Нажмите чтобы изменить логотип (Аватар ВУЗа)">
+                    <i data-lucide="shield" style="width:28px;height:28px;color:var(--primary);"></i>
+                    <span style="font-size:0.65rem; font-weight:700; color:var(--text-muted); margin-top:2px;">Логотип</span>
+                </div>
+                <div style="flex:1;">
+                    <div contenteditable="true" id="editor-name"
+                         class="editable-field editor-h1"
+                         data-placeholder="Название университета">University Name</div>
+                    <div contenteditable="true" id="editor-slogan"
+                         class="editable-field editor-slogan-text"
+                         data-placeholder="Слоган университета (необязательно)"></div>
+                </div>
             </div>
 
             <!-- Two Column Grid (same as student view) -->
@@ -1703,26 +1719,41 @@
                 </div>
             </div>
 
-            <!-- Controls: Scale Slider -->
-            <div style="margin-top:1.25rem; display:flex; align-items:center; gap:1rem;">
-                <span style="font-size:0.85rem; font-weight:600; color:var(--text-secondary); white-space:nowrap;">Масштаб:</span>
-                <button type="button" class="btn btn-outline btn-sm" id="crop-zoom-out" style="padding:0.35rem 0.75rem; font-weight:700;">-</button>
-                <input type="range" id="crop-scale-range" min="0.2" max="3" step="0.02" value="1" style="flex:1; cursor:pointer;">
-                <button type="button" class="btn btn-outline btn-sm" id="crop-zoom-in" style="padding:0.35rem 0.75rem; font-weight:700;">+</button>
+            <!-- Controls: Scale & Rotation Sliders -->
+            <div style="margin-top:1.25rem; display:flex; flex-direction:column; gap:0.85rem;">
+                <!-- Scale Slider -->
+                <div style="display:flex; align-items:center; gap:0.75rem;">
+                    <span style="font-size:0.85rem; font-weight:600; color:var(--text-secondary); min-width:80px;">Масштаб:</span>
+                    <button type="button" class="btn btn-outline btn-sm" id="crop-zoom-out" style="padding:0.3rem 0.65rem; font-weight:700;">-</button>
+                    <input type="range" id="crop-scale-range" min="0.2" max="3" step="0.02" value="1" style="flex:1; cursor:pointer;">
+                    <button type="button" class="btn btn-outline btn-sm" id="crop-zoom-in" style="padding:0.3rem 0.65rem; font-weight:700;">+</button>
+                </div>
+
+                <!-- Rotation Controls -->
+                <div style="display:flex; align-items:center; gap:0.75rem;">
+                    <span style="font-size:0.85rem; font-weight:600; color:var(--text-secondary); min-width:80px;">Поворот:</span>
+                    <input type="range" id="crop-rotate-range" min="-180" max="180" step="1" value="0" style="flex:1; cursor:pointer;">
+                    <span id="crop-rotate-angle-badge" style="font-size:0.78rem; font-weight:700; background:var(--primary); color:var(--bg); padding:0.25rem 0.6rem; border-radius:6px; min-width:65px; text-align:center;">0°</span>
+                </div>
+
+                <!-- Quick Rotation Preset Buttons -->
+                <div style="display:flex; justify-content:flex-end; gap:0.5rem;">
+                    <button type="button" class="btn btn-outline btn-sm" id="crop-rotate-90-left" style="font-size:0.78rem; padding:0.25rem 0.65rem;">⟲ -90°</button>
+                    <button type="button" class="btn btn-outline btn-sm" id="crop-rotate-0" style="font-size:0.78rem; padding:0.25rem 0.65rem;">0° (Сброс)</button>
+                    <button type="button" class="btn btn-outline btn-sm" id="crop-rotate-90-right" style="font-size:0.78rem; padding:0.25rem 0.65rem;">+90° ⟳</button>
+                    <button type="button" class="btn btn-outline btn-sm" id="crop-rotate-180" style="font-size:0.78rem; padding:0.25rem 0.65rem;">180° ↻</button>
+                </div>
             </div>
 
-            <!-- Live Website Preview -->
+            <!-- Live Website Preview (Pure clean without black gradient) -->
             <div id="crop-live-preview-container" style="margin-top:1.25rem; padding:1rem; background:var(--bg-accent); border-radius:14px; border:1px solid var(--card-border);">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.65rem;">
                     <span style="font-size:0.78rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em;">
                         Живой предпросмотр на сайте:
                     </span>
-                    <span style="font-size:0.75rem; color:var(--text-secondary); font-style:italic;">Так фото увидят абитуриенты</span>
+                    <span style="font-size:0.75rem; color:var(--text-secondary); font-style:italic;">Чистый вид фотографии без фильтров</span>
                 </div>
-                <div id="crop-live-preview-card" style="width:100%; height:140px; border-radius:14px; overflow:hidden; background-size:cover; background-position:center; border:1px solid var(--card-border); position:relative; box-shadow:0 4px 15px rgba(0,0,0,0.15);">
-                    <div style="position:absolute; bottom:0; left:0; right:0; background:linear-gradient(transparent, rgba(0,0,0,0.85)); padding:0.75rem 1rem; color:#fff; font-size:0.9rem; font-weight:700;">
-                        Университет (Пример карточки на сайте)
-                    </div>
+                <div id="crop-live-preview-card" style="width:100%; height:140px; border-radius:14px; overflow:hidden; background-size:cover !important; background-position:center !important; background-repeat:no-repeat !important; border:1px solid var(--card-border); position:relative; box-shadow:0 4px 15px rgba(0,0,0,0.15);">
                 </div>
             </div>
 
@@ -1740,7 +1771,7 @@
     <script src="/frontend/grainient.js"></script>
     
     <!-- App Logic Script -->
-    <script src="/frontend/app.js?v=52.0"></script>
+    <script src="/frontend/app.js?v=59.0"></script>
 </body>
 </html>
 

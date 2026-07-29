@@ -858,25 +858,38 @@ body.dark-theme .price-range-display {
     justify-content: space-between;
     align-items: stretch;
     width: 100%;
-    min-height: 250px;
+    min-height: 230px;
 }
 
 .uni-card-main-info {
-    flex: 1 1 50%;
+    flex: 1;
     min-width: 0;
-    padding: 2rem 2.25rem 1.75rem 2.25rem;
+    padding: 0.75rem 1.25rem 0.75rem 0.75rem;
     display: flex;
     flex-direction: column;
     justify-content: center;
+}
+
+.uni-card-left-avatar {
+    width: 130px;
+    height: 130px;
+    align-self: flex-start;
+    border-radius: 18px;
+    flex-shrink: 0;
+    margin: 0;
+    overflow: hidden;
+    border: 1px solid var(--card-border);
+    background-size: cover !important;
+    background-position: center center !important;
+    background-repeat: no-repeat !important;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.12);
 }
 
 .uni-card-right-corner-photo {
     width: 360px;
     align-self: stretch;
     flex-shrink: 0;
-    border-top-right-radius: 19px;
-    border-top-left-radius: 18px;
-    border-bottom-left-radius: 18px;
+    border-radius: 18px;
     margin: 0.75rem 0.75rem 0.75rem 0;
     overflow: hidden;
     background: var(--bg-accent);
@@ -890,7 +903,7 @@ body.dark-theme .price-range-display {
 }
 
 .uni-card-footer-bar {
-    padding: 1.1rem 2.25rem;
+    padding: 0.9rem 1.25rem;
     border-top: 1px solid var(--card-border);
     display: flex;
     align-items: center;

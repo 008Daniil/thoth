@@ -60,8 +60,10 @@ window.handleOpenStudentSpecDetail = function(event, specId) {
 
 let chartInstance = null; // Store Chart.js instance to prevent memory leaks
 let bgGrainient = null; // WebGL shader background instance
-let wizardPhotoBase64 = ""; // Base64 string for university card photo (home page)
+let wizardPhotoBase64 = ""; // Base64 string for university card photo
+let wizardLogoBase64 = ""; // Base64 string for university logo avatar (square)
 let wizardBannerBase64 = ""; // Base64 string for university header banner
+let wizardCampusPhotos = []; // Array of Base64 strings for campus presentation slides
 let loadedLeads = []; // Store currently fetched applications for sorting
 let currentAdvantages = []; // Store current university profile advantages (0-3)
 
@@ -89,7 +91,13 @@ function openImageCropModal(imgSrc, cropType, onSaveCallback) {
     }
 
     cropState.cropType = cropType || "banner";
-    cropState.aspectRatio = (cropType === "banner") ? (16 / 7) : (16 / 10);
+    if (cropType === "square" || cropType === "logo") {
+        cropState.aspectRatio = 1;
+    } else if (cropType === "banner") {
+        cropState.aspectRatio = 16 / 7;
+    } else {
+        cropState.aspectRatio = 16 / 10;
+    }
     cropState.onSave = onSaveCallback;
     cropState.scale = 1;
     cropState.offsetX = 0;
@@ -97,9 +105,13 @@ function openImageCropModal(imgSrc, cropType, onSaveCallback) {
 
     const subtitleEl = document.getElementById("crop-modal-subtitle");
     if (subtitleEl) {
-        subtitleEl.textContent = (cropType === "banner")
-            ? "Режим: Шапка профиля ВУЗа (горизонтальный баннер)"
-            : "Режим: Карточка ВУЗа на главной странице";
+        if (cropType === "square" || cropType === "logo") {
+            subtitleEl.textContent = "Режим: Логотип ВУЗа (Квадратный аватар)";
+        } else if (cropType === "banner") {
+            subtitleEl.textContent = "Режим: Шапка профиля ВУЗа (горизонтальный баннер)";
+        } else {
+            subtitleEl.textContent = "Режим: Презентационный снимок кампуса";
+        }
     }
 
     const rangeInput = document.getElementById("crop-scale-range");
@@ -195,8 +207,14 @@ function renderCropCanvas() {
         imgX, imgY, drawW, drawH, nw, nh
     };
 
-    // 1. Draw source photo
-    ctx.drawImage(img, imgX, imgY, drawW, drawH);
+    // 1. Draw source photo with 360-degree rotation support
+    ctx.save();
+    const centerX = imgX + drawW / 2;
+    const centerY = imgY + drawH / 2;
+    ctx.translate(centerX, centerY);
+    ctx.rotate((cropState.rotation || 0) * Math.PI / 180);
+    ctx.drawImage(img, -drawW / 2, -drawH / 2, drawW, drawH);
+    ctx.restore();
 
     // 2. Dark vignette mask outside crop box
     ctx.fillStyle = "rgba(0, 0, 0, 0.70)";
@@ -243,9 +261,12 @@ function getCroppedBase64() {
     const img = cropState.img;
     const r = cropState.cropRect;
 
-    if (!r.w || !r.h || r.w <= 0 || r.h <= 0) return "";
-
-    const targetW = cropState.cropType === "banner" ? 1200 : 800;
+    let targetW = 800;
+    if (cropState.cropType === "banner") {
+        targetW = 1200;
+    } else if (cropState.cropType === "square" || cropState.cropType === "logo") {
+        targetW = 400;
+    }
     const targetH = Math.round(targetW / cropState.aspectRatio);
 
     const tempCanvas = document.createElement("canvas");
@@ -277,7 +298,11 @@ function getCroppedBase64() {
         tCtx.rect(0, 0, targetW, targetH);
         tCtx.clip();
 
-        tCtx.drawImage(img, destX, destY, destW, destH);
+        const destCenterX = destX + destW / 2;
+        const destCenterY = destY + destH / 2;
+        tCtx.translate(destCenterX, destCenterY);
+        tCtx.rotate((cropState.rotation || 0) * Math.PI / 180);
+        tCtx.drawImage(img, -destW / 2, -destH / 2, destW, destH);
         tCtx.restore();
 
         return tempCanvas.toDataURL("image/jpeg", 0.92);
@@ -317,6 +342,46 @@ function setupImageCropModal() {
             renderCropCanvas();
         });
     }
+
+    // Rotation Range Slider & Buttons
+    const rotateInput = document.getElementById("crop-rotate-range");
+    const rotateBadge = document.getElementById("crop-rotate-angle-badge");
+
+    const updateRotation = (angle) => {
+        let normAngle = Math.round(angle);
+        if (normAngle > 180) normAngle -= 360;
+        if (normAngle < -180) normAngle += 360;
+
+        cropState.rotation = normAngle;
+        if (rotateInput) rotateInput.value = normAngle;
+
+        let angleLabel = `${normAngle}°`;
+        if (normAngle === 0) angleLabel = "0° (Прямо)";
+        else if (normAngle === 90) angleLabel = "90° (Вправо)";
+        else if (normAngle === -90) angleLabel = "-90° (Влево)";
+        else if (Math.abs(normAngle) === 180) angleLabel = "180° (Вверх дном)";
+
+        if (rotateBadge) rotateBadge.textContent = angleLabel;
+        renderCropCanvas();
+    };
+
+    if (rotateInput) {
+        rotateInput.addEventListener("input", (e) => {
+            updateRotation(parseFloat(e.target.value) || 0);
+        });
+    }
+
+    const r90L = document.getElementById("crop-rotate-90-left");
+    if (r90L) r90L.addEventListener("click", () => updateRotation((cropState.rotation || 0) - 90));
+
+    const r0 = document.getElementById("crop-rotate-0");
+    if (r0) r0.addEventListener("click", () => updateRotation(0));
+
+    const r90R = document.getElementById("crop-rotate-90-right");
+    if (r90R) r90R.addEventListener("click", () => updateRotation((cropState.rotation || 0) + 90));
+
+    const r180 = document.getElementById("crop-rotate-180");
+    if (r180) r180.addEventListener("click", () => updateRotation((cropState.rotation || 0) + 180));
 
     const zoomIn = document.getElementById("crop-zoom-in");
     if (zoomIn) {
@@ -1235,7 +1300,46 @@ function setupEventListeners() {
         });
     }
 
-    // Visual Editor Event Listeners (Banner & Card Photo with Crop Modal)
+function renderEditorCampusPhotos() {
+    const grid = document.getElementById("editor-campus-photos-grid");
+    if (!grid) return;
+
+    grid.innerHTML = "";
+
+    if (!wizardCampusPhotos || wizardCampusPhotos.length === 0) {
+        grid.innerHTML = `
+            <div style="color:var(--text-muted); font-size:0.8rem; font-style:italic; text-align:center; width:100%; padding:1.5rem;">
+                Снимки не добавлены. Нажмите «+ Добавить снимок», чтобы выложить презентационные фотографии кампуса.
+            </div>
+        `;
+        return;
+    }
+
+    wizardCampusPhotos.forEach((photoBase64, idx) => {
+        const item = document.createElement("div");
+        item.style.cssText = "width:130px; height:130px; flex-shrink:0; border-radius:12px; position:relative; overflow:hidden; background-size:cover; background-position:center; border:1px solid var(--card-border); box-shadow:0 2px 8px rgba(0,0,0,0.15);";
+        item.style.backgroundImage = `url('${photoBase64}')`;
+
+        item.innerHTML = `
+            <div style="position:absolute; top:4px; right:4px; background:rgba(255,77,79,0.9); color:#fff; width:22px; height:22px; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:12px; font-weight:bold;" title="Удалить снимок" data-idx="${idx}">
+                ✕
+            </div>
+            <div style="position:absolute; bottom:0; left:0; right:0; background:rgba(0,0,0,0.65); color:#fff; font-size:0.68rem; text-align:center; padding:2px;">
+                Слайд #${idx + 1}
+            </div>
+        `;
+
+        item.querySelector("[data-idx]").addEventListener("click", (e) => {
+            e.stopPropagation();
+            wizardCampusPhotos.splice(idx, 1);
+            renderEditorCampusPhotos();
+        });
+
+        grid.appendChild(item);
+    });
+}
+
+    // Visual Editor Event Listeners (Banner, Logo Avatar, Campus Photos)
     const editorBannerUpload = document.getElementById("editor-banner-upload");
     const editorBannerDiv = document.getElementById("editor-banner-div");
     if (editorBannerDiv && editorBannerUpload) {
@@ -1247,7 +1351,7 @@ function setupEventListeners() {
             if (file) {
                 const reader = new FileReader();
                 reader.onload = (event) => {
-                    openImageCropModal(event.target.result, (croppedResult) => {
+                    openImageCropModal(event.target.result, "banner", (croppedResult) => {
                         wizardBannerBase64 = croppedResult;
                         editorBannerDiv.style.backgroundImage = `url('${croppedResult}')`;
                     });
@@ -1257,23 +1361,44 @@ function setupEventListeners() {
         });
     }
 
-    const editorPhotoUpload = document.getElementById("editor-photo-upload");
-    const editorPhotoDiv = document.getElementById("editor-photo-div");
-    if (editorPhotoDiv && editorPhotoUpload) {
-        editorPhotoDiv.addEventListener("click", () => {
-            editorPhotoUpload.click();
+    const editorLogoUpload = document.getElementById("editor-logo-upload");
+    const editorLogoDiv = document.getElementById("editor-logo-div");
+    if (editorLogoDiv && editorLogoUpload) {
+        editorLogoDiv.addEventListener("click", () => {
+            editorLogoUpload.click();
         });
-        editorPhotoUpload.addEventListener("change", (e) => {
+        editorLogoUpload.addEventListener("change", (e) => {
             const file = e.target.files[0];
             if (file) {
                 const reader = new FileReader();
                 reader.onload = (event) => {
-                    openImageCropModal(event.target.result, (croppedResult) => {
-                        wizardPhotoBase64 = croppedResult;
-                        editorPhotoDiv.style.backgroundImage = `url('${croppedResult}')`;
-                        editorPhotoDiv.style.backgroundSize = "cover";
-                        editorPhotoDiv.style.backgroundPosition = "center";
-                        editorPhotoDiv.innerHTML = `<div style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.65);color:#fff;font-size:0.75rem;padding:4px;text-align:center;">Изменить фото</div>`;
+                    openImageCropModal(event.target.result, "square", (croppedResult) => {
+                        wizardLogoBase64 = croppedResult;
+                        editorLogoDiv.style.backgroundImage = `url('${croppedResult}')`;
+                        editorLogoDiv.style.backgroundSize = "cover";
+                        editorLogoDiv.style.backgroundPosition = "center";
+                        editorLogoDiv.innerHTML = `<div style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.65);color:#fff;font-size:0.6rem;padding:2px;text-align:center;">Изменить</div>`;
+                    });
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    }
+
+    const editorCampusUpload = document.getElementById("editor-campus-upload");
+    const editorAddPhotoBtn = document.getElementById("editor-add-photo-btn");
+    if (editorAddPhotoBtn && editorCampusUpload) {
+        editorAddPhotoBtn.addEventListener("click", () => {
+            editorCampusUpload.click();
+        });
+        editorCampusUpload.addEventListener("change", (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    openImageCropModal(event.target.result, "card", (croppedResult) => {
+                        wizardCampusPhotos.push(croppedResult);
+                        renderEditorCampusPhotos();
                     });
                 };
                 reader.readAsDataURL(file);
@@ -1791,27 +1916,42 @@ function renderUniversityCards(list) {
         const isDefault = uni.id === DEFAULT_UNI_ID;
         const alias = uni.name.split(" ").map(w => w[0]).join("").substring(0, 4);
 
-        const hasPhoto = uni.photo && uni.photo.startsWith("data:image/");
-        const photoStyle = hasPhoto 
-            ? `background-image: url('${uni.photo}'); background-size: cover; background-position: center;`
-            : `background: var(--bg-accent);`;
+        const uniLogo = (uni.logo && uni.logo.startsWith("data:image/")) ? uni.logo : (uni.photo && uni.photo.startsWith("data:image/") ? uni.photo : "");
+        const logoStyle = uniLogo
+            ? `background-image: url('${uniLogo}'); background-size: cover; background-position: center; border: 1px solid var(--card-border);`
+            : `background: var(--primary); color: var(--bg); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.1rem; border: 1px solid var(--card-border);`;
 
-        const priceText = uni.contract_price ? `от $${Number(uni.contract_price).toLocaleString()} / год` : 'от $1,500 / год';
-        const ieltsVal = uni.min_ielts ? `IELTS ${uni.min_ielts}+` : 'IELTS 5.5+';
-        const satVal = uni.min_sat ? ` / SAT ${uni.min_sat}+` : ' / SAT 1200+';
-        const reqText = `${ieltsVal}${satVal}`;
+        const photosList = (uni.photos && Array.isArray(uni.photos) && uni.photos.length > 0)
+            ? uni.photos
+            : (uni.photo && uni.photo.startsWith("data:image/") ? [uni.photo] : []);
+
+        let currentSlideIdx = 0;
 
         card.innerHTML = `
             <div class="uni-card-top-content">
                 <div class="uni-card-main-info">
-                    <h3 class="uni-card-title">${uni.name}</h3>
-                    <p class="uni-card-location"><i data-lucide="map-pin"></i> ${uni.city || 'Кампус'}, ${uni.country || 'Страна'}</p>
-                    ${uni.slogan ? `<p style="font-size: 0.88rem; color: var(--text-secondary); font-style: italic; margin: 0.35rem 0 0.5rem 0; line-height: 1.4;">${uni.slogan}</p>` : ''}
+                    <div style="display:flex; align-items:flex-start; gap:1.15rem; margin-bottom:0.85rem;">
+                        <div class="uni-card-left-avatar" style="${logoStyle}">
+                            ${uniLogo ? '' : alias}
+                        </div>
+                        <div style="flex:1; min-width:0; padding-top:0.15rem;">
+                            <h3 class="uni-card-title" style="margin:0 0 0.4rem 0; font-size:1.55rem;">${uni.name}</h3>
+                            <p class="uni-card-location" style="margin:0; font-size:1.05rem;"><i data-lucide="map-pin"></i> ${uni.city || 'Кампус'}, ${uni.country || 'Страна'}</p>
+                        </div>
+                    </div>
+                    ${uni.slogan ? `<p style="font-size: 0.88rem; color: var(--text-secondary); font-style: italic; margin: 0.25rem 0 0.5rem 0; line-height: 1.4;">${uni.slogan}</p>` : ''}
                     <p class="uni-card-description">${uni.description || 'Официальный партнер THOTH.'}</p>
                 </div>
 
-                <div class="uni-card-right-corner-photo" style="${photoStyle}">
-                    ${hasPhoto ? '' : `<span style="color: var(--text-muted); font-size: 1.5rem; font-weight: 800;">${alias}</span>`}
+                <div class="uni-card-right-corner-photo" id="uni-card-photo-box-${uni.id}" style="${photosList[0] ? `background-image: url('${photosList[0]}'); background-size: cover; background-position: center;` : 'background: var(--bg-accent);'} position: relative; user-select: none;">
+                    ${photosList.length > 1 ? `
+                        <button type="button" class="uni-slide-arrow prev-slide" id="prev-slide-${uni.id}" style="position:absolute; left:8px; top:50%; transform:translateY(-50%); background:rgba(0,0,0,0.65); color:#fff; border:none; border-radius:50%; width:32px; height:32px; cursor:pointer; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:1.1rem; z-index:10; backdrop-filter:blur(4px); box-shadow:0 2px 6px rgba(0,0,0,0.3);" title="Предыдущее фото">‹</button>
+                        <button type="button" class="uni-slide-arrow next-slide" id="next-slide-${uni.id}" style="position:absolute; right:8px; top:50%; transform:translateY(-50%); background:rgba(0,0,0,0.65); color:#fff; border:none; border-radius:50%; width:32px; height:32px; cursor:pointer; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:1.1rem; z-index:10; backdrop-filter:blur(4px); box-shadow:0 2px 6px rgba(0,0,0,0.3);" title="Следующее фото">›</button>
+                        
+                        <div class="uni-slide-dots" id="dots-${uni.id}" style="position:absolute; bottom:10px; left:50%; transform:translateX(-50%); display:flex; gap:6px; z-index:10; background:rgba(0,0,0,0.4); padding:3px 8px; border-radius:10px; backdrop-filter:blur(4px);">
+                            ${photosList.map((_, i) => `<span style="width:${i === 0 ? '14px' : '6px'}; height:6px; border-radius:3px; background:${i === 0 ? '#ffffff' : 'rgba(255,255,255,0.5)'}; transition:all 0.25s ease;"></span>`).join('')}
+                        </div>
+                    ` : (photosList.length === 0 ? `<span style="color: var(--text-muted); font-size: 1.5rem; font-weight: 800;">${alias}</span>` : '')}
                 </div>
             </div>
 
@@ -1820,6 +1960,40 @@ function renderUniversityCards(list) {
                 <button class="btn btn-primary btn-sm" id="apply-${uni.id}">Подать документы</button>
             </div>
         `;
+
+        if (photosList.length > 1) {
+            const photoBox = card.querySelector(`#uni-card-photo-box-${uni.id}`);
+            const prevBtn = card.querySelector(`#prev-slide-${uni.id}`);
+            const nextBtn = card.querySelector(`#next-slide-${uni.id}`);
+            const dotsContainer = card.querySelector(`#dots-${uni.id}`);
+
+            const updateSlide = () => {
+                if (photoBox) {
+                    photoBox.style.backgroundImage = `url('${photosList[currentSlideIdx]}')`;
+                }
+                if (dotsContainer) {
+                    dotsContainer.innerHTML = photosList.map((_, i) => 
+                        `<span style="width:${i === currentSlideIdx ? '14px' : '6px'}; height:6px; border-radius:3px; background:${i === currentSlideIdx ? '#ffffff' : 'rgba(255,255,255,0.5)'}; transition:all 0.25s ease;"></span>`
+                    ).join('');
+                }
+            };
+
+            if (prevBtn) {
+                prevBtn.addEventListener("click", (e) => {
+                    e.stopPropagation();
+                    currentSlideIdx = (currentSlideIdx - 1 + photosList.length) % photosList.length;
+                    updateSlide();
+                });
+            }
+
+            if (nextBtn) {
+                nextBtn.addEventListener("click", (e) => {
+                    e.stopPropagation();
+                    currentSlideIdx = (currentSlideIdx + 1) % photosList.length;
+                    updateSlide();
+                });
+            }
+        }
 
         card.querySelector(`#view-${uni.id}`).addEventListener("click", (e) => {
             e.stopPropagation();
@@ -2066,10 +2240,10 @@ async function loadUniversityDetails(id) {
         const grantsContent = document.getElementById("det-grants-scholarships-content");
         if (grantsSection && grantsContent) {
             let html = "";
-            if (uni.has_grant !== false || (uni.grant_info && uni.grant_info.trim())) {
+            if (uni.has_grant === true) {
                 const gInfo = (uni.grant_info && uni.grant_info.trim()) 
                     ? uni.grant_info 
-                    : "Покрытие до 100% стоимости обучения для абитуриентов с высокими баллами IELTS/SAT или по результатам вступительных испытаний.";
+                    : "Покрытие до 100% стоимости обучения по результатам вступительных испытаний или показателей баллов.";
                 html += `
                     <div style="background: var(--bg-accent); border: 1px solid var(--card-border); border-radius: 12px; padding: 1.25rem; display: flex; flex-direction: column; justify-content: space-between; gap: 1rem;">
                         <div>
@@ -2088,10 +2262,10 @@ async function loadUniversityDetails(id) {
                     </div>
                 `;
             }
-            if (uni.has_scholarship !== false || (uni.scholarship_info && uni.scholarship_info.trim())) {
+            if (uni.has_scholarship === true) {
                 const sInfo = (uni.scholarship_info && uni.scholarship_info.trim()) 
                     ? uni.scholarship_info 
-                    : "Академическая стипендия выплачивается ежемесячно студентам за отличную успеваемость и научную деятельность.";
+                    : "Академическая стипендия выплачивается ежемесячно студентам за успеваемость.";
                 html += `
                     <div style="background: var(--bg-accent); border: 1px solid var(--card-border); border-radius: 12px; padding: 1.25rem; display: flex; flex-direction: column; justify-content: space-between; gap: 1rem;">
                         <div>
@@ -4370,9 +4544,9 @@ function openWYSIWYGEditor() {
         const hasSchBox = document.getElementById("editor-has-scholarship");
         const schInfoInput = document.getElementById("editor-scholarship-info");
 
-        if (hasGrantBox) hasGrantBox.checked = myUniversity.has_grant !== false;
+        if (hasGrantBox) hasGrantBox.checked = myUniversity.has_grant === true;
         if (grantInfoInput) grantInfoInput.value = myUniversity.grant_info || "";
-        if (hasSchBox) hasSchBox.checked = myUniversity.has_scholarship !== false;
+        if (hasSchBox) hasSchBox.checked = myUniversity.has_scholarship === true;
         if (schInfoInput) schInfoInput.value = myUniversity.scholarship_info || "";
 
         // Load advantages
@@ -4381,9 +4555,13 @@ function openWYSIWYGEditor() {
         if (myUniversity.adv_2_title) currentAdvantages.push({ title: myUniversity.adv_2_title, desc: myUniversity.adv_2_desc || "" });
         if (myUniversity.adv_3_title) currentAdvantages.push({ title: myUniversity.adv_3_title, desc: myUniversity.adv_3_desc || "" });
 
-        // Load photo / banner
+        // Load logo / banner / campus photos
+        wizardLogoBase64 = myUniversity.logo || "";
         wizardPhotoBase64 = myUniversity.photo || "";
         wizardBannerBase64 = myUniversity.banner || "";
+        wizardCampusPhotos = (myUniversity.photos && Array.isArray(myUniversity.photos) && myUniversity.photos.length > 0)
+            ? JSON.parse(JSON.stringify(myUniversity.photos))
+            : (wizardPhotoBase64 ? [wizardPhotoBase64] : []);
 
         const bannerDiv = document.getElementById("editor-banner-div");
         if (bannerDiv) {
@@ -4394,19 +4572,21 @@ function openWYSIWYGEditor() {
             }
         }
 
-        const photoDiv = document.getElementById("editor-photo-div");
-        if (photoDiv) {
-            if (wizardPhotoBase64) {
-                photoDiv.style.backgroundImage = `url('${wizardPhotoBase64}')`;
-                photoDiv.style.backgroundSize = "cover";
-                photoDiv.style.backgroundPosition = "center";
-                photoDiv.innerHTML = `<div style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.65);color:#fff;font-size:0.75rem;padding:4px;text-align:center;">Изменить фото</div>`;
+        const logoDiv = document.getElementById("editor-logo-div");
+        if (logoDiv) {
+            if (wizardLogoBase64) {
+                logoDiv.style.backgroundImage = `url('${wizardLogoBase64}')`;
+                logoDiv.style.backgroundSize = "cover";
+                logoDiv.style.backgroundPosition = "center";
+                logoDiv.innerHTML = `<div style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.65);color:#fff;font-size:0.6rem;padding:2px;text-align:center;">Изменить</div>`;
             } else {
-                photoDiv.style.backgroundImage = "none";
-                photoDiv.innerHTML = `<i data-lucide="image" style="width:32px;height:32px;color:var(--primary);margin-bottom:0.5rem;"></i><span style="font-size:0.85rem; font-weight:600; color:var(--text-primary);">Фото для карточки</span><span style="font-size:0.75rem; color:var(--text-muted); margin-top:0.25rem;">Нажмите чтобы изменить</span>`;
+                logoDiv.style.backgroundImage = "none";
+                logoDiv.innerHTML = `<i data-lucide="shield" style="width:28px;height:28px;color:var(--primary);"></i><span style="font-size:0.65rem; font-weight:700; color:var(--text-muted); margin-top:2px;">Логотип</span>`;
                 if (window.lucide) lucide.createIcons();
             }
         }
+
+        renderEditorCampusPhotos();
 
         // Load specialties
         currentSpecialties = myUniversity.specialties ? JSON.parse(JSON.stringify(myUniversity.specialties)) : [];
@@ -4430,6 +4610,20 @@ function openWYSIWYGEditor() {
 
     renderEditorAdvantages();
     renderEditorSpecialties();
+
+    // Re-bind advantage button every time editor opens (fixes lost listener)
+    const advBtn = document.getElementById("editor-add-adv-btn");
+    if (advBtn) {
+        const newAdvBtn = advBtn.cloneNode(true);
+        advBtn.parentNode.replaceChild(newAdvBtn, advBtn);
+        newAdvBtn.addEventListener("click", () => {
+            if (currentAdvantages.length < 3) {
+                currentAdvantages.push({ title: "", desc: "" });
+                renderEditorAdvantages();
+            }
+        });
+    }
+
     lucide.createIcons();
 }
 
@@ -4552,10 +4746,20 @@ function renderEditorSpecialties() {
                 <div class="editor-tags-list" style="display:flex;flex-wrap:wrap;gap:0.5rem;">
                     ${tagsHtml || '<span style="font-size:0.8rem;color:var(--text-muted);">Требования не добавлены</span>'}
                 </div>
+
+                <!-- Quick Requirement Preset Buttons -->
+                <div style="display:flex; flex-wrap:wrap; gap:0.4rem; margin-top:0.35rem; margin-bottom:0.35rem;">
+                    <span style="font-size:0.75rem; color:var(--text-muted); align-self:center; font-weight:600;">Быстрый выбор:</span>
+                    <button type="button" class="req-preset-btn btn btn-outline btn-sm" data-preset="IELTS " style="padding:0.15rem 0.5rem; font-size:0.75rem;">+ IELTS</button>
+                    <button type="button" class="req-preset-btn btn btn-outline btn-sm" data-preset="SAT " style="padding:0.15rem 0.5rem; font-size:0.75rem;">+ SAT</button>
+                    <button type="button" class="req-preset-btn btn btn-outline btn-sm" data-preset="GPA " style="padding:0.15rem 0.5rem; font-size:0.75rem;">+ GPA</button>
+                    <button type="button" class="req-preset-btn btn btn-outline btn-sm" data-preset="Внутренний экзамен" style="padding:0.15rem 0.5rem; font-size:0.75rem;">+ Внутренний экзамен</button>
+                    <button type="button" class="req-preset-btn btn btn-outline btn-sm" data-preset="Собеседование" style="padding:0.15rem 0.5rem; font-size:0.75rem;">+ Собеседование</button>
+                </div>
                 
                 <div style="display: flex; gap: 0.5rem; margin-top: 0.35rem;">
-                    <input type="text" class="editor-new-req-input editor-spec-input" placeholder="Введите новое требование (например: IELTS 6.5)..." style="flex: 1;">
-                    <button type="button" class="editor-add-tag-btn btn btn-outline btn-sm" style="white-space: nowrap;">+ Добавить</button>
+                    <input type="text" class="editor-new-req-input editor-spec-input" placeholder="Или введите свое требование..." style="flex: 1;">
+                    <button type="button" class="editor-add-tag-btn btn btn-outline btn-sm" style="white-space: nowrap;">+ Добавить свое</button>
                 </div>
             </div>
 
@@ -4621,6 +4825,18 @@ function renderEditorSpecialties() {
                 e.preventDefault();
                 confirmAddTag();
             }
+        });
+
+        // Bind requirement preset buttons
+        row.querySelectorAll(".req-preset-btn").forEach(btn => {
+            btn.addEventListener("click", (e) => {
+                e.preventDefault();
+                const prefix = btn.dataset.preset;
+                if (newReqInput) {
+                    newReqInput.value = prefix;
+                    newReqInput.focus();
+                }
+            });
         });
 
         // Remove requirements tag
@@ -4731,7 +4947,11 @@ function openSpecDetailModal(spec, specIdx, isEditMode) {
                         disciplines: discInp ? discInp.value.trim() : "",
                         career: careerInp ? careerInp.value.trim() : "",
                     };
-                    showToast("Описание сохранено! Не забудьте нажать «Сохранить изменения».", "success");
+                    if (typeof specIdx === "number" && currentSpecialties && currentSpecialties[specIdx]) {
+                        currentSpecialties[specIdx].detail = spec.detail;
+                    }
+                    closeSpecDetailModal();
+                    showToast("Описание специальности сохранено!", "success");
                 };
             }
         } else {
@@ -4890,9 +5110,10 @@ async function saveWYSIWYGData() {
         has_grant: hasGrant,
         grant_info: grantInfo,
         has_scholarship: hasScholarship,
-        scholarship_info: scholarshipInfo,
-        photo: wizardPhotoBase64,
+        photo: (wizardCampusPhotos && wizardCampusPhotos[0]) ? wizardCampusPhotos[0] : wizardPhotoBase64,
         banner: wizardBannerBase64,
+        logo: wizardLogoBase64,
+        photos: wizardCampusPhotos,
         specialties: currentSpecialties
     };
 

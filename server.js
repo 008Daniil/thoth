@@ -1010,8 +1010,8 @@ function startTelegramPolling() {
 
 // --- 4. EXPRESS APP SETUP ---
 const app = express();
-app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // Disable browser caching for development
 app.use((req, res, next) => {
@@ -1205,24 +1205,28 @@ app.post('/api/v1/students/profile', (req, res) => {
 app.post('/api/v1/universities/profile', (req, res) => {
     const { 
         partner_id, name, country, city, website, description, min_ielts, min_sat, specialties,
-        slogan, adv_1_title, adv_1_desc, adv_2_title, adv_2_desc, adv_3_title, adv_3_desc, photo, banner 
+        slogan, adv_1_title, adv_1_desc, adv_2_title, adv_2_desc, adv_3_title, adv_3_desc, photo, banner,
+        logo, photos, campus_photos
     } = req.body;
     
-    if (!partner_id || !name || !country || !city || !description) {
-        return res.status(400).json({ detail: 'Missing required fields' });
-    }
+    const finalPartnerId = partner_id || req.body.partner_id || 'partner-default';
+    const finalName = name || req.body.name || 'Университет';
+    const finalCountry = country || req.body.country || 'Узбекистан';
+    const finalCity = city || req.body.city || 'Ташкент';
+    const finalDescription = description || req.body.description || 'Официальный партнер THOTH.';
 
     const db = loadDB();
     
     // Find if university profile already exists
-    let uni = db.universities.find(u => u.partner_id === partner_id);
+    let uni = db.universities.find(u => u.partner_id === finalPartnerId);
+    const photosArr = Array.isArray(photos) ? photos : (Array.isArray(campus_photos) ? campus_photos : (photo ? [photo] : []));
     
     if (uni) {
-        uni.name = name;
-        uni.country = country;
-        uni.city = city;
+        uni.name = finalName;
+        uni.country = finalCountry;
+        uni.city = finalCity;
         uni.website = website || '';
-        uni.description = description;
+        uni.description = finalDescription;
         uni.min_ielts = min_ielts ? parseFloat(min_ielts) : null;
         uni.min_sat = min_sat ? parseInt(min_sat) : null;
         uni.slogan = slogan || '';
@@ -1237,18 +1241,20 @@ app.post('/api/v1/universities/profile', (req, res) => {
         uni.has_scholarship = req.body.has_scholarship === true || req.body.has_scholarship === 'true' || req.body.has_scholarship === 'on';
         uni.scholarship_info = req.body.scholarship_info || '';
         uni.contact_info = req.body.contact_info || '';
-        uni.photo = photo || '';
+        uni.photo = photo || (photosArr[0] || '');
         uni.banner = banner || req.body.banner || '';
-        uni.status = 'approved'; // Instantly publish university
+        uni.logo = logo || req.body.logo || '';
+        uni.photos = photosArr;
+        uni.status = 'pending'; // Requires Telegram Bot Admin Moderation!
     } else {
         uni = {
             id: crypto.randomUUID(),
-            partner_id,
-            name,
-            country,
-            city,
+            partner_id: finalPartnerId,
+            name: finalName,
+            country: finalCountry,
+            city: finalCity,
             website: website || '',
-            description,
+            description: finalDescription,
             min_ielts: min_ielts ? parseFloat(min_ielts) : null,
             min_sat: min_sat ? parseInt(min_sat) : null,
             slogan: slogan || '',
@@ -1263,9 +1269,11 @@ app.post('/api/v1/universities/profile', (req, res) => {
             has_scholarship: req.body.has_scholarship === true || req.body.has_scholarship === 'true' || req.body.has_scholarship === 'on',
             scholarship_info: req.body.scholarship_info || '',
             contact_info: req.body.contact_info || '',
-            photo: photo || '',
+            photo: photo || (photosArr[0] || ''),
             banner: banner || req.body.banner || '',
-            status: 'approved',
+            logo: logo || req.body.logo || '',
+            photos: photosArr,
+            status: 'pending', // Requires Telegram Bot Admin Moderation!
             views: 0,
             created_at: new Date().toISOString()
         };
