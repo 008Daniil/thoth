@@ -58,6 +58,95 @@ window.handleOpenStudentSpecDetail = function(event, specId) {
     }
 };
 
+window.handleAddEditorAdv = function(event) {
+    try {
+        if (event) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+        console.log("[EditorAdv] Clicked. currentAdvantages:", currentAdvantages);
+        if (typeof currentAdvantages === "undefined" || !currentAdvantages) {
+            currentAdvantages = [];
+        }
+        if (currentAdvantages.length < 3) {
+            currentAdvantages.push({ title: "", desc: "" });
+            renderEditorAdvantages();
+        } else {
+            showToast("Вы можете добавить не более 3 ключевых преимуществ", "warning");
+        }
+    } catch (err) {
+        console.error("[EditorAdv] Error:", err);
+        showToast("Ошибка при добавлении преимущества: " + err.message, "danger");
+    }
+};
+
+window.handleAddWizardAdv = function(event) {
+    try {
+        if (event) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+        console.log("[WizardAdv] Clicked. currentAdvantages:", currentAdvantages);
+        if (typeof currentAdvantages === "undefined" || !currentAdvantages) {
+            currentAdvantages = [];
+        }
+        if (currentAdvantages.length < 3) {
+            currentAdvantages.push({ title: "", desc: "" });
+            renderWizardAdvantages();
+            syncWizardLivePreview();
+        } else {
+            showToast("Вы можете добавить не более 3 ключевых преимуществ", "warning");
+        }
+    } catch (err) {
+        console.error("[WizardAdv] Error:", err);
+        showToast("Ошибка при добавлении преимущества: " + err.message, "danger");
+    }
+};
+
+window.handleAddEditorSpec = function(event) {
+    try {
+        if (event) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+        console.log("[EditorSpec] Clicked. currentSpecialties:", currentSpecialties);
+        if (typeof currentSpecialties === "undefined" || !currentSpecialties) {
+            currentSpecialties = [];
+        }
+        currentSpecialties.push({
+            name: "",
+            tuition_fee: "",
+            min_requirements: "IELTS 6.0",
+            reqTags: ["IELTS 6.0"],
+            format: "Очный (Дневной)",
+            duration: "4 года (Бакалавриат)",
+            language: "Английский / Русский"
+        });
+        renderEditorSpecialties();
+    } catch (err) {
+        console.error("[EditorSpec] Error:", err);
+        showToast("Ошибка при добавлении специальности: " + err.message, "danger");
+    }
+};
+
+window.handleAddWizardSpec = function(event) {
+    try {
+        if (event) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+        console.log("[WizardSpec] Clicked.");
+        if (typeof addSpecialtyRow === "function") {
+            addSpecialtyRow();
+        } else {
+            throw new Error("addSpecialtyRow is not a function");
+        }
+    } catch (err) {
+        console.error("[WizardSpec] Error:", err);
+        showToast("Ошибка при добавлении специальности: " + err.message, "danger");
+    }
+};
+
 let chartInstance = null; // Store Chart.js instance to prevent memory leaks
 let bgGrainient = null; // WebGL shader background instance
 let wizardPhotoBase64 = ""; // Base64 string for university card photo
@@ -403,13 +492,16 @@ function setupImageCropModal() {
 
     const saveBtn = document.getElementById("crop-save-btn");
     if (saveBtn) {
-        saveBtn.addEventListener("click", () => {
-            const croppedData = getCroppedBase64();
-            if (croppedData && cropState.onSave) {
-                cropState.onSave(croppedData);
-            }
-            closeImageCropModal();
-        });
+        if (!saveBtn.dataset.bound) {
+            saveBtn.dataset.bound = true;
+            saveBtn.addEventListener("click", () => {
+                const croppedData = getCroppedBase64();
+                if (croppedData && cropState.onSave) {
+                    cropState.onSave(croppedData);
+                }
+                closeImageCropModal();
+            });
+        }
     }
 }
 
@@ -958,6 +1050,7 @@ function setupEventListeners() {
 
                 localStorage.setItem("currentStudentName", fullName);
                 localStorage.setItem("currentStudentPhone", phone);
+                localStorage.removeItem("currentPartner");
 
                 showToast(`🎉 Заявка успешно отправлена в ${uniName}!`, "success");
                 closeQuickApplyModal();
@@ -996,6 +1089,7 @@ function setupEventListeners() {
     if (studentLogoutBtn) {
         studentLogoutBtn.addEventListener("click", () => {
             localStorage.removeItem("currentStudentPhone");
+            localStorage.removeItem("currentPartner");
             resetPassportCard("");
             document.getElementById("auth-phone-input").value = "";
             showToast("Вы вышли из профиля", "success");
@@ -1008,6 +1102,7 @@ function setupEventListeners() {
     if (globalLogoutBtn) {
         globalLogoutBtn.addEventListener("click", () => {
             localStorage.removeItem("currentStudentPhone");
+            localStorage.removeItem("currentPartner");
             resetPassportCard("");
             document.getElementById("auth-phone-input").value = "";
             showToast("Вы вышли из профиля", "success");
@@ -1020,6 +1115,7 @@ function setupEventListeners() {
     if (profileLogoutBtn) {
         profileLogoutBtn.addEventListener("click", () => {
             localStorage.removeItem("currentStudentPhone");
+            localStorage.removeItem("currentPartner");
             resetPassportCard("");
             document.getElementById("auth-phone-input").value = "";
             showToast("Вы вышли из профиля", "success");
@@ -1070,6 +1166,7 @@ function setupEventListeners() {
                 showToast("Успешный вход в аккаунт!", "success");
                 
                 localStorage.setItem("currentStudentPhone", phone);
+                localStorage.removeItem("currentPartner");
                 document.getElementById("auth-phone-input").value = phone;
                 
                 await loadStudentProfile(phone, false);
@@ -1200,6 +1297,7 @@ function setupEventListeners() {
                 showToast("Ваш профиль успешно создан!", "success");
                 
                 localStorage.setItem("currentStudentPhone", phone);
+                localStorage.removeItem("currentPartner");
                 document.getElementById("auth-phone-input").value = phone;
                 
                 await loadStudentProfile(phone, false);
@@ -1279,6 +1377,9 @@ function setupEventListeners() {
     if (logoutBtn) {
         logoutBtn.addEventListener("click", () => {
             localStorage.removeItem("currentPartner");
+            localStorage.removeItem("currentStudentPhone");
+            localStorage.removeItem("currentStudentName");
+            window.currentStudentProfile = null;
             renderPartnerCabinet();
             showToast("Вы вышли из личного кабинета", "success");
         });
@@ -1391,19 +1492,23 @@ function renderEditorCampusPhotos() {
         editorAddPhotoBtn.addEventListener("click", () => {
             editorCampusUpload.click();
         });
-        editorCampusUpload.addEventListener("change", (e) => {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = (event) => {
-                    openImageCropModal(event.target.result, "card", (croppedResult) => {
-                        wizardCampusPhotos.push(croppedResult);
-                        renderEditorCampusPhotos();
-                    });
-                };
-                reader.readAsDataURL(file);
-            }
-        });
+        if (!editorCampusUpload.dataset.bound) {
+            editorCampusUpload.dataset.bound = true;
+            editorCampusUpload.addEventListener("change", (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        openImageCropModal(event.target.result, "card", (croppedResult) => {
+                            wizardCampusPhotos.push(croppedResult);
+                            renderEditorCampusPhotos();
+                        });
+                    };
+                    reader.readAsDataURL(file);
+                }
+                editorCampusUpload.value = "";
+            });
+        }
     }
 
     // Initialize Image Crop Modal events
@@ -1427,8 +1532,30 @@ function renderEditorCampusPhotos() {
     // Initialize spec detail modal tabs and back button
     setupSpecDetailModal();
 
-    // Global Event Delegation for Specialty Detail Modals
+    // Global Event Delegation for Tabs and Dynamic Buttons (fixes duplicate listener & cloning issues)
     document.addEventListener("click", (e) => {
+        // 1. Details Tab Switcher
+        const tabBtn = e.target.closest(".uni-tab-btn");
+        if (tabBtn) {
+            e.preventDefault();
+            const activeTab = tabBtn.dataset.tab;
+            document.querySelectorAll(".uni-tab-btn").forEach(btn => {
+                const isActive = btn.dataset.tab === activeTab;
+                btn.classList.toggle("active", isActive);
+                btn.style.color = isActive ? "var(--primary)" : "var(--text-secondary)";
+                btn.style.borderBottom = isActive ? "2px solid var(--primary)" : "2px solid transparent";
+            });
+            document.querySelectorAll(".uni-details-tab-panel").forEach(panel => {
+                panel.style.display = "none";
+            });
+            const activePanel = document.getElementById(`uni-details-tab-${activeTab}`);
+            if (activePanel) activePanel.style.display = "block";
+            return;
+        }
+
+        // Handled by inline onclick window-level helpers to ensure absolute reliability and no scope mismatches
+
+        // 6. Specialty Detail Modal next btn
         const nextBtn = e.target.closest(".editor-spec-next-btn");
         if (nextBtn) {
             e.preventDefault();
@@ -1445,31 +1572,7 @@ function renderEditorCampusPhotos() {
         }
     });
 
-    const editorAddAdvBtn = document.getElementById("editor-add-adv-btn");
-    if (editorAddAdvBtn) {
-        editorAddAdvBtn.addEventListener("click", () => {
-            if (currentAdvantages.length < 3) {
-                currentAdvantages.push({ title: "", desc: "" });
-                renderEditorAdvantages();
-            }
-        });
-    }
-
-    const editorAddSpecBtn = document.getElementById("editor-add-spec-btn");
-    if (editorAddSpecBtn) {
-        editorAddSpecBtn.addEventListener("click", () => {
-            currentSpecialties.push({
-                name: "",
-                tuition_fee: "",
-                min_requirements: "IELTS 6.0",
-                reqTags: ["IELTS 6.0"],
-                format: "Очный (Дневной)",
-                duration: "4 года (Бакалавриат)",
-                language: "Английский / Русский"
-            });
-            renderEditorSpecialties();
-        });
-    }
+    // Handled by global document click delegation to prevent duplicate listener/scope issues
 
     // AI Orientation Modal Event Listeners
     const aiFab = document.getElementById("ai-orientation-fab");
@@ -1597,12 +1700,7 @@ function renderEditorCampusPhotos() {
         });
     }
 
-    const wizardAddSpecBtn = document.getElementById("wizard-add-spec-btn");
-    if (wizardAddSpecBtn) {
-        wizardAddSpecBtn.addEventListener("click", () => {
-            addSpecialtyRow();
-        });
-    }
+    // Handled by global document click delegation
 
     const wizardSubmitBtn = document.getElementById("wizard-submit-btn");
     if (wizardSubmitBtn) {
@@ -1701,16 +1799,7 @@ function renderEditorCampusPhotos() {
     });
 
     // Add Advantage Button Handler
-    const addAdvBtn = document.getElementById("wizard-add-adv-btn");
-    if (addAdvBtn) {
-        addAdvBtn.addEventListener("click", () => {
-            if (currentAdvantages.length < 3) {
-                currentAdvantages.push({ title: "", desc: "" });
-                renderWizardAdvantages();
-                syncWizardLivePreview();
-            }
-        });
-    }
+    // Handled by global document click delegation
 
     // Toggle Grant & Scholarship Boxes in Wizard
     const toggleGrantBtn = document.getElementById("wizard-toggle-grant-btn");
@@ -2141,23 +2230,29 @@ async function loadUniversityDetails(id) {
         // Alias generation (first letters of words, e.g. MIT)
         const words = uni.name.split(" ");
         const alias = words.map(w => w[0] ? w[0] : "").join("").toUpperCase().substring(0, 4);
-        document.getElementById("det-uni-alias").textContent = alias || "UNI";
 
-        const detailBanner = document.querySelector(".wb-product-banner");
-        if (detailBanner) {
-            const bannerImg = (uni.banner && uni.banner.startsWith("data:image/")) ? uni.banner : uni.photo;
-            if (bannerImg && bannerImg.startsWith("data:image/")) {
-                detailBanner.style.backgroundImage = `url('${bannerImg}')`;
-                detailBanner.style.backgroundSize = "cover";
-                detailBanner.style.backgroundPosition = "center";
-                document.getElementById("det-uni-alias").style.display = "none";
+        const logoElem = document.getElementById("det-uni-logo");
+        if (logoElem) {
+            const finalLogo = (uni.logo && uni.logo.startsWith("data:image/")) ? uni.logo : (uni.photo && uni.photo.startsWith("data:image/") ? uni.photo : "");
+            if (finalLogo) {
+                logoElem.style.backgroundImage = `url('${finalLogo}')`;
+                logoElem.textContent = "";
             } else {
-                detailBanner.style.backgroundImage = "";
-                detailBanner.style.backgroundSize = "";
-                detailBanner.style.backgroundPosition = "";
-                document.getElementById("det-uni-alias").style.display = "block";
+                logoElem.style.backgroundImage = "";
+                logoElem.textContent = alias || "UNI";
             }
         }
+
+        // Reset details page active tab states to "info"
+        document.querySelectorAll(".uni-tab-btn").forEach(btn => {
+            const isActive = btn.dataset.tab === "info";
+            btn.classList.toggle("active", isActive);
+            btn.style.color = isActive ? "var(--primary)" : "var(--text-secondary)";
+            btn.style.borderBottom = isActive ? "2px solid var(--primary)" : "2px solid transparent";
+        });
+        document.querySelectorAll(".uni-details-tab-panel").forEach(panel => {
+            panel.style.display = panel.id === "uni-details-tab-info" ? "block" : "none";
+        });
         
         // 2. Description
         document.getElementById("det-uni-desc").textContent = uni.description || "Описание университета на модерации.";
@@ -2357,6 +2452,32 @@ async function loadUniversityDetails(id) {
         }
 
 
+        // Populate photos grid in Photos Tab
+        const photosGrid = document.getElementById("det-photos-grid");
+        if (photosGrid) {
+            photosGrid.innerHTML = "";
+            const photosList = uni.photos || [];
+            if (photosList.length === 0) {
+                photosGrid.innerHTML = `
+                    <div style="grid-column: 1 / -1; color: var(--text-secondary); font-style: italic; text-align: center; padding: 3rem 1.5rem;">
+                        Фотографии кампуса и университета не загружены представителем ВУЗа.
+                    </div>
+                `;
+            } else {
+                photosList.forEach((photoBase64, pIdx) => {
+                    const imgItem = document.createElement("div");
+                    imgItem.style.cssText = "border-radius:16px; overflow:hidden; border:1px solid var(--card-border); box-shadow:0 4px 15px rgba(0,0,0,0.06); aspect-ratio:16/10; background-size:cover; background-position:center; background-repeat:no-repeat; transition: transform 0.2s; cursor:pointer;";
+                    imgItem.style.backgroundImage = `url('${photoBase64}')`;
+                    imgItem.onmouseover = () => { imgItem.style.transform = "scale(1.025)"; };
+                    imgItem.onmouseout = () => { imgItem.style.transform = "scale(1)"; };
+                    imgItem.onclick = () => {
+                        openFullscreenLightbox(photoBase64);
+                    };
+                    photosGrid.appendChild(imgItem);
+                });
+            }
+        }
+
         // Bind details page button
         const applyBtn = document.querySelector("#page-university .apply-now-btn");
         if (applyBtn) {
@@ -2371,6 +2492,34 @@ async function loadUniversityDetails(id) {
         showToast("Не удалось загрузить подробности об университете", "danger");
         window.location.hash = "home";
     }
+}
+
+function openFullscreenLightbox(photoBase64) {
+    const overlay = document.createElement("div");
+    overlay.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.92); display:flex; align-items:center; justify-content:center; z-index:999999999; cursor:pointer; opacity:0; transition:opacity 0.2s ease-in-out; backdrop-filter:blur(8px);";
+    
+    const img = document.createElement("img");
+    img.src = photoBase64;
+    img.style.cssText = "max-width:92%; max-height:90%; border-radius:12px; box-shadow:0 10px 40px rgba(0,0,0,0.5); object-fit:contain; transform:scale(0.95); transition:transform 0.2s ease-in-out;";
+    
+    overlay.appendChild(img);
+    document.body.appendChild(overlay);
+    
+    // Force reflow
+    overlay.offsetHeight;
+    
+    overlay.style.opacity = "1";
+    img.style.transform = "scale(1)";
+    
+    const closeLightbox = () => {
+        overlay.style.opacity = "0";
+        img.style.transform = "scale(0.95)";
+        setTimeout(() => {
+            overlay.remove();
+        }, 200);
+    };
+    
+    overlay.onclick = closeLightbox;
 }
 
 // Load specialties and preselect a specific one
@@ -2476,6 +2625,7 @@ async function loadStudentProfile(phone, notifyUser = true) {
 
         // Save active student session
         localStorage.setItem("currentStudentPhone", profile.phone);
+        localStorage.removeItem("currentPartner");
         window.currentStudentProfile = profile;
 
         // Avatar Initial
@@ -2738,6 +2888,9 @@ async function handlePartnerLoginSubmit(e) {
         }
 
         localStorage.setItem("currentPartner", JSON.stringify(data));
+        localStorage.removeItem("currentStudentPhone");
+        localStorage.removeItem("currentStudentName");
+        window.currentStudentProfile = null;
         showToast("Успешный вход в кабинет!", "success");
         document.getElementById("partner-login-form").reset();
         
@@ -2781,6 +2934,9 @@ async function handlePartnerSignupSubmit(e) {
             throw new Error(data.detail || "Ошибка регистрации");
         }
 
+        localStorage.removeItem("currentStudentPhone");
+        localStorage.removeItem("currentStudentName");
+        window.currentStudentProfile = null;
         showToast("Аккаунт успешно создан и отправлен на модерацию в Telegram. После одобрения вы сможете войти.", "success");
         document.getElementById("partner-signup-form").reset();
         
@@ -4132,27 +4288,22 @@ function syncWizardLivePreview() {
     // 2. Render advantages in live preview dynamically (no icons)
     renderUniversityAdvantages(null, "preview-advantages-container", true);
 
-    // 2. Banner Alias/Photo
-    const aliasSpan = document.getElementById("preview-det-uni-alias");
-    const bannerBg = document.getElementById("preview-banner-bg");
-    if (aliasSpan && bannerBg) {
-        const words = name.split(" ");
-        const alias = words.map(w => w[0] ? w[0] : "").join("").toUpperCase().substring(0, 4);
-        aliasSpan.textContent = alias || "UNI";
-
-        if (wizardPhotoBase64 && wizardPhotoBase64.startsWith("data:image/")) {
-            bannerBg.style.backgroundImage = `url('${wizardPhotoBase64}')`;
-            bannerBg.style.backgroundSize = "cover";
-            bannerBg.style.backgroundPosition = "center";
-            aliasSpan.style.display = "none";
+    // 2. Logo Syncing
+    const previewLogo = document.getElementById("preview-det-uni-logo");
+    if (previewLogo) {
+        const finalLogo = (wizardLogoBase64 && wizardLogoBase64.startsWith("data:image/")) ? wizardLogoBase64 : (wizardPhotoBase64 && wizardPhotoBase64.startsWith("data:image/") ? wizardPhotoBase64 : "");
+        if (finalLogo) {
+            previewLogo.style.backgroundImage = `url('${finalLogo}')`;
+            previewLogo.style.backgroundSize = "cover";
+            previewLogo.style.backgroundPosition = "center";
+            previewLogo.textContent = "";
         } else {
-            bannerBg.style.backgroundImage = "";
-            bannerBg.style.backgroundSize = "";
-            bannerBg.style.backgroundPosition = "";
-            aliasSpan.style.display = "block";
+            const words = name.split(" ");
+            const alias = words.map(w => w[0] ? w[0] : "").join("").toUpperCase().substring(0, 4);
+            previewLogo.style.backgroundImage = "";
+            previewLogo.textContent = alias || "UNI";
         }
     }
-
     // 3. Price Card
     const previewPrice = document.getElementById("preview-det-uni-price");
     if (previewPrice) {
@@ -4555,22 +4706,13 @@ function openWYSIWYGEditor() {
         if (myUniversity.adv_2_title) currentAdvantages.push({ title: myUniversity.adv_2_title, desc: myUniversity.adv_2_desc || "" });
         if (myUniversity.adv_3_title) currentAdvantages.push({ title: myUniversity.adv_3_title, desc: myUniversity.adv_3_desc || "" });
 
-        // Load logo / banner / campus photos
+        // Load logo / campus photos
         wizardLogoBase64 = myUniversity.logo || "";
         wizardPhotoBase64 = myUniversity.photo || "";
-        wizardBannerBase64 = myUniversity.banner || "";
-        wizardCampusPhotos = (myUniversity.photos && Array.isArray(myUniversity.photos) && myUniversity.photos.length > 0)
+        wizardBannerBase64 = "";
+        wizardCampusPhotos = (myUniversity.photos && Array.isArray(myUniversity.photos))
             ? JSON.parse(JSON.stringify(myUniversity.photos))
-            : (wizardPhotoBase64 ? [wizardPhotoBase64] : []);
-
-        const bannerDiv = document.getElementById("editor-banner-div");
-        if (bannerDiv) {
-            if (wizardBannerBase64) {
-                bannerDiv.style.backgroundImage = `url('${wizardBannerBase64}')`;
-            } else {
-                bannerDiv.style.backgroundImage = "none";
-            }
-        }
+            : [];
 
         const logoDiv = document.getElementById("editor-logo-div");
         if (logoDiv) {
@@ -4603,27 +4745,15 @@ function openWYSIWYGEditor() {
         document.getElementById("editor-scholarship-info").value = "";
         
         wizardPhotoBase64 = "";
-        document.getElementById("editor-banner-div").style.backgroundImage = "none";
+        wizardLogoBase64 = "";
+        wizardBannerBase64 = "";
+        wizardCampusPhotos = [];
         currentAdvantages = [];
         currentSpecialties = [];
     }
 
     renderEditorAdvantages();
     renderEditorSpecialties();
-
-    // Re-bind advantage button every time editor opens (fixes lost listener)
-    const advBtn = document.getElementById("editor-add-adv-btn");
-    if (advBtn) {
-        const newAdvBtn = advBtn.cloneNode(true);
-        advBtn.parentNode.replaceChild(newAdvBtn, advBtn);
-        newAdvBtn.addEventListener("click", () => {
-            if (currentAdvantages.length < 3) {
-                currentAdvantages.push({ title: "", desc: "" });
-                renderEditorAdvantages();
-            }
-        });
-    }
-
     lucide.createIcons();
 }
 
@@ -5111,7 +5241,7 @@ async function saveWYSIWYGData() {
         grant_info: grantInfo,
         has_scholarship: hasScholarship,
         photo: (wizardCampusPhotos && wizardCampusPhotos[0]) ? wizardCampusPhotos[0] : wizardPhotoBase64,
-        banner: wizardBannerBase64,
+        banner: "",
         logo: wizardLogoBase64,
         photos: wizardCampusPhotos,
         specialties: currentSpecialties

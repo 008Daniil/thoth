@@ -17,7 +17,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <!-- Main Style Sheet -->
-    <link rel="stylesheet" href="/frontend/style.css?v=59.0">
+    <link rel="stylesheet" href="/frontend/style.css?v=61.0">
 </head>
 <body>
 
@@ -374,21 +374,31 @@
                 <i data-lucide="arrow-left"></i> Назад к списку
             </button>
 
-            <!-- cover image top span -->
-            <div class="wb-product-banner academic-banner-style" style="border-radius: 20px; margin-bottom: 2rem; height: 380px; position: relative; overflow: hidden; background-size: cover; background-position: center; border: 1px solid var(--card-border);">
-                <div class="banner-content" style="position: absolute; bottom: 1.5rem; left: 1.5rem;">
-                    <span class="banner-alias" id="det-uni-alias" style="display: none; font-size: 4rem; font-weight: 900; color: rgba(255,255,255,0.15);">UNI</span>
+            <!-- University Header with Logo (No banner) -->
+            <div style="margin-bottom: 2.5rem; display: flex; align-items: center; gap: 1.5rem;">
+                <div id="det-uni-logo" style="width: 110px; height: 110px; border-radius: 24px; border: 1px solid var(--card-border); background-size: cover; background-position: center; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 2.2rem; font-weight: 800; color: var(--primary); background: var(--card-bg); box-shadow: 0 4px 15px rgba(0,0,0,0.12);">
+                    UNI
+                </div>
+                <div>
+                    <h1 id="det-uni-name" style="font-family: var(--font-heading); font-size: 2.8rem; font-weight: 800; color: var(--text-primary); margin: 0 0 0.4rem 0; line-height: 1.2;">University Name</h1>
+                    <p id="det-uni-slogan" style="font-size: 1.1rem; color: var(--text-secondary); font-style: italic; margin: 0; display: none;"></p>
                 </div>
             </div>
 
-            <!-- University Title -->
-            <div style="margin-bottom: 2rem;">
-                <h1 id="det-uni-name" style="font-family: var(--font-heading); font-size: 2.6rem; font-weight: 800; color: var(--text-primary); margin: 0 0 0.4rem 0; line-height: 1.2;">University Name</h1>
-                <p id="det-uni-slogan" style="font-size: 1.05rem; color: var(--text-secondary); font-style: italic; margin: 0; display: none;"></p>
+            <!-- Detail Page Tabs -->
+            <div style="display: flex; gap: 0.5rem; margin-top: 1.5rem; margin-bottom: 2.5rem; border-bottom: 2px solid var(--card-border); padding-bottom: 0;" id="uni-details-tabs">
+                <button class="uni-tab-btn active" data-tab="info" style="background: none; border: none; padding: 0.75rem 1.5rem; font-size: 1.05rem; font-weight: 600; cursor: pointer; color: var(--primary); border-bottom: 2px solid var(--primary); margin-bottom: -2px; transition: all 0.2s;">
+                    Информация
+                </button>
+                <button class="uni-tab-btn" data-tab="photos" style="background: none; border: none; padding: 0.75rem 1.5rem; font-size: 1.05rem; font-weight: 600; cursor: pointer; color: var(--text-secondary); border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all 0.2s;">
+                    Фотографии университета
+                </button>
             </div>
 
-            <!-- Two Column Grid -->
-            <div class="uni-details-layout-grid">
+            <!-- Tab Panels -->
+            <div id="uni-details-tab-info" class="uni-details-tab-panel">
+                <!-- Two Column Grid -->
+                <div class="uni-details-layout-grid">
                 
                 <!-- Left Side: Quick Facts & Tuition Card -->
                 <div class="uni-details-sidebar" style="display: flex; flex-direction: column; gap: 1.5rem;">
@@ -466,6 +476,16 @@
                         <div id="det-grants-scholarships-content" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.25rem;">
                             <!-- Dynamic Grant & Scholarship Cards loaded by JS -->
                         </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Photos Tab Panel -->
+            <div id="uni-details-tab-photos" class="uni-details-tab-panel" style="display: none;">
+                <div class="glass-card" style="padding: 2.25rem; border-radius: 20px; border: 1px solid var(--card-border); background: var(--card-bg);">
+                    <h3 style="font-size: 1.4rem; font-weight: 700; margin-bottom: 1.5rem; color: var(--text-primary);">Фотографии кампуса и университета</h3>
+                    <div id="det-photos-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.25rem;">
+                        <!-- Photos populated dynamically by JS -->
                     </div>
                 </div>
             </div>
@@ -865,13 +885,6 @@
                             <div class="wb-product-container" style="display: grid; grid-template-columns: 1fr; gap: 1.5rem; margin: 0;">
                                 <!-- Left side (Gallery & specs style) -->
                                 <div class="wb-product-gallery-side" style="width: 100%;">
-                                    <div class="wb-product-banner academic-banner-style" id="preview-banner-bg" style="height: 180px;">
-                                        <div class="banner-overlay"></div>
-                                        <div class="banner-content">
-                                            <span class="banner-tag">OFFICIAL PROFILE</span>
-                                            <span class="banner-alias" id="preview-det-uni-alias">UNI</span>
-                                        </div>
-                                    </div>
 
                                     <div class="wb-price-card glass-card" style="margin-top: 1rem; padding: 1.25rem;">
                                         <div class="wb-price-row">
@@ -910,10 +923,15 @@
 
                                 <!-- Right side (Title & slogan style) -->
                                 <div class="wb-product-info-side" style="width: 100%;">
-                                    <div class="wb-title-card glass-card" style="padding: 1.25rem;">
-                                        <span class="badge badge-success">Верифицирован приемной комиссией</span>
-                                        <h1 id="preview-det-uni-name" style="font-family: var(--font-heading); font-size: 2.2rem; margin-top: 0.5rem; margin-bottom: 0.5rem; line-height: 1.2;">Название ВУЗа</h1>
-                                        <p class="wb-slogan" id="preview-det-uni-slogan">Слоган университета</p>
+                                    <div class="wb-title-card glass-card" style="padding: 1.25rem; display: flex; align-items: center; gap: 1rem;">
+                                        <div id="preview-det-uni-logo" style="width: 60px; height: 60px; border-radius: 12px; border: 1px solid var(--card-border); background-size: cover; background-position: center; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; font-weight: 800; color: var(--primary); background: var(--card-bg); flex-shrink: 0;">
+                                            UNI
+                                        </div>
+                                        <div>
+                                            <span class="badge badge-success" style="font-size: 0.75rem;">Верифицирован приемной комиссией</span>
+                                            <h1 id="preview-det-uni-name" style="font-family: var(--font-heading); font-size: 1.6rem; margin-top: 0.25rem; margin-bottom: 0.25rem; line-height: 1.2;">Название ВУЗа</h1>
+                                            <p class="wb-slogan" id="preview-det-uni-slogan" style="margin: 0; font-size: 0.85rem;">Слоган университета</p>
+                                        </div>
                                     </div>
 
                                     <div class="wb-desc-card glass-card" style="margin-top: 1rem; padding: 1.25rem;">
@@ -991,7 +1009,7 @@
                                             <!-- Dynamic advantage rows loaded here -->
                                         </div>
 
-                                        <button type="button" class="btn btn-outline btn-sm" id="wizard-add-adv-btn" style="margin-top: 1rem; align-self: flex-start; display: inline-flex; align-items: center; gap: 0.5rem; height: 38px;">
+                                        <button type="button" class="btn btn-outline btn-sm" id="wizard-add-adv-btn" style="margin-top: 1rem; align-self: flex-start; display: inline-flex; align-items: center; gap: 0.5rem; height: 38px;" onclick="handleAddWizardAdv(event)">
                                             <i data-lucide="plus" style="width: 16px; height: 16px;"></i>Добавить преимущество
                                         </button>
                                      <!-- Grants & Scholarships Controls in Wizard -->
@@ -1043,7 +1061,7 @@
                                         <!-- Dynamic rows added here -->
                                     </div>
 
-                                    <button type="button" class="btn btn-outline btn-sm" id="wizard-add-spec-btn" style="margin-top: 1rem; align-self: flex-start;">
+                                    <button type="button" class="btn btn-outline btn-sm" id="wizard-add-spec-btn" style="margin-top: 1rem; align-self: flex-start;" onclick="handleAddWizardSpec(event)">
                                         <i data-lucide="plus" class="btn-icon"></i>Добавить специальность
                                     </button>
 
@@ -1200,49 +1218,23 @@
                 </div>
             </div>
 
-            <!-- Hidden file input for banner -->
-            <input type="file" id="editor-banner-upload" accept="image/*" style="display:none;">
-            <!-- Hidden file input for card photo -->
-            <input type="file" id="editor-photo-upload" accept="image/*" style="display:none;">
-
-            <!-- Two Photos Section: Banner (Header) & Card Photo (Home Page) -->
-            <div style="display:grid; grid-template-columns: 2fr 1fr; gap:1.5rem; margin-bottom:2rem;">
-            <!-- Media Upload Section (Banner, Logo Avatar, Campus Photos Collection) -->
-            <input type="file" id="editor-banner-upload" accept="image/*" style="display:none;">
+            <!-- Hidden file inputs -->
             <input type="file" id="editor-logo-upload" accept="image/*" style="display:none;">
             <input type="file" id="editor-campus-upload" accept="image/*" style="display:none;">
 
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1.5rem; margin-bottom:2rem;">
-                <!-- Banner photo for detail page -->
-                <div>
-                    <label style="font-size:0.85rem; font-weight:700; color:var(--text-secondary); display:block; margin-bottom:0.5rem;">
-                        Шапка / Баннер страницы ВУЗа
+            <!-- Campus Photos Collection -->
+            <div style="margin-bottom:2rem;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
+                    <label style="font-size:0.85rem; font-weight:700; color:var(--text-secondary);">
+                        Фотографии университета (презентационные снимки)
                     </label>
-                    <div id="editor-banner-div"
-                         class="wb-product-banner academic-banner-style"
-                         style="border-radius:16px; height:180px; position:relative; overflow:hidden; background-size:cover; background-position:center; border:1px solid var(--card-border); cursor:pointer;"
-                         title="Нажмите чтобы изменить баннер">
-                        <div class="editor-banner-hint">
-                            <i data-lucide="camera" style="width:24px;height:24px;"></i>
-                            <span>Изменить баннер</span>
-                        </div>
-                    </div>
+                    <button type="button" class="btn btn-outline btn-sm" id="editor-add-photo-btn" style="padding:0.2rem 0.65rem; font-size:0.75rem;">
+                        + Добавить снимок
+                    </button>
                 </div>
-
-                <!-- Campus Photos Collection (Slides for right card view) -->
-                <div>
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
-                        <label style="font-size:0.85rem; font-weight:700; color:var(--text-secondary);">
-                            Презентационные снимки кампуса
-                        </label>
-                        <button type="button" class="btn btn-outline btn-sm" id="editor-add-photo-btn" style="padding:0.2rem 0.65rem; font-size:0.75rem;">
-                            + Добавить снимок
-                        </button>
-                    </div>
-                    
-                    <div id="editor-campus-photos-grid" style="display:flex; gap:0.75rem; overflow-x:auto; padding:0.5rem; background:var(--card-bg); border-radius:16px; border:1px dashed var(--card-border); min-height:180px; align-items:center;">
-                        <!-- Mini thumb items added here dynamically -->
-                    </div>
+                
+                <div id="editor-campus-photos-grid" style="display:flex; gap:0.75rem; overflow-x:auto; padding:0.5rem; background:var(--card-bg); border-radius:16px; border:1px dashed var(--card-border); min-height:180px; align-items:center;">
+                    <!-- Mini thumb items added here dynamically -->
                 </div>
             </div>
 
@@ -1312,7 +1304,7 @@
                     <div class="glass-card" style="padding:1.75rem;border-radius:16px;border:1px solid var(--card-border);">
                         <h3 style="font-size:1.2rem;font-weight:700;margin-bottom:1.25rem;color:var(--text-primary);">Ключевые преимущества</h3>
                         <div id="editor-advantages-container" style="display:flex;flex-direction:column;gap:1rem;"></div>
-                        <button type="button" id="editor-add-adv-btn" class="btn btn-outline btn-sm" style="margin-top:1rem;">
+                        <button type="button" id="editor-add-adv-btn" class="btn btn-outline btn-sm" style="margin-top:1rem;" onclick="handleAddEditorAdv(event)">
                             <i data-lucide="plus" class="btn-icon"></i>Добавить преимущество
                         </button>
                     </div>
@@ -1321,7 +1313,7 @@
                     <div class="glass-card" style="padding:1.75rem;border-radius:16px;border:1px solid var(--card-border);">
                         <h3 style="font-size:1.2rem;font-weight:700;margin-bottom:1.25rem;color:var(--text-primary);">Направления и программы</h3>
                         <div id="editor-specialties-container" style="display:flex;flex-direction:column;gap:0.75rem;"></div>
-                        <button type="button" id="editor-add-spec-btn" class="btn btn-outline btn-sm" style="margin-top:1rem;">
+                        <button type="button" id="editor-add-spec-btn" class="btn btn-outline btn-sm" style="margin-top:1rem;" onclick="handleAddEditorSpec(event)">
                             <i data-lucide="plus" class="btn-icon"></i>Добавить специальность
                         </button>
                     </div>
@@ -1771,7 +1763,7 @@
     <script src="/frontend/grainient.js"></script>
     
     <!-- App Logic Script -->
-    <script src="/frontend/app.js?v=59.0"></script>
+    <script src="/frontend/app.js?v=61.0"></script>
 </body>
 </html>
 

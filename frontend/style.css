@@ -3292,6 +3292,11 @@ body.dark-theme .step-connector {
     flex-direction: column;
     gap: 0.75rem;
 }
+.uni-tab-btn:hover {
+    color: var(--primary) !important;
+    opacity: 0.85;
+}
+
 
 
 
