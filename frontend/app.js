@@ -4763,8 +4763,8 @@ function initAIOrientation() {
     if (input && counter) {
         input.addEventListener("input", () => {
             const len = input.value.length;
-            counter.textContent = `${len}/250`;
-            if (len >= 250) {
+            counter.textContent = `${len}/2000`;
+            if (len >= 2000) {
                 counter.style.color = "#ff4d4f";
             } else {
                 counter.style.color = "var(--text-muted)";
@@ -4881,15 +4881,15 @@ async function sendAiUserMessage(overrideText = null) {
 
     if (!userText) return;
 
-    if (userText.length > 250) {
-        showToast("Сообщение не должно превышать 250 символов", "danger");
+    if (userText.length > 2000) {
+        showToast("Сообщение не должно превышать 2000 символов", "danger");
         return;
     }
 
     if (input && !overrideText) {
         input.value = "";
         const counter = document.getElementById("ai-char-counter");
-        if (counter) counter.textContent = "0/250";
+        if (counter) counter.textContent = "0/2000";
     }
 
     // Clear quick action buttons once user responds
