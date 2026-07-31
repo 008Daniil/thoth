@@ -1389,47 +1389,14 @@ function setupEventListeners() {
     if (signupForm) {
         signupForm.addEventListener("submit", handlePartnerSignupSubmit);
     }
-
-    // Sidebar Tabs Event Listeners
-    const menuDashBtn = document.getElementById("menu-dash-btn");
-    const menuEditProfileBtn = document.getElementById("menu-edit-profile-btn");
+    // Sidebar Settings button click (opens sliding settings drawer)
     const menuSettingsBtn = document.getElementById("menu-settings-btn");
-
-    const dashView = document.getElementById("partner-dashboard-view");
-    const settingsView = document.getElementById("partner-settings-view");
-    const wizardView = document.getElementById("partner-wizard-view");
-
-    const setActiveTab = (activeBtn) => {
-        [menuDashBtn, menuEditProfileBtn, menuSettingsBtn].forEach(btn => {
-            if (btn) btn.classList.remove("active");
-        });
-        if (activeBtn) activeBtn.classList.add("active");
-    };
-
-    if (menuDashBtn) {
-        menuDashBtn.addEventListener("click", () => {
-            setActiveTab(menuDashBtn);
-            if (dashView) dashView.style.display = "block";
-            if (settingsView) settingsView.style.display = "none";
-            if (wizardView) wizardView.style.display = "none";
-        });
-    }
-
-    if (menuEditProfileBtn) {
-        menuEditProfileBtn.addEventListener("click", () => {
-            openWYSIWYGEditor();
-        });
-    }
-
     if (menuSettingsBtn) {
-        menuSettingsBtn.addEventListener("click", () => {
-            setActiveTab(menuSettingsBtn);
-            if (dashView) dashView.style.display = "none";
-            if (settingsView) settingsView.style.display = "block";
-            if (wizardView) wizardView.style.display = "none";
+        menuSettingsBtn.addEventListener("click", (e) => {
+            e.preventDefault();
+            openPartnerSettingsDrawer();
         });
     }
-
     // Sidebar Logout button
     const sidebarLogoutBtn = document.getElementById("partner-sidebar-logout-btn");
     if (sidebarLogoutBtn) {
@@ -1458,18 +1425,17 @@ function setupEventListeners() {
             openWYSIWYGEditor();
         });
     }
-
-    // Settings Inline Form Submit (Save messages, admissions phone, telegram contact)
-    const partnerCustomSettingsForm = document.getElementById("partner-custom-settings-form");
-    if (partnerCustomSettingsForm) {
-        partnerCustomSettingsForm.addEventListener("submit", async (e) => {
+    // Settings Drawer Form Submit (Save messages, admissions phone, telegram contact)
+    const partnerCustomSettingsFormDrawer = document.getElementById("partner-custom-settings-form-drawer");
+    if (partnerCustomSettingsFormDrawer) {
+        partnerCustomSettingsFormDrawer.addEventListener("submit", async (e) => {
             e.preventDefault();
             if (!myUniversity) return;
 
-            const acceptedMsg = document.getElementById("settings-accepted-msg-new").value.trim();
-            const rejectedMsg = document.getElementById("settings-rejected-msg-new").value.trim();
-            const admissionsPhone = document.getElementById("settings-admissions-phone-new").value.trim();
-            const telegramContact = document.getElementById("settings-telegram-contact").value.trim();
+            const acceptedMsg = document.getElementById("settings-accepted-msg-drawer").value.trim();
+            const rejectedMsg = document.getElementById("settings-rejected-msg-drawer").value.trim();
+            const admissionsPhone = document.getElementById("settings-admissions-phone-drawer").value.trim();
+            const telegramContact = document.getElementById("settings-telegram-contact-drawer").value.trim();
 
             try {
                 const res = await fetch(`${API_BASE}/api/v1/universities/settings`, {
@@ -1497,15 +1463,15 @@ function setupEventListeners() {
         });
     }
 
-    // Verification Form Submit (License and Requisites)
-    const settingsVerificationForm = document.getElementById("settings-verification-form");
-    if (settingsVerificationForm) {
-        settingsVerificationForm.addEventListener("submit", async (e) => {
+    // Verification Drawer Form Submit (License and Requisites)
+    const settingsVerificationFormDrawer = document.getElementById("settings-verification-form-drawer");
+    if (settingsVerificationFormDrawer) {
+        settingsVerificationFormDrawer.addEventListener("submit", async (e) => {
             e.preventDefault();
             if (!myUniversity) return;
 
-            const licenseVal = document.getElementById("settings-license-number").value.trim();
-            const requisitesVal = document.getElementById("settings-org-requisites").value.trim();
+            const licenseVal = document.getElementById("settings-license-number-drawer").value.trim();
+            const requisitesVal = document.getElementById("settings-org-requisites-drawer").value.trim();
 
             try {
                 const res = await fetch(`${API_BASE}/api/v1/universities/submit-verification`, {
@@ -1532,15 +1498,15 @@ function setupEventListeners() {
         });
     }
 
-    // Change Password Form Submit
-    const settingsPasswordForm = document.getElementById("settings-password-form");
-    if (settingsPasswordForm) {
-        settingsPasswordForm.addEventListener("submit", async (e) => {
+    // Change Password Drawer Form Submit
+    const settingsPasswordFormDrawer = document.getElementById("settings-password-form-drawer");
+    if (settingsPasswordFormDrawer) {
+        settingsPasswordFormDrawer.addEventListener("submit", async (e) => {
             e.preventDefault();
             if (!currentPartner) return;
 
-            const oldPassword = document.getElementById("settings-old-password").value;
-            const newPassword = document.getElementById("settings-new-password").value;
+            const oldPassword = document.getElementById("settings-old-password-drawer").value;
+            const newPassword = document.getElementById("settings-new-password-drawer").value;
 
             if (newPassword.length < 6) {
                 showToast("Новый пароль должен быть не менее 6 символов", "warning");
@@ -1565,8 +1531,8 @@ function setupEventListeners() {
                 currentPartner.password = newPassword;
                 localStorage.setItem("currentPartner", JSON.stringify(currentPartner));
 
-                document.getElementById("settings-old-password").value = "";
-                document.getElementById("settings-new-password").value = "";
+                document.getElementById("settings-old-password-drawer").value = "";
+                document.getElementById("settings-new-password-drawer").value = "";
 
                 showToast("Пароль успешно изменен!", "success");
             } catch (err) {
@@ -1575,18 +1541,58 @@ function setupEventListeners() {
         });
     }
 
-    // Toggle password fields visibility
-    const toggleSettingsPassword = document.getElementById("toggle-settings-password");
-    if (toggleSettingsPassword) {
-        toggleSettingsPassword.addEventListener("change", () => {
-            const oldPassInput = document.getElementById("settings-old-password");
-            const newPassInput = document.getElementById("settings-new-password");
-            const type = toggleSettingsPassword.checked ? "text" : "password";
-            if (oldPassInput) oldPassInput.type = type;
-            if (newPassInput) newPassInput.type = type;
+    // Toggle password fields visibility in the sliding drawer using robust setAttribute
+    const toggleSettingsPasswordDrawer = document.getElementById("toggle-settings-password-drawer");
+    if (toggleSettingsPasswordDrawer) {
+        toggleSettingsPasswordDrawer.addEventListener("change", () => {
+            const oldPassInput = document.getElementById("settings-old-password-drawer");
+            const newPassInput = document.getElementById("settings-new-password-drawer");
+            const type = toggleSettingsPasswordDrawer.checked ? "text" : "password";
+            if (oldPassInput) oldPassInput.setAttribute("type", type);
+            if (newPassInput) newPassInput.setAttribute("type", type);
         });
     }
 
+    // Global drawer helper functions
+    window.openPartnerSettingsDrawer = () => {
+        const drawer = document.getElementById("partner-settings-drawer");
+        const backdrop = document.getElementById("partner-settings-drawer-backdrop");
+        if (drawer && backdrop) {
+            drawer.classList.add("show");
+            backdrop.classList.add("show");
+            document.body.style.overflow = "hidden"; // Prevent scrolling main page when drawer is open
+        }
+    };
+
+    window.closePartnerSettingsDrawer = () => {
+        const drawer = document.getElementById("partner-settings-drawer");
+        const backdrop = document.getElementById("partner-settings-drawer-backdrop");
+        if (drawer && backdrop) {
+            drawer.classList.remove("show");
+            backdrop.classList.remove("show");
+            document.body.style.overflow = "";
+        }
+    };
+
+    window.switchSettingsTab = (event, panelId) => {
+        if (event) event.preventDefault();
+        
+        // Hide all panels
+        const panels = document.querySelectorAll(".settings-panel");
+        panels.forEach(p => p.style.display = "none");
+        
+        // Show active panel
+        const activePanel = document.getElementById(panelId);
+        if (activePanel) activePanel.style.display = "block";
+        
+        // Manage active state on tab items
+        const tabs = document.querySelectorAll(".settings-tab-item");
+        tabs.forEach(t => t.classList.remove("active"));
+        
+        if (event && event.currentTarget) {
+            event.currentTarget.classList.add("active");
+        }
+    };
 function renderEditorCampusPhotos() {
     const grid = document.getElementById("editor-campus-photos-grid");
     if (!grid) return;
@@ -3311,7 +3317,7 @@ async function handleWizardSubmit(e) {
 }
 
 function renderVerificationStatus(status) {
-    const box = document.getElementById("settings-verification-status-box");
+    const box = document.getElementById("settings-verification-status-box-drawer");
     if (!box) return;
     
     let html = "";
@@ -3327,9 +3333,9 @@ function renderVerificationStatus(status) {
                 </div>
             </div>
         `;
-        document.getElementById("settings-license-number").disabled = true;
-        document.getElementById("settings-org-requisites").disabled = true;
-        document.getElementById("settings-submit-verification-btn").style.display = "none";
+        document.getElementById("settings-license-number-drawer").disabled = true;
+        document.getElementById("settings-org-requisites-drawer").disabled = true;
+        document.getElementById("settings-submit-verification-btn-drawer").style.display = "none";
     } else if (status === "pending") {
         html = `
             <div style="background: rgba(217, 119, 6, 0.08); border: 1px solid rgba(217, 119, 6, 0.25); border-radius: 12px; padding: 1.25rem; display: flex; align-items: center; gap: 0.75rem;">
@@ -3342,9 +3348,9 @@ function renderVerificationStatus(status) {
                 </div>
             </div>
         `;
-        document.getElementById("settings-license-number").disabled = true;
-        document.getElementById("settings-org-requisites").disabled = true;
-        document.getElementById("settings-submit-verification-btn").style.display = "none";
+        document.getElementById("settings-license-number-drawer").disabled = true;
+        document.getElementById("settings-org-requisites-drawer").disabled = true;
+        document.getElementById("settings-submit-verification-btn-drawer").style.display = "none";
     } else {
         html = `
             <div style="background: var(--bg-accent); border: 1px solid var(--card-border); border-radius: 12px; padding: 1.25rem; display: flex; align-items: center; gap: 0.75rem;">
@@ -3357,9 +3363,9 @@ function renderVerificationStatus(status) {
                 </div>
             </div>
         `;
-        document.getElementById("settings-license-number").disabled = false;
-        document.getElementById("settings-org-requisites").disabled = false;
-        document.getElementById("settings-submit-verification-btn").style.display = "inline-flex";
+        document.getElementById("settings-license-number-drawer").disabled = false;
+        document.getElementById("settings-org-requisites-drawer").disabled = false;
+        document.getElementById("settings-submit-verification-btn-drawer").style.display = "inline-flex";
     }
     
     box.innerHTML = html;
@@ -3384,15 +3390,11 @@ async function renderPartnerCabinet() {
         const res = await fetch(`${API_BASE}/api/v1/universities/my-profile/${currentPartner.id}`);
         if (!res.ok) throw new Error("Failed to load profile");
         myUniversity = await res.json();
-        
-        const dashBtn = document.getElementById("menu-dash-btn");
-        
         if (!myUniversity) {
             document.getElementById("partner-no-profile-view").style.display = "block";
             document.getElementById("partner-pending-profile-notice").style.display = "none";
             document.getElementById("partner-wizard-view").style.display = "none";
             document.getElementById("partner-dashboard-view").style.display = "none";
-            document.getElementById("partner-settings-view").style.display = "none";
             
             document.getElementById("partner-sidebar-name").textContent = "Новая организация";
         } else {
@@ -3404,19 +3406,8 @@ async function renderPartnerCabinet() {
                 document.getElementById("partner-pending-profile-notice").style.display = "none";
             }
 
-            // Always reset active menu to dashboard tab when rendering cabinet
-            if (dashBtn) {
-                [dashBtn, document.getElementById("menu-edit-profile-btn"), document.getElementById("menu-settings-btn")].forEach(btn => {
-                    if (btn) btn.classList.remove("active");
-                });
-                dashBtn.classList.add("active");
-            }
-
             document.getElementById("partner-wizard-view").style.display = "none";
             document.getElementById("partner-dashboard-view").style.display = "block";
-            document.getElementById("partner-settings-view").style.display = "none";
-            
-            document.getElementById("dash-uni-name").textContent = myUniversity.name;
             document.getElementById("partner-sidebar-name").textContent = myUniversity.name;
             
             const logoElem = document.getElementById("partner-sidebar-logo");
@@ -3434,16 +3425,22 @@ async function renderPartnerCabinet() {
                     logoElem.textContent = alias || "UNI";
                 }
             }
+            // Populate settings view inputs in the sliding drawer
+            const acceptMsgInput = document.getElementById("settings-accepted-msg-drawer");
+            const rejectMsgInput = document.getElementById("settings-rejected-msg-drawer");
+            const phoneInput = document.getElementById("settings-admissions-phone-drawer");
+            const tgInput = document.getElementById("settings-telegram-contact-drawer");
+            const licenseInput = document.getElementById("settings-license-number-drawer");
+            const reqInput = document.getElementById("settings-org-requisites-drawer");
+            const emailInput = document.getElementById("settings-account-email-drawer");
 
-            // Populate settings view inputs
-            document.getElementById("settings-accepted-msg-new").value = myUniversity.accepted_message || "";
-            document.getElementById("settings-rejected-msg-new").value = myUniversity.rejected_message || "";
-            document.getElementById("settings-admissions-phone-new").value = myUniversity.admissions_phone || "";
-            document.getElementById("settings-telegram-contact").value = myUniversity.telegram_contact || "";
-            document.getElementById("settings-license-number").value = myUniversity.license_number || "";
-            document.getElementById("settings-org-requisites").value = myUniversity.org_requisites || "";
-            document.getElementById("settings-account-email").value = currentPartner.personal_email || currentPartner.email || "";
-            
+            if (acceptMsgInput) acceptMsgInput.value = myUniversity.accepted_message || "";
+            if (rejectMsgInput) rejectMsgInput.value = myUniversity.rejected_message || "";
+            if (phoneInput) phoneInput.value = myUniversity.admissions_phone || "";
+            if (tgInput) tgInput.value = myUniversity.telegram_contact || "";
+            if (licenseInput) licenseInput.value = myUniversity.license_number || "";
+            if (reqInput) reqInput.value = myUniversity.org_requisites || "";
+            if (emailInput) emailInput.value = currentPartner.personal_email || currentPartner.email || "";
             renderVerificationStatus(myUniversity.status);
             loadPartnerDashboardData(myUniversity.id);
         }

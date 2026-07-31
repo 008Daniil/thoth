@@ -835,12 +835,6 @@
                         </div>
                         
                         <div class="partner-menu">
-                            <button class="btn btn-menu active" id="menu-dash-btn">
-                                <i data-lucide="layout-dashboard"></i> Дашборд
-                            </button>
-                            <button class="btn btn-menu" id="menu-edit-profile-btn">
-                                <i data-lucide="edit-3"></i> Редактор профиля
-                            </button>
                             <button class="btn btn-menu" id="menu-settings-btn">
                                 <i data-lucide="settings"></i> Настройки
                             </button>
@@ -1107,9 +1101,7 @@
                             <button class="btn btn-outline" id="dash-preview-profile-btn" style="border-color: var(--primary);">
                                 <i data-lucide="eye" class="btn-icon"></i>Как видят студенты
                             </button>
-                            <button class="btn btn-outline" id="dash-settings-btn" style="border-color: var(--card-border); color: var(--text-primary);">
-                                <i data-lucide="settings" class="btn-icon"></i>Настройки
-                            </button>
+
                             <button class="btn btn-outline" id="dash-edit-profile-btn">
                                 <i data-lucide="edit-3" class="btn-icon"></i>Редактировать ВУЗ
                             </button>
@@ -1209,136 +1201,7 @@
 
                 </div>
 
-                <!-- 4.2.5 SETTINGS VIEW -->
-                <div id="partner-settings-view" style="display: none; width: 100%;">
-                    <div class="admin-header-bar" style="margin-bottom: 2rem;">
-                        <div>
-                            <h2 style="font-family: var(--font-heading); font-size: 2.2rem; color: var(--primary);">Настройки кабинета</h2>
-                            <p class="subtitle">Управление приемом документов, верификацией профиля и безопасностью</p>
-                        </div>
-                    </div>
-                    
-                    <div style="display: grid; grid-template-columns: 1fr; gap: 2rem;">
-                        <!-- BLOCK 1: Verification Status -->
-                        <div class="glass-card" style="padding: 2rem; border-radius: 20px; border: 1px solid var(--card-border);">
-                            <h3 style="font-family: var(--font-heading); font-size: 1.3rem; margin-bottom: 1.25rem; color: var(--primary); display: flex; align-items: center; gap: 0.5rem;">
-                                <i data-lucide="shield-check"></i> Безопасность и верификация
-                            </h3>
-                            
-                            <!-- Status Display Container -->
-                            <div id="settings-verification-status-box" style="margin-bottom: 1.5rem;">
-                                <!-- Will render dynamically based on university status -->
-                            </div>
-                            
-                            <!-- Requisites Form fields -->
-                            <form id="settings-verification-form" class="custom-form" style="border-top: 1px solid var(--card-border); padding-top: 1.5rem; display: flex; flex-direction: column; gap: 1.25rem;">
-                                <div class="form-group">
-                                    <label for="settings-license-number" style="font-weight: 700; font-size: 0.85rem; color: var(--text-primary);">
-                                        Номер лицензии / государственной аккредитации <span class="required">*</span>
-                                    </label>
-                                    <input type="text" id="settings-license-number" placeholder="Серия и номер акта (например: №10293-A)" required>
-                                </div>
-                                
-                                <div class="form-group">
-                                    <label for="settings-org-requisites" style="font-weight: 700; font-size: 0.85rem; color: var(--text-primary);">
-                                        Официальные реквизиты организации (ИНН, ОГРН, юридический адрес) <span class="required">*</span>
-                                    </label>
-                                    <textarea id="settings-org-requisites" rows="3" placeholder="Укажите ИНН, ОГРН и адрес регистрации организации..." required></textarea>
-                                </div>
-                                
-                                <button type="submit" class="btn btn-primary" id="settings-submit-verification-btn" style="align-self: flex-start;">
-                                    <i data-lucide="send" class="btn-icon"></i> Отправить на модерацию
-                                </button>
-                            </form>
-                        </div>
-
-                        <!-- BLOCK 2: Document Admissions Settings -->
-                        <div class="glass-card" style="padding: 2rem; border-radius: 20px; border: 1px solid var(--card-border);">
-                            <h3 style="font-family: var(--font-heading); font-size: 1.3rem; margin-bottom: 1.25rem; color: var(--primary); display: flex; align-items: center; gap: 0.5rem;">
-                                <i data-lucide="file-text"></i> Настройки приёма абитуриентов
-                            </h3>
-                            
-                            <form id="partner-custom-settings-form" class="custom-form" style="display: flex; flex-direction: column; gap: 1.25rem;">
-                                <div class="form-group">
-                                    <label for="settings-accepted-msg-new" style="font-weight: 700; font-size: 0.85rem; color: var(--text-primary);">
-                                        Сообщение для ОДОБРЕННЫХ (Поступивших) студентов
-                                    </label>
-                                    <textarea id="settings-accepted-msg-new" rows="3" placeholder="Поздравляем с успешным зачислением! Свяжитесь с приемной комиссией для предоставления оригиналов документов..." style="width: 100%; box-sizing: border-box;"></textarea>
-                                </div>
-
-                                <div class="form-group">
-                                    <label for="settings-rejected-msg-new" style="font-weight: 700; font-size: 0.85rem; color: var(--text-primary);">
-                                        Сообщение для ОТКЛОНЕННЫХ (Не поступивших) студентов
-                                    </label>
-                                    <textarea id="settings-rejected-msg-new" rows="3" placeholder="К сожалению, ваш конкурсный балл ниже требуемого. Желаем успехов в дальнейшем обучении!..." style="width: 100%; box-sizing: border-box;"></textarea>
-                                </div>
-
-                                <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-                                    <div class="form-group">
-                                        <label for="settings-admissions-phone-new" style="font-weight: 700; font-size: 0.85rem; color: var(--text-primary);">
-                                            Прямой телефон приемной комиссии
-                                        </label>
-                                        <input type="text" id="settings-admissions-phone-new" placeholder="+7 (999) 123-45-67">
-                                    </div>
-                                    
-                                    <div class="form-group">
-                                        <label for="settings-telegram-contact" style="font-weight: 700; font-size: 0.85rem; color: var(--text-primary);">
-                                            Telegram канал или контакт приёмной комиссии
-                                        </label>
-                                        <input type="text" id="settings-telegram-contact" placeholder="https://t.me/uni_admissions">
-                                    </div>
-                                </div>
-
-                                <button type="submit" class="btn btn-primary" style="align-self: flex-start;">
-                                    Сохранить изменения
-                                </button>
-                            </form>
-                        </div>
-
-                        <!-- BLOCK 3: Security & Password Change -->
-                        <div class="glass-card" style="padding: 2rem; border-radius: 20px; border: 1px solid var(--card-border);">
-                            <h3 style="font-family: var(--font-heading); font-size: 1.3rem; margin-bottom: 1.25rem; color: var(--primary); display: flex; align-items: center; gap: 0.5rem;">
-                                <i data-lucide="key"></i> Безопасность и смена пароля
-                            </h3>
-                            
-                            <form id="settings-password-form" class="custom-form" style="display: flex; flex-direction: column; gap: 1.25rem;">
-                                <div class="form-group">
-                                    <label style="font-weight: 700; font-size: 0.85rem; color: var(--text-secondary);">
-                                        Электронная почта учетной записи
-                                    </label>
-                                    <input type="email" id="settings-account-email" readonly style="background: var(--bg-accent); cursor: not-allowed; font-weight: 600;">
-                                </div>
-                                
-                                <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-                                    <div class="form-group">
-                                        <label for="settings-old-password" style="font-weight: 700; font-size: 0.85rem; color: var(--text-primary);">
-                                            Старый пароль
-                                        </label>
-                                        <input type="password" id="settings-old-password" placeholder="••••••••" required>
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="settings-new-password" style="font-weight: 700; font-size: 0.85rem; color: var(--text-primary);">
-                                            Новый пароль
-                                        </label>
-                                        <input type="password" id="settings-new-password" placeholder="Минимум 6 символов" required>
-                                    </div>
-                                </div>
-                                
-                                <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
-                                    <input type="checkbox" id="toggle-settings-password" style="width: 18px; height: 18px; cursor: pointer;">
-                                    <label for="toggle-settings-password" style="font-size: 0.85rem; color: var(--text-secondary); cursor: pointer; user-select: none;">
-                                        Показать пароли
-                                    </label>
-                                </div>
-                                
-                                <button type="submit" class="btn btn-primary" style="align-self: flex-start;">
-                                    Сменить пароль
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-
+                <!-- 4.2.5 SETTINGS VIEW REMOVED -->
                 </div> <!-- End partner-main-content -->
             </div> <!-- End partner-layout -->
             </div> <!-- End partner-cabinet-block -->
@@ -1873,6 +1736,142 @@
     
     <!-- App Logic Script -->
     <script src="/frontend/app.js?v=62.0"></script>
+
+    <!-- ====== PARTNER SETTINGS SLIDING DRAWER ====== -->
+    <div id="partner-settings-drawer-backdrop" class="settings-drawer-backdrop" onclick="closePartnerSettingsDrawer();"></div>
+    <div id="partner-settings-drawer" class="settings-drawer">
+        <div class="settings-drawer-header">
+            <div>
+                <h3 style="font-family: var(--font-heading); font-size: 1.5rem; color: var(--primary); margin: 0;">Настройки кабинета</h3>
+                <p style="color: var(--text-secondary); font-size: 0.8rem; margin: 2px 0 0 0;">Управление приемом документов, верификацией профиля и безопасностью</p>
+            </div>
+            <button onclick="closePartnerSettingsDrawer();" style="background: transparent; border: none; font-size: 2rem; color: var(--text-secondary); cursor: pointer; transition: color 0.2s ease; outline: none; line-height: 1;" onmouseover="this.style.color='var(--primary)'" onmouseout="this.style.color='var(--text-secondary)'">&times;</button>
+        </div>
+        
+        <div class="settings-drawer-body">
+            <!-- Left Side Tabs Menu (Matching the photo line design) -->
+            <div class="settings-tab-menu">
+                <button class="settings-tab-item active" onclick="switchSettingsTab(event, 'settings-panel-admissions');">
+                    Приём документов
+                </button>
+                <button class="settings-tab-item" onclick="switchSettingsTab(event, 'settings-panel-password');">
+                    Безопасность
+                </button>
+                <button class="settings-tab-item" onclick="switchSettingsTab(event, 'settings-panel-verification');">
+                    Верификация ВУЗа
+                </button>
+            </div>
+            
+            <!-- Right Side Forms Panels -->
+            <div class="settings-tab-content" style="display: flex; flex-direction: column; gap: 1.5rem; min-width: 0; flex: 1;">
+                
+                <!-- Panel 1: Document Admissions -->
+                <div id="settings-panel-admissions" class="settings-panel">
+                    <h4 style="font-family: var(--font-heading); font-size: 1.15rem; color: var(--primary); margin: 0 0 1rem 0;">Приём абитуриентов</h4>
+                    <form id="partner-custom-settings-form-drawer" class="custom-form" style="display: flex; flex-direction: column; gap: 1.25rem;">
+                        <div class="form-group">
+                            <label for="settings-accepted-msg-drawer" style="font-weight: 700; font-size: 0.85rem; color: var(--text-primary);">
+                                Сообщение для ОДОБРЕННЫХ (Поступивших) студентов
+                            </label>
+                            <textarea id="settings-accepted-msg-drawer" rows="3" placeholder="Поздравляем с успешным зачислением! Свяжитесь с приемной комиссией..." style="width: 100%; box-sizing: border-box;"></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="settings-rejected-msg-drawer" style="font-weight: 700; font-size: 0.85rem; color: var(--text-primary);">
+                                Сообщение для ОТКЛОНЕННЫХ (Не поступивших) студентов
+                            </label>
+                            <textarea id="settings-rejected-msg-drawer" rows="3" placeholder="К сожалению, ваш конкурсный балл ниже требуемого..." style="width: 100%; box-sizing: border-box;"></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="settings-admissions-phone-drawer" style="font-weight: 700; font-size: 0.85rem; color: var(--text-primary);">
+                                Прямой телефон приемной комиссии
+                            </label>
+                            <input type="text" id="settings-admissions-phone-drawer" placeholder="+7 (999) 123-45-67" style="width: 100%; box-sizing: border-box;">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="settings-telegram-contact-drawer" style="font-weight: 700; font-size: 0.85rem; color: var(--text-primary);">
+                                Telegram канал или контакт приемной комиссии
+                            </label>
+                            <input type="text" id="settings-telegram-contact-drawer" placeholder="https://t.me/uni_admissions" style="width: 100%; box-sizing: border-box;">
+                        </div>
+
+                        <button type="submit" class="btn btn-primary" style="align-self: flex-start;">
+                            Сохранить настройки
+                        </button>
+                    </form>
+                </div>
+                
+                <!-- Panel 2: Password Change -->
+                <div id="settings-panel-password" class="settings-panel" style="display: none;">
+                    <h4 style="font-family: var(--font-heading); font-size: 1.15rem; color: var(--primary); margin: 0 0 1rem 0;">Смена пароля</h4>
+                    <form id="settings-password-form-drawer" class="custom-form" style="display: flex; flex-direction: column; gap: 1.25rem;">
+                        <div class="form-group">
+                            <label style="font-weight: 700; font-size: 0.85rem; color: var(--text-secondary);">
+                                Электронная почта учетной записи
+                            </label>
+                            <input type="email" id="settings-account-email-drawer" readonly style="background: var(--bg-accent); cursor: not-allowed; font-weight: 600; width: 100%; box-sizing: border-box;">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="settings-old-password-drawer" style="font-weight: 700; font-size: 0.85rem; color: var(--text-primary);">
+                                Старый пароль
+                            </label>
+                            <input type="password" id="settings-old-password-drawer" placeholder="••••••••" required style="width: 100%; box-sizing: border-box;">
+                        </div>
+                        <div class="form-group">
+                            <label for="settings-new-password-drawer" style="font-weight: 700; font-size: 0.85rem; color: var(--text-primary);">
+                                Новый пароль
+                            </label>
+                            <input type="password" id="settings-new-password-drawer" placeholder="Минимум 6 символов" required style="width: 100%; box-sizing: border-box;">
+                        </div>
+                        
+                        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                            <input type="checkbox" id="toggle-settings-password-drawer" style="width: 18px; height: 18px; cursor: pointer;">
+                            <label for="toggle-settings-password-drawer" style="font-size: 0.85rem; color: var(--text-secondary); cursor: pointer; user-select: none;">
+                                Показать пароли
+                            </label>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary" style="align-self: flex-start;">
+                            Сменить пароль
+                        </button>
+                    </form>
+                </div>
+                
+                <!-- Panel 3: Verification status & requisites -->
+                <div id="settings-panel-verification" class="settings-panel" style="display: none;">
+                    <h4 style="font-family: var(--font-heading); font-size: 1.15rem; color: var(--primary); margin: 0 0 1rem 0;">Верификация профиля</h4>
+                    
+                    <div id="settings-verification-status-box-drawer" style="margin-bottom: 1.5rem;">
+                        <!-- Rendered dynamically -->
+                    </div>
+                    
+                    <form id="settings-verification-form-drawer" class="custom-form" style="border-top: 1px solid var(--card-border); padding-top: 1.5rem; display: flex; flex-direction: column; gap: 1.25rem;">
+                        <div class="form-group">
+                            <label for="settings-license-number-drawer" style="font-weight: 700; font-size: 0.85rem; color: var(--text-primary);">
+                                Номер лицензии / государственной аккредитации <span class="required">*</span>
+                            </label>
+                            <input type="text" id="settings-license-number-drawer" placeholder="Серия и номер акта (например: №10293-A)" required style="width: 100%; box-sizing: border-box;">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="settings-org-requisites-drawer" style="font-weight: 700; font-size: 0.85rem; color: var(--text-primary);">
+                                Официальные реквизиты организации (ИНН, ОГРН, адрес) <span class="required">*</span>
+                            </label>
+                            <textarea id="settings-org-requisites-drawer" rows="3" placeholder="Укажите ИНН, ОГРН и адрес регистрации организации..." required style="width: 100%; box-sizing: border-box;"></textarea>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary" id="settings-submit-verification-btn-drawer" style="align-self: flex-start;">
+                            <i data-lucide="send" class="btn-icon"></i> Отправить на модерацию
+                        </button>
+                    </form>
+                </div>
+                
+            </div>
+        </div>
+    </div>
 </body>
 </html>
 
