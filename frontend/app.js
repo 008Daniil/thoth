@@ -1389,10 +1389,10 @@ function setupEventListeners() {
     if (signupForm) {
         signupForm.addEventListener("submit", handlePartnerSignupSubmit);
     }
-    // Sidebar Settings button click (opens sliding settings drawer)
-    const menuSettingsBtn = document.getElementById("menu-settings-btn");
-    if (menuSettingsBtn) {
-        menuSettingsBtn.addEventListener("click", (e) => {
+    // Dashboard Settings button click (opens sliding settings drawer)
+    const dashSettingsBtn = document.getElementById("dash-settings-btn");
+    if (dashSettingsBtn) {
+        dashSettingsBtn.addEventListener("click", (e) => {
             e.preventDefault();
             openPartnerSettingsDrawer();
         });
