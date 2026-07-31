@@ -632,9 +632,15 @@ document.addEventListener("DOMContentLoaded", () => {
     // Load initial data
     loadUniversities();
 });
-
 // --- ROUTER SYSTEM ---
 function handleRoute() {
+    // Reset body scroll lock and close any active modals
+    document.body.style.overflow = "";
+    closeSpecDetailModal();
+    closeImageCropModal();
+    closeQuickApplyModal();
+    closeLeadStudentModal();
+
     const hash = window.location.hash.substring(1) || "home";
     let page = hash;
     let param = null;
@@ -748,6 +754,18 @@ function prefillStudentForm() {
 
 // --- EVENT LISTENERS ---
 function setupEventListeners() {
+    // Privacy policy listeners
+    const bindPrivacy = (btn) => {
+        if (btn) {
+            btn.addEventListener("click", (e) => {
+                e.preventDefault();
+                showToast("Политика конфиденциальности: ваши данные надежно защищены шифрованием THOTH.", "info");
+            });
+        }
+    };
+    bindPrivacy(document.getElementById("nav-privacy-link"));
+    bindPrivacy(document.getElementById("footer-privacy-link"));
+
     // Theme Toggle listener
     const themeToggle = document.getElementById("theme-toggle");
     if (themeToggle) {

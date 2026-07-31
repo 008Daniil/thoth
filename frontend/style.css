@@ -263,16 +263,15 @@ body.dark-theme .toast {
     padding: 0;
     box-sizing: border-box;
 }
-
 body {
     background-color: var(--bg);
     color: var(--text-primary);
     font-family: var(--font-sans);
     line-height: 1.6;
     overflow-x: hidden;
+    overflow-y: auto;
     -webkit-font-smoothing: antialiased;
 }
-
 /* Scrollbar Customization */
 ::-webkit-scrollbar {
     width: 8px;
@@ -287,7 +286,6 @@ body {
 ::-webkit-scrollbar-thumb:hover {
     background: var(--primary);
 }
-
 /* Background glow container for WebGL Grainient shader */
 .bg-glow-container {
     position: fixed;
@@ -298,8 +296,8 @@ body {
     z-index: -2;
     overflow: hidden;
     background-color: var(--bg);
+    pointer-events: none;
 }
-
 /* --- HEADER & NAVIGATION --- */
 .app-header {
     position: sticky;
