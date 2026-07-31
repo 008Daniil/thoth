@@ -1573,6 +1573,69 @@ body.dark-theme .price-range-display {
 }
 
 /* --- PARTNER PAGE --- */
+.partner-layout {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 2rem;
+    align-items: start;
+    margin-top: 1rem;
+}
+@media (max-width: 992px) {
+    .partner-layout {
+        grid-template-columns: 1fr;
+    }
+}
+.partner-sidebar {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 20px;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    position: sticky;
+    top: 2rem;
+}
+.partner-menu {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+.btn-menu {
+    justify-content: flex-start !important;
+    text-align: left;
+    width: 100%;
+    padding: 0.8rem 1.2rem !important;
+    border-radius: 12px !important;
+    font-size: 0.95rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    border: 1px solid transparent !important;
+    background: transparent !important;
+    color: var(--text-secondary) !important;
+}
+.btn-menu i {
+    margin-right: 0.75rem;
+    width: 18px;
+    height: 18px;
+    stroke-width: 2px;
+}
+.btn-menu:hover {
+    background: var(--bg-accent) !important;
+    color: var(--text-primary) !important;
+}
+.btn-menu.active {
+    background: rgba(102, 2, 60, 0.08) !important;
+    border-color: rgba(102, 2, 60, 0.2) !important;
+    color: var(--primary) !important;
+    font-weight: 600;
+}
+[data-theme="dark"] .btn-menu.active {
+    background: rgba(236, 72, 153, 0.15) !important;
+    border-color: rgba(236, 72, 153, 0.3) !important;
+    color: #ec4899 !important;
+}
+
 .partner-form-container {
     max-width: 700px;
     margin: 0 auto;

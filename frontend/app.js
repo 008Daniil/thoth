@@ -1390,10 +1390,50 @@ function setupEventListeners() {
         signupForm.addEventListener("submit", handlePartnerSignupSubmit);
     }
 
-    // Logout button
-    const logoutBtn = document.getElementById("partner-logout-btn");
-    if (logoutBtn) {
-        logoutBtn.addEventListener("click", () => {
+    // Sidebar Tabs Event Listeners
+    const menuDashBtn = document.getElementById("menu-dash-btn");
+    const menuEditProfileBtn = document.getElementById("menu-edit-profile-btn");
+    const menuSettingsBtn = document.getElementById("menu-settings-btn");
+
+    const dashView = document.getElementById("partner-dashboard-view");
+    const settingsView = document.getElementById("partner-settings-view");
+    const wizardView = document.getElementById("partner-wizard-view");
+
+    const setActiveTab = (activeBtn) => {
+        [menuDashBtn, menuEditProfileBtn, menuSettingsBtn].forEach(btn => {
+            if (btn) btn.classList.remove("active");
+        });
+        if (activeBtn) activeBtn.classList.add("active");
+    };
+
+    if (menuDashBtn) {
+        menuDashBtn.addEventListener("click", () => {
+            setActiveTab(menuDashBtn);
+            if (dashView) dashView.style.display = "block";
+            if (settingsView) settingsView.style.display = "none";
+            if (wizardView) wizardView.style.display = "none";
+        });
+    }
+
+    if (menuEditProfileBtn) {
+        menuEditProfileBtn.addEventListener("click", () => {
+            openWYSIWYGEditor();
+        });
+    }
+
+    if (menuSettingsBtn) {
+        menuSettingsBtn.addEventListener("click", () => {
+            setActiveTab(menuSettingsBtn);
+            if (dashView) dashView.style.display = "none";
+            if (settingsView) settingsView.style.display = "block";
+            if (wizardView) wizardView.style.display = "none";
+        });
+    }
+
+    // Sidebar Logout button
+    const sidebarLogoutBtn = document.getElementById("partner-sidebar-logout-btn");
+    if (sidebarLogoutBtn) {
+        sidebarLogoutBtn.addEventListener("click", () => {
             localStorage.removeItem("currentPartner");
             localStorage.removeItem("currentStudentPhone");
             localStorage.removeItem("currentStudentName");
@@ -1403,7 +1443,7 @@ function setupEventListeners() {
         });
     }
 
-    // Start Wizard button
+    // Start Wizard button (from empty screen)
     const startWizardBtn = document.getElementById("start-wizard-btn");
     if (startWizardBtn) {
         startWizardBtn.addEventListener("click", () => {
@@ -1411,11 +1451,139 @@ function setupEventListeners() {
         });
     }
 
-    // Edit profile button
+    // Edit profile button (from dashboard stats header)
     const editProfileBtn = document.getElementById("dash-edit-profile-btn");
     if (editProfileBtn) {
         editProfileBtn.addEventListener("click", () => {
             openWYSIWYGEditor();
+        });
+    }
+
+    // Settings Inline Form Submit (Save messages, admissions phone, telegram contact)
+    const partnerCustomSettingsForm = document.getElementById("partner-custom-settings-form");
+    if (partnerCustomSettingsForm) {
+        partnerCustomSettingsForm.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            if (!myUniversity) return;
+
+            const acceptedMsg = document.getElementById("settings-accepted-msg-new").value.trim();
+            const rejectedMsg = document.getElementById("settings-rejected-msg-new").value.trim();
+            const admissionsPhone = document.getElementById("settings-admissions-phone-new").value.trim();
+            const telegramContact = document.getElementById("settings-telegram-contact").value.trim();
+
+            try {
+                const res = await fetch(`${API_BASE}/api/v1/universities/settings`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        university_id: myUniversity.id,
+                        accepted_message: acceptedMsg,
+                        rejected_message: rejectedMsg,
+                        admissions_phone: admissionsPhone,
+                        telegram_contact: telegramContact
+                    })
+                });
+                if (!res.ok) throw new Error("Failed to save settings");
+                
+                myUniversity.accepted_message = acceptedMsg;
+                myUniversity.rejected_message = rejectedMsg;
+                myUniversity.admissions_phone = admissionsPhone;
+                myUniversity.telegram_contact = telegramContact;
+
+                showToast("Настройки приёма успешно сохранены!", "success");
+            } catch (err) {
+                showToast("Не удалось сохранить настройки", "danger");
+            }
+        });
+    }
+
+    // Verification Form Submit (License and Requisites)
+    const settingsVerificationForm = document.getElementById("settings-verification-form");
+    if (settingsVerificationForm) {
+        settingsVerificationForm.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            if (!myUniversity) return;
+
+            const licenseVal = document.getElementById("settings-license-number").value.trim();
+            const requisitesVal = document.getElementById("settings-org-requisites").value.trim();
+
+            try {
+                const res = await fetch(`${API_BASE}/api/v1/universities/submit-verification`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        university_id: myUniversity.id,
+                        license_number: licenseVal,
+                        org_requisites: requisitesVal
+                    })
+                });
+                if (!res.ok) throw new Error("Failed to submit verification request");
+
+                const result = await res.json();
+                myUniversity.license_number = licenseVal;
+                myUniversity.org_requisites = requisitesVal;
+                myUniversity.status = "pending";
+
+                renderVerificationStatus("pending");
+                showToast("Документы успешно отправлены на модерацию!", "success");
+            } catch (err) {
+                showToast(err.message || "Не удалось отправить документы", "danger");
+            }
+        });
+    }
+
+    // Change Password Form Submit
+    const settingsPasswordForm = document.getElementById("settings-password-form");
+    if (settingsPasswordForm) {
+        settingsPasswordForm.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            if (!currentPartner) return;
+
+            const oldPassword = document.getElementById("settings-old-password").value;
+            const newPassword = document.getElementById("settings-new-password").value;
+
+            if (newPassword.length < 6) {
+                showToast("Новый пароль должен быть не менее 6 символов", "warning");
+                return;
+            }
+
+            try {
+                const res = await fetch(`${API_BASE}/api/v1/universities/change-password`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        partner_id: currentPartner.id,
+                        old_password: oldPassword,
+                        new_password: newPassword
+                    })
+                });
+
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.detail || "Failed to change password");
+
+                // Update localStorage with new password if needed, or just toast success
+                currentPartner.password = newPassword;
+                localStorage.setItem("currentPartner", JSON.stringify(currentPartner));
+
+                document.getElementById("settings-old-password").value = "";
+                document.getElementById("settings-new-password").value = "";
+
+                showToast("Пароль успешно изменен!", "success");
+            } catch (err) {
+                showToast(err.message || "Не удалось изменить пароль", "danger");
+            }
+        });
+    }
+
+    // Toggle password fields visibility
+    const toggleSettingsPassword = document.getElementById("toggle-settings-password");
+    if (toggleSettingsPassword) {
+        toggleSettingsPassword.addEventListener("change", () => {
+            const oldPassInput = document.getElementById("settings-old-password");
+            const newPassInput = document.getElementById("settings-new-password");
+            const type = toggleSettingsPassword.checked ? "text" : "password";
+            if (oldPassInput) oldPassInput.type = type;
+            if (newPassInput) newPassInput.type = type;
         });
     }
 
@@ -2223,7 +2391,11 @@ async function loadUniversityDetails(id) {
         window.currentLoadedUniversity = uni;
         
         // 1. Title, Alias & Slogan
-        document.getElementById("det-uni-name").textContent = uni.name;
+        if (uni.status === 'approved') {
+            document.getElementById("det-uni-name").innerHTML = `${uni.name} <i data-lucide="check-circle-2" style="color: #3b82f6; fill: rgba(59, 130, 246, 0.1); width: 22px; height: 22px; vertical-align: middle; margin-left: 0.5rem; display: inline-block;" title="Официальный профиль"></i>`;
+        } else {
+            document.getElementById("det-uni-name").textContent = uni.name;
+        }
 
         const backBtn = document.getElementById("back-to-home-btn");
         if (backBtn) {
@@ -3138,7 +3310,62 @@ async function handleWizardSubmit(e) {
     }
 }
 
-// 10. Partner cabinet renderer
+function renderVerificationStatus(status) {
+    const box = document.getElementById("settings-verification-status-box");
+    if (!box) return;
+    
+    let html = "";
+    if (status === "approved") {
+        html = `
+            <div style="background: rgba(34, 197, 94, 0.08); border: 1px solid rgba(34, 197, 94, 0.25); border-radius: 12px; padding: 1.25rem; display: flex; align-items: center; gap: 0.75rem;">
+                <div style="width: 40px; height: 40px; border-radius: 50%; background: rgba(34, 197, 94, 0.15); display: flex; align-items: center; justify-content: center; color: #22c55e; flex-shrink: 0;">
+                    <i data-lucide="check-circle-2" style="width: 24px; height: 24px;"></i>
+                </div>
+                <div>
+                    <h4 style="font-weight: 700; color: #22c55e; margin: 0 0 2px 0; font-size: 0.95rem;">Профиль верифицирован</h4>
+                    <p style="margin: 0; font-size: 0.85rem; color: var(--text-secondary);">Профиль официально верифицирован командой THOTH.</p>
+                </div>
+            </div>
+        `;
+        document.getElementById("settings-license-number").disabled = true;
+        document.getElementById("settings-org-requisites").disabled = true;
+        document.getElementById("settings-submit-verification-btn").style.display = "none";
+    } else if (status === "pending") {
+        html = `
+            <div style="background: rgba(217, 119, 6, 0.08); border: 1px solid rgba(217, 119, 6, 0.25); border-radius: 12px; padding: 1.25rem; display: flex; align-items: center; gap: 0.75rem;">
+                <div style="width: 40px; height: 40px; border-radius: 50%; background: rgba(217, 119, 6, 0.15); display: flex; align-items: center; justify-content: center; color: #d97706; flex-shrink: 0;">
+                    <i data-lucide="clock" style="width: 24px; height: 24px;"></i>
+                </div>
+                <div>
+                    <h4 style="font-weight: 700; color: #d97706; margin: 0 0 2px 0; font-size: 0.95rem;">На проверке</h4>
+                    <p style="margin: 0; font-size: 0.85rem; color: var(--text-secondary);">Документы отправлены. Модерация занимает до 24 часов. Наш менеджер свяжется с вами при необходимости.</p>
+                </div>
+            </div>
+        `;
+        document.getElementById("settings-license-number").disabled = true;
+        document.getElementById("settings-org-requisites").disabled = true;
+        document.getElementById("settings-submit-verification-btn").style.display = "none";
+    } else {
+        html = `
+            <div style="background: var(--bg-accent); border: 1px solid var(--card-border); border-radius: 12px; padding: 1.25rem; display: flex; align-items: center; gap: 0.75rem;">
+                <div style="width: 40px; height: 40px; border-radius: 50%; background: var(--card-border); display: flex; align-items: center; justify-content: center; color: var(--text-secondary); flex-shrink: 0;">
+                    <i data-lucide="help-circle" style="width: 24px; height: 24px;"></i>
+                </div>
+                <div>
+                    <h4 style="font-weight: 700; color: var(--text-primary); margin: 0 0 2px 0; font-size: 0.95rem;">Не верифицирован</h4>
+                    <p style="margin: 0; font-size: 0.85rem; color: var(--text-secondary);">Загрузите лицензию/аккредитацию и реквизиты организации для прохождения проверки модератором.</p>
+                </div>
+            </div>
+        `;
+        document.getElementById("settings-license-number").disabled = false;
+        document.getElementById("settings-org-requisites").disabled = false;
+        document.getElementById("settings-submit-verification-btn").style.display = "inline-flex";
+    }
+    
+    box.innerHTML = html;
+    lucide.createIcons();
+}
+
 async function renderPartnerCabinet() {
     const partnerData = localStorage.getItem("currentPartner");
     if (!partnerData) {
@@ -3151,31 +3378,25 @@ async function renderPartnerCabinet() {
     currentPartner = JSON.parse(partnerData);
     document.getElementById("partner-auth-block").style.display = "none";
     document.getElementById("partner-cabinet-block").style.display = "block";
-    document.getElementById("cabinet-user-email").textContent = currentPartner.email;
-    
-    const statusBadge = document.getElementById("cabinet-user-status");
-    statusBadge.textContent = currentPartner.status === "approved" ? "Верифицирован" : currentPartner.status;
-    if (currentPartner.status === "approved") {
-        statusBadge.style.backgroundColor = "rgba(16, 185, 129, 0.1)";
-        statusBadge.style.color = "#10B981";
-    } else {
-        statusBadge.style.backgroundColor = "rgba(217, 119, 6, 0.1)";
-        statusBadge.style.color = "#D97706";
-    }
+    document.getElementById("partner-sidebar-email").textContent = currentPartner.personal_email || currentPartner.email;
 
     try {
         const res = await fetch(`${API_BASE}/api/v1/universities/my-profile/${currentPartner.id}`);
         if (!res.ok) throw new Error("Failed to load profile");
         myUniversity = await res.json();
         
+        const dashBtn = document.getElementById("menu-dash-btn");
+        
         if (!myUniversity) {
             document.getElementById("partner-no-profile-view").style.display = "block";
             document.getElementById("partner-pending-profile-notice").style.display = "none";
             document.getElementById("partner-wizard-view").style.display = "none";
             document.getElementById("partner-dashboard-view").style.display = "none";
+            document.getElementById("partner-settings-view").style.display = "none";
+            
+            document.getElementById("partner-sidebar-name").textContent = "Новая организация";
         } else {
             document.getElementById("partner-no-profile-view").style.display = "none";
-            
             
             if (myUniversity.status === "pending_profile") {
                 document.getElementById("partner-pending-profile-notice").style.display = "block";
@@ -3183,16 +3404,54 @@ async function renderPartnerCabinet() {
                 document.getElementById("partner-pending-profile-notice").style.display = "none";
             }
 
+            // Always reset active menu to dashboard tab when rendering cabinet
+            if (dashBtn) {
+                [dashBtn, document.getElementById("menu-edit-profile-btn"), document.getElementById("menu-settings-btn")].forEach(btn => {
+                    if (btn) btn.classList.remove("active");
+                });
+                dashBtn.classList.add("active");
+            }
+
             document.getElementById("partner-wizard-view").style.display = "none";
             document.getElementById("partner-dashboard-view").style.display = "block";
-            document.getElementById("dash-uni-name").textContent = myUniversity.name;
+            document.getElementById("partner-settings-view").style.display = "none";
             
+            document.getElementById("dash-uni-name").textContent = myUniversity.name;
+            document.getElementById("partner-sidebar-name").textContent = myUniversity.name;
+            
+            const logoElem = document.getElementById("partner-sidebar-logo");
+            if (logoElem) {
+                const words = myUniversity.name.split(" ");
+                const alias = words.map(w => w[0] ? w[0] : "").join("").toUpperCase().substring(0, 3);
+                if (myUniversity.logo && myUniversity.logo.startsWith("data:image/")) {
+                    logoElem.style.backgroundImage = `url('${myUniversity.logo}')`;
+                    logoElem.textContent = "";
+                } else if (myUniversity.photo && myUniversity.photo.startsWith("data:image/")) {
+                    logoElem.style.backgroundImage = `url('${myUniversity.photo}')`;
+                    logoElem.textContent = "";
+                } else {
+                    logoElem.style.backgroundImage = "";
+                    logoElem.textContent = alias || "UNI";
+                }
+            }
+
+            // Populate settings view inputs
+            document.getElementById("settings-accepted-msg-new").value = myUniversity.accepted_message || "";
+            document.getElementById("settings-rejected-msg-new").value = myUniversity.rejected_message || "";
+            document.getElementById("settings-admissions-phone-new").value = myUniversity.admissions_phone || "";
+            document.getElementById("settings-telegram-contact").value = myUniversity.telegram_contact || "";
+            document.getElementById("settings-license-number").value = myUniversity.license_number || "";
+            document.getElementById("settings-org-requisites").value = myUniversity.org_requisites || "";
+            document.getElementById("settings-account-email").value = currentPartner.personal_email || currentPartner.email || "";
+            
+            renderVerificationStatus(myUniversity.status);
             loadPartnerDashboardData(myUniversity.id);
         }
     } catch (err) {
         showToast(err.message || "Ошибка загрузки кабинета", "danger");
     }
 }
+
 
 // 11. Fetch statistics and list leads for active partner dashboard
 async function loadPartnerDashboardData(uniId) {

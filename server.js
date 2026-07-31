@@ -342,9 +342,6 @@ function sendUniversityProfileAlert(uni) {
 
     sendTelegramMessage(text, replyMarkup);
 
-    // Generate beautifully styled standalone HTML file representing the Wildberries-style profile card
-    const fs = require('fs');
-    
     // Calculate price range
     let priceRangeText = "от $1,500/год";
     if (specs.length > 0) {
@@ -556,6 +553,28 @@ function sendUniversityProfileAlert(uni) {
     setTimeout(() => {
         sendTelegramDocument(tempFilePath, `📄 Интерактивный HTML-макет карточки ВУЗа "${uni.name}" для предпросмотра на любом устройстве`);
     }, 100);
+}
+
+// Moderation: University Verification Alert
+function sendUniversityVerificationAlert(uni) {
+    const text = `ℹ️ *Заявка на верификацию ВУЗа!*\n\n` +
+                 `🏫 *ВУЗ:* ${uni.name}\n` +
+                 `📍 *Локация:* ${uni.country || '—'}, ${uni.city || '—'}\n` +
+                 `📜 *Лицензия:* ${uni.license_number || 'Не указана'}\n` +
+                 `🧾 *Реквизиты:* ${uni.org_requisites || 'Не указаны'}\n` +
+                 `📞 *Telegram комиссия:* ${uni.telegram_contact || 'Не указан'}\n\n` +
+                 `Одобрить верификацию профиля?`;
+
+    const replyMarkup = {
+        inline_keyboard: [
+            [
+                { text: '✅ Одобрить', callback_data: `approve_uni:${uni.id}` },
+                { text: '❌ Отклонить', callback_data: `reject_uni:${uni.id}` }
+            ]
+        ]
+    };
+
+    sendTelegramMessage(text, replyMarkup);
 }
 
 // Send main admin menu with persistent keyboard
@@ -1421,10 +1440,9 @@ app.get('/api/v1/students/:phone/profile', (req, res) => {
         applications: apps
     });
 });
-
-// POST: Save partner university message settings
+// POST: Save partner university settings (messages, admissions phone, telegram contact)
 app.post('/api/v1/universities/settings', (req, res) => {
-    const { university_id, accepted_message, rejected_message, admissions_phone } = req.body;
+    const { university_id, accepted_message, rejected_message, admissions_phone, telegram_contact } = req.body;
     if (!university_id) {
         return res.status(400).json({ detail: 'Missing university_id' });
     }
@@ -1438,13 +1456,69 @@ app.post('/api/v1/universities/settings', (req, res) => {
     uni.accepted_message = accepted_message || '';
     uni.rejected_message = rejected_message || '';
     uni.admissions_phone = admissions_phone || '';
+    uni.telegram_contact = telegram_contact || '';
 
     saveDB(db);
 
     res.json({
         status: 'success',
-        message: 'Настройки сообщений успешно сохранены',
+        message: 'Настройки приёма успешно сохранены',
         university: uni
+    });
+});
+
+// POST: Submit university documents for verification/moderation
+app.post('/api/v1/universities/submit-verification', (req, res) => {
+    const { university_id, license_number, org_requisites } = req.body;
+    if (!university_id) {
+        return res.status(400).json({ detail: 'Missing university_id' });
+    }
+
+    const db = loadDB();
+    const uni = db.universities.find(u => u.id === university_id);
+    if (!uni) {
+        return res.status(404).json({ detail: 'Университет не найден' });
+    }
+
+    uni.license_number = license_number || '';
+    uni.org_requisites = org_requisites || '';
+    uni.status = 'pending'; // Change status to 'pending' (Under review)
+
+    saveDB(db);
+
+    // Alert admin via Telegram bot
+    setTimeout(() => sendUniversityVerificationAlert(uni), 50);
+
+    res.json({
+        status: 'success',
+        message: 'Документы отправлены на модерацию',
+        university: uni
+    });
+});
+
+// POST: Change partner account password
+app.post('/api/v1/universities/change-password', (req, res) => {
+    const { partner_id, old_password, new_password } = req.body;
+    if (!partner_id || !old_password || !new_password) {
+        return res.status(400).json({ detail: 'Missing required fields' });
+    }
+
+    const db = loadDB();
+    const acc = db.partner_accounts.find(p => p.id === partner_id);
+    if (!acc) {
+        return res.status(404).json({ detail: 'Аккаунт не найден' });
+    }
+
+    if (acc.password !== old_password) {
+        return res.status(400).json({ detail: 'Старый пароль указан неверно' });
+    }
+
+    acc.password = new_password;
+    saveDB(db);
+
+    res.json({
+        status: 'success',
+        message: 'Пароль успешно обновлен'
     });
 });
 
