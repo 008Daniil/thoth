@@ -4785,19 +4785,13 @@ function initAIOrientation() {
 }
 
 function startAiChat() {
-    const initialText = "Привет! Я ИИ-гид платформы ТОТ. Помогу тебе понять, какая профессия и универ тебе реально подойдут.\n\nКак поступим: сделаем быстрый экспресс-тест на 4 вопроса или пройдем детальный разбор (7–8 вопросов), чтобы подобрать профессию максимально точно?";
+    const initialText = "Привет! Я твой ИИ-помощник. Ты можешь спросить меня о чём угодно — о выборе будущей профессии, университетах Узбекистана, попросить написать код, решить задачу или просто поболтать. О чём бы ты хотел поговорить?";
     
     aiChatHistory = [];
     const messagesContainer = document.getElementById("ai-chat-messages");
     if (messagesContainer) messagesContainer.innerHTML = "";
 
     appendAiBubble(initialText);
-
-    // Render initial mode selection buttons
-    renderAiQuickButtons([
-        { label: "⚡ Быстрый (4 вопроса)", text: "Выбираю быстрый экспресс-тест на 4 вопроса" },
-        { label: "🎯 Детальный (7–8 вопросов)", text: "Выбираю детальный разбор на 7-8 вопросов" }
-    ]);
 }
 
 function appendAiBubble(text) {
