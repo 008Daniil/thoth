@@ -1727,9 +1727,8 @@ async function handleAIOrientation(req, res) {
                 });
             }
             openRouterMessages.push({ role: 'user', content: trimmedMessage });
-
             const payload = JSON.stringify({
-                model: 'google/gemini-2.0-flash-exp:free',
+                model: 'openrouter/free',
                 messages: openRouterMessages,
                 max_tokens: 300,
                 temperature: 0.75
