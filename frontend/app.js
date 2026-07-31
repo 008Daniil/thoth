@@ -1788,67 +1788,7 @@ function renderEditorCampusPhotos() {
         });
     }
 
-    // Partner Settings button & modal
-    const dashSettingsBtn = document.getElementById("dash-settings-btn");
-    const settingsModal = document.getElementById("partner-settings-modal");
-    const closeSettingsBtn = document.getElementById("close-partner-settings-btn");
-    const cancelSettingsBtn = document.getElementById("cancel-partner-settings-btn");
-    const settingsForm = document.getElementById("partner-settings-form");
-
-    if (dashSettingsBtn && settingsModal) {
-        dashSettingsBtn.addEventListener("click", () => {
-            if (myUniversity) {
-                document.getElementById("settings-accepted-msg").value = myUniversity.accepted_message || myUniversity.contact_info || "";
-                document.getElementById("settings-rejected-msg").value = myUniversity.rejected_message || "";
-                document.getElementById("settings-admissions-phone").value = myUniversity.admissions_phone || "";
-            }
-            settingsModal.style.display = "flex";
-            setTimeout(() => settingsModal.classList.add("show"), 10);
-        });
-    }
-
-    const closeSettings = () => {
-        if (!settingsModal) return;
-        settingsModal.classList.remove("show");
-        settingsModal.style.display = "none";
-    };
-
-    if (closeSettingsBtn) closeSettingsBtn.onclick = closeSettings;
-    if (cancelSettingsBtn) cancelSettingsBtn.onclick = closeSettings;
-
-    if (settingsForm) {
-        settingsForm.addEventListener("submit", async (e) => {
-            e.preventDefault();
-            if (!myUniversity) return;
-
-            const accMsg = document.getElementById("settings-accepted-msg").value.trim();
-            const rejMsg = document.getElementById("settings-rejected-msg").value.trim();
-            const phone = document.getElementById("settings-admissions-phone").value.trim();
-
-            try {
-                const res = await fetch(`${API_BASE}/api/v1/universities/settings`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        university_id: myUniversity.id,
-                        accepted_message: accMsg,
-                        rejected_message: rejMsg,
-                        admissions_phone: phone
-                    })
-                });
-                if (!res.ok) throw new Error("Failed to save settings");
-                
-                myUniversity.accepted_message = accMsg;
-                myUniversity.rejected_message = rejMsg;
-                myUniversity.admissions_phone = phone;
-
-                showToast("Настройки сообщений приёмной комиссии сохранены!", "success");
-                closeSettings();
-            } catch (err) {
-                showToast("Не удалось сохранить настройки", "danger");
-            }
-        });
-    }
+    // Old partner settings modal listeners removed (replaced by sliding drawer)
 
     // Refresh Dashboard button
     const refreshDashBtn = document.getElementById("refresh-dash-data-btn");
