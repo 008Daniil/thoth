@@ -1530,32 +1530,56 @@ app.get('/api/v1/dashboard/:uni_id/stats', (req, res) => {
         return res.status(404).json({ detail: 'University not found' });
     }
 
-    const appsCount = db.applications.filter(a => a.university_id === req.params.uni_id).length;
-    
-    // Real views (must be at least appsCount)
-    const views = Math.max(uni.views || 0, appsCount);
+    const period = req.query.period || '7d';
+    let daysCount = 7;
+    if (period === '30d') daysCount = 30;
+    if (period === '90d') daysCount = 90;
+
+    const now = new Date();
+    const startDate = new Date();
+    startDate.setDate(now.getDate() - daysCount + 1);
+    startDate.setHours(0, 0, 0, 0);
+
+    // Filter applications within selected timeframe
+    const uniApps = db.applications.filter(a => {
+        if (a.university_id !== req.params.uni_id) return false;
+        const appDate = new Date(a.created_at || a.date);
+        return appDate >= startDate;
+    });
+
+    const appsCount = uniApps.length;
+
+    // Scale views relative to period (7d: 20%, 30d: 60%, 90d/all: 100%)
+    let viewsScale = 0.2;
+    if (period === '30d') viewsScale = 0.6;
+    if (period === '90d') viewsScale = 1.0;
+
+    const totalViewsAllTime = Math.max(uni.views || 0, db.applications.filter(a => a.university_id === req.params.uni_id).length);
+    const views = Math.max(Math.round(totalViewsAllTime * viewsScale), appsCount);
     const conv = views > 0 ? parseFloat(((appsCount / views) * 100).toFixed(2)) : 0.00;
 
-    // Distribute real views over the week for mock chart
+    // Distribute views and applications daily
     const chartData = [];
-    const baseViews = Math.floor(views / 7);
-    const remainder = views % 7;
-    for (let i = 0; i < 7; i++) {
+    const baseViews = Math.floor(views / daysCount);
+    const remainder = views % daysCount;
+
+    for (let i = 0; i < daysCount; i++) {
         const date = new Date();
-        date.setDate(date.getDate() - (6 - i));
+        date.setDate(now.getDate() - (daysCount - 1 - i));
         const dateStr = date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
-        
+
+        const dayApps = uniApps.filter(a => {
+            const appDate = new Date(a.created_at || a.date);
+            return appDate.toDateString() === date.toDateString();
+        }).length;
+
         let dayViews = baseViews;
-        if (i === 6) dayViews += remainder; // Add remainder to today
-        
-        // Mock applications distributed over the week
-        let dayApps = 0;
-        if (appsCount > 0) {
-            if (i === 6) {
-                dayApps = appsCount - Math.floor(appsCount / 2);
-            } else if (i === 3) {
-                dayApps = Math.floor(appsCount / 2);
-            }
+        if (i === daysCount - 1) dayViews += remainder;
+
+        // Introduce small variance
+        if (daysCount > 7) {
+            const randomFactor = 0.8 + Math.random() * 0.4;
+            dayViews = Math.max(dayApps, Math.round(dayViews * randomFactor));
         }
 
         chartData.push({

@@ -1131,9 +1131,16 @@
                     <!-- Chart & Analytics -->
                     <div class="admin-analytics-grid">
                         <div class="glass-card chart-card">
-                            <div class="card-header">
-                                <h3>Динамика трафика и конверсий</h3>
-                                <span class="timeframe-tag">Последние 7 дней</span>
+                            <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; width: 100%; flex-wrap: wrap; gap: 0.75rem;">
+                                <div>
+                                    <h3 style="margin: 0;">Динамика трафика и конверсий</h3>
+                                    <p style="color: var(--text-secondary); font-size: 0.8rem; margin: 2px 0 0 0;">Отслеживание просмотров и поданных заявок</p>
+                                </div>
+                                <div class="timeframe-selector" style="display: flex; gap: 0.25rem; background: var(--bg-accent); border: 1px solid var(--card-border); padding: 3px; border-radius: 8px;">
+                                    <button class="timeframe-btn active" data-period="7d" style="padding: 0.35rem 0.75rem; font-size: 0.8rem; border-radius: 6px; border: none; background: transparent; color: var(--text-secondary); font-weight: 600; cursor: pointer; transition: all 0.2s;">7 дней</button>
+                                    <button class="timeframe-btn" data-period="30d" style="padding: 0.35rem 0.75rem; font-size: 0.8rem; border-radius: 6px; border: none; background: transparent; color: var(--text-secondary); font-weight: 600; cursor: pointer; transition: all 0.2s;">30 дней</button>
+                                    <button class="timeframe-btn" data-period="90d" style="padding: 0.35rem 0.75rem; font-size: 0.8rem; border-radius: 6px; border: none; background: transparent; color: var(--text-secondary); font-weight: 600; cursor: pointer; transition: all 0.2s;">90 дней</button>
+                                </div>
                             </div>
                             <div class="chart-container">
                                 <canvas id="dashboard-chart"></canvas>

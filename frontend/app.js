@@ -1621,6 +1621,15 @@ function setupEventListeners() {
             lucide.createIcons();
         });
     }
+    // Timeframe selector button group listeners
+    document.querySelectorAll(".timeframe-btn").forEach(btn => {
+        btn.addEventListener("click", (e) => {
+            e.preventDefault();
+            if (!myUniversity || !myUniversity.id) return;
+            const period = btn.getAttribute("data-period");
+            loadPartnerDashboardData(myUniversity.id, period);
+        });
+    });
 
     // Global drawer helper functions
     window.openPartnerSettingsDrawer = () => {
@@ -3461,10 +3470,27 @@ async function renderPartnerCabinet() {
 }
 
 
+// Helper to style timeframe buttons based on selected period
+function updateTimeframeButtonsStyle(activePeriod) {
+    document.querySelectorAll(".timeframe-btn").forEach(btn => {
+        const period = btn.getAttribute("data-period");
+        if (period === activePeriod) {
+            btn.classList.add("active");
+            btn.style.background = "var(--primary)";
+            btn.style.color = "#FFFFFF";
+        } else {
+            btn.classList.remove("active");
+            btn.style.background = "transparent";
+            btn.style.color = "var(--text-secondary)";
+        }
+    });
+}
+
 // 11. Fetch statistics and list leads for active partner dashboard
-async function loadPartnerDashboardData(uniId) {
+async function loadPartnerDashboardData(uniId, period = "7d") {
     try {
-        const statsRes = await fetch(`${API_BASE}/api/v1/dashboard/${uniId}/stats`);
+        updateTimeframeButtonsStyle(period);
+        const statsRes = await fetch(`${API_BASE}/api/v1/dashboard/${uniId}/stats?period=${period}`);
         if (!statsRes.ok) throw new Error("Stats load error");
         const stats = await statsRes.json();
 
