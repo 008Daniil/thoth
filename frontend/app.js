@@ -1426,59 +1426,66 @@ function setupEventListeners() {
             openWYSIWYGEditor();
         });
     }
+    // Helper to save admissions messages, phone, and telegram contact
+    async function saveAdmissionsSettings(e) {
+        if (e) e.preventDefault();
+        
+        if (!myUniversity) {
+            if (currentPartner) {
+                try {
+                    const profileRes = await fetch(`${API_BASE}/api/v1/universities/my-profile/${currentPartner.id}`);
+                    if (profileRes.ok) {
+                        myUniversity = await profileRes.json();
+                    }
+                } catch (err) {
+                    console.error("Self-healing myUniversity failed:", err);
+                }
+            }
+        }
+
+        if (!myUniversity || !myUniversity.id) {
+            showToast("Ошибка: Профиль университета не найден. Пожалуйста, сначала заполните профиль ВУЗа.", "danger");
+            return;
+        }
+
+        const acceptedMsg = document.getElementById("settings-accepted-msg-drawer").value.trim();
+        const rejectedMsg = document.getElementById("settings-rejected-msg-drawer").value.trim();
+        const admissionsPhone = document.getElementById("settings-admissions-phone-drawer").value.trim();
+        const telegramContact = document.getElementById("settings-telegram-contact-drawer").value.trim();
+
+        try {
+            const res = await fetch(`${API_BASE}/api/v1/universities/settings`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    university_id: myUniversity.id,
+                    accepted_message: acceptedMsg,
+                    rejected_message: rejectedMsg,
+                    admissions_phone: admissionsPhone,
+                    telegram_contact: telegramContact
+                })
+            });
+            if (!res.ok) throw new Error("Failed to save settings");
+            
+            myUniversity.accepted_message = acceptedMsg;
+            myUniversity.rejected_message = rejectedMsg;
+            myUniversity.admissions_phone = admissionsPhone;
+            myUniversity.telegram_contact = telegramContact;
+
+            showToast("Настройки приёма успешно сохранены!", "success");
+        } catch (err) {
+            showToast("Не удалось сохранить настройки", "danger");
+        }
+    }
+
     // Settings Drawer Form Submit (Save messages, admissions phone, telegram contact)
     const partnerCustomSettingsFormDrawer = document.getElementById("partner-custom-settings-form-drawer");
     if (partnerCustomSettingsFormDrawer) {
-        partnerCustomSettingsFormDrawer.addEventListener("submit", async (e) => {
-            e.preventDefault();
-            
-            if (!myUniversity) {
-                if (currentPartner) {
-                    try {
-                        const profileRes = await fetch(`${API_BASE}/api/v1/universities/my-profile/${currentPartner.id}`);
-                        if (profileRes.ok) {
-                            myUniversity = await profileRes.json();
-                        }
-                    } catch (err) {
-                        console.error("Self-healing myUniversity failed:", err);
-                    }
-                }
-            }
-
-            if (!myUniversity || !myUniversity.id) {
-                showToast("Ошибка: Профиль университета не найден. Пожалуйста, сначала заполните профиль ВУЗа.", "danger");
-                return;
-            }
-
-            const acceptedMsg = document.getElementById("settings-accepted-msg-drawer").value.trim();
-            const rejectedMsg = document.getElementById("settings-rejected-msg-drawer").value.trim();
-            const admissionsPhone = document.getElementById("settings-admissions-phone-drawer").value.trim();
-            const telegramContact = document.getElementById("settings-telegram-contact-drawer").value.trim();
-
-            try {
-                const res = await fetch(`${API_BASE}/api/v1/universities/settings`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        university_id: myUniversity.id,
-                        accepted_message: acceptedMsg,
-                        rejected_message: rejectedMsg,
-                        admissions_phone: admissionsPhone,
-                        telegram_contact: telegramContact
-                    })
-                });
-                if (!res.ok) throw new Error("Failed to save settings");
-                
-                myUniversity.accepted_message = acceptedMsg;
-                myUniversity.rejected_message = rejectedMsg;
-                myUniversity.admissions_phone = admissionsPhone;
-                myUniversity.telegram_contact = telegramContact;
-
-                showToast("Настройки приёма успешно сохранены!", "success");
-            } catch (err) {
-                showToast("Не удалось сохранить настройки", "danger");
-            }
-        });
+        partnerCustomSettingsFormDrawer.addEventListener("submit", saveAdmissionsSettings);
+    }
+    const settingsSaveAdmissionsBtn = document.getElementById("settings-save-admissions-btn");
+    if (settingsSaveAdmissionsBtn) {
+        settingsSaveAdmissionsBtn.addEventListener("click", saveAdmissionsSettings);
     }
 
     // Verification Drawer Form Submit (License and Requisites)
@@ -1627,7 +1634,65 @@ function setupEventListeners() {
             e.preventDefault();
             if (!myUniversity || !myUniversity.id) return;
             const period = btn.getAttribute("data-period");
-            loadPartnerDashboardData(myUniversity.id, period);
+            
+            const customPicker = document.getElementById("custom-date-picker-container");
+            if (period === "custom") {
+                if (customPicker) customPicker.style.display = "flex";
+                
+                const startInput = document.getElementById("stats-start-date");
+                const endInput = document.getElementById("stats-end-date");
+                
+                if (startInput && !startInput.value) {
+                    const d = new Date();
+                    d.setDate(d.getDate() - 14);
+                    startInput.value = d.toISOString().split("T")[0];
+                }
+                if (endInput && !endInput.value) {
+                    endInput.value = new Date().toISOString().split("T")[0];
+                }
+                
+                updateTimeframeButtonsStyle("custom");
+                loadPartnerDashboardDataWithCustomDates();
+            } else {
+                if (customPicker) customPicker.style.display = "none";
+                loadPartnerDashboardData(myUniversity.id, period);
+            }
+        });
+    });
+
+    const startInput = document.getElementById("stats-start-date");
+    const endInput = document.getElementById("stats-end-date");
+    if (startInput && endInput) {
+        const handleDateChange = () => {
+            loadPartnerDashboardDataWithCustomDates();
+        };
+        startInput.addEventListener("change", handleDateChange);
+        endInput.addEventListener("change", handleDateChange);
+    }
+
+    // Preview message buttons handling
+    document.querySelectorAll(".btn-preview-msg").forEach(btn => {
+        btn.addEventListener("click", (e) => {
+            e.preventDefault();
+            const targetId = btn.getAttribute("data-target");
+            const textarea = document.getElementById(targetId);
+            const previewBox = document.getElementById(`preview-box-${targetId}`);
+            
+            if (textarea && previewBox) {
+                const textEl = previewBox.querySelector(".preview-text");
+                const textVal = textarea.value.trim() || textarea.placeholder || "";
+                
+                if (textEl) {
+                    textEl.textContent = textVal;
+                }
+                
+                const isHidden = previewBox.style.display === "none";
+                previewBox.style.display = isHidden ? "block" : "none";
+                btn.innerHTML = isHidden
+                    ? '<i data-lucide="eye-off" style="width: 12px; height: 12px;"></i> Скрыть'
+                    : '<i data-lucide="eye" style="width: 12px; height: 12px;"></i> Предпросмотр';
+                lucide.createIcons();
+            }
         });
     });
 
@@ -3484,6 +3549,17 @@ function updateTimeframeButtonsStyle(activePeriod) {
             btn.style.color = "var(--text-secondary)";
         }
     });
+}
+
+// Helper to load partner dashboard data with custom start and end dates
+async function loadPartnerDashboardDataWithCustomDates() {
+    if (!myUniversity || !myUniversity.id) return;
+    const startInput = document.getElementById("stats-start-date");
+    const endInput = document.getElementById("stats-end-date");
+    if (startInput && endInput && startInput.value && endInput.value) {
+        const period = `custom&start_date=${startInput.value}&end_date=${endInput.value}`;
+        loadPartnerDashboardData(myUniversity.id, period);
+    }
 }
 
 // 11. Fetch statistics and list leads for active partner dashboard

@@ -1136,10 +1136,19 @@
                                     <h3 style="margin: 0;">Динамика трафика и конверсий</h3>
                                     <p style="color: var(--text-secondary); font-size: 0.8rem; margin: 2px 0 0 0;">Отслеживание просмотров и поданных заявок</p>
                                 </div>
-                                <div class="timeframe-selector" style="display: flex; gap: 0.25rem; background: var(--bg-accent); border: 1px solid var(--card-border); padding: 3px; border-radius: 8px;">
-                                    <button class="timeframe-btn active" data-period="7d" style="padding: 0.35rem 0.75rem; font-size: 0.8rem; border-radius: 6px; border: none; background: transparent; color: var(--text-secondary); font-weight: 600; cursor: pointer; transition: all 0.2s;">7 дней</button>
-                                    <button class="timeframe-btn" data-period="30d" style="padding: 0.35rem 0.75rem; font-size: 0.8rem; border-radius: 6px; border: none; background: transparent; color: var(--text-secondary); font-weight: 600; cursor: pointer; transition: all 0.2s;">30 дней</button>
-                                    <button class="timeframe-btn" data-period="90d" style="padding: 0.35rem 0.75rem; font-size: 0.8rem; border-radius: 6px; border: none; background: transparent; color: var(--text-secondary); font-weight: 600; cursor: pointer; transition: all 0.2s;">90 дней</button>
+                                <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+                                    <div class="timeframe-selector">
+                                        <button class="timeframe-btn active" data-period="7d">7 дней</button>
+                                        <button class="timeframe-btn" data-period="30d">30 дней</button>
+                                        <button class="timeframe-btn" data-period="90d">90 дней</button>
+                                        <button class="timeframe-btn" data-period="custom">Период</button>
+                                    </div>
+                                    <div id="custom-date-picker-container" style="display: none; align-items: center; gap: 0.35rem; font-size: 0.8rem; color: var(--text-secondary); background: var(--bg-accent); padding: 5px 10px; border-radius: 8px; border: 1px solid var(--card-border);">
+                                        <span>с</span>
+                                        <input type="date" id="stats-start-date" style="border: none; background: transparent; color: var(--text-primary); font-family: var(--font-sans); font-size: 0.8rem; outline: none; cursor: pointer;">
+                                        <span>по</span>
+                                        <input type="date" id="stats-end-date" style="border: none; background: transparent; color: var(--text-primary); font-family: var(--font-sans); font-size: 0.8rem; outline: none; cursor: pointer;">
+                                    </div>
                                 </div>
                             </div>
                             <div class="chart-container">
@@ -1819,17 +1828,43 @@
                     <h4 style="font-family: var(--font-heading); font-size: 1.15rem; color: var(--primary); margin: 0 0 1rem 0;">Приём абитуриентов</h4>
                     <form id="partner-custom-settings-form-drawer" class="custom-form" style="display: flex; flex-direction: column; gap: 1.25rem;">
                         <div class="form-group">
-                            <label for="settings-accepted-msg-drawer" style="font-weight: 700; font-size: 0.85rem; color: var(--text-primary);">
-                                Сообщение для ОДОБРЕННЫХ (Поступивших) студентов
-                            </label>
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <label for="settings-accepted-msg-drawer" style="font-weight: 700; font-size: 0.85rem; color: var(--text-primary); margin: 0;">
+                                    Сообщение для ОДОБРЕННЫХ (Поступивших) студентов
+                                </label>
+                                <button type="button" class="btn-preview-msg" data-target="settings-accepted-msg-drawer" style="background: transparent; border: none; color: var(--primary); font-size: 0.75rem; cursor: pointer; padding: 2px 0; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; outline: none;">
+                                    <i data-lucide="eye" style="width: 12px; height: 12px;"></i> Предпросмотр
+                                </button>
+                            </div>
                             <textarea id="settings-accepted-msg-drawer" rows="3" placeholder="Поздравляем с успешным зачислением! Свяжитесь с приемной комиссией..." style="width: 100%; box-sizing: border-box;"></textarea>
+                            
+                            <!-- Inline message preview block -->
+                            <div id="preview-box-settings-accepted-msg-drawer" style="display: none; margin-top: 0.5rem; background: var(--bg-accent); padding: 0.85rem 1rem; border-radius: 8px; border: 1px solid var(--card-border);">
+                                <h5 style="margin: 0 0 0.35rem 0; font-size: 0.82rem; font-weight: 700; color: var(--text-primary);">
+                                    <span style="color: var(--success); font-weight: bold; margin-right: 4px;">●</span> Сообщение в паспорте (Одобрен):
+                                </h5>
+                                <p class="preview-text" style="font-size: 0.82rem; color: var(--text-secondary); margin: 0; white-space: pre-line; line-height: 1.4;"></p>
+                            </div>
                         </div>
 
                         <div class="form-group">
-                            <label for="settings-rejected-msg-drawer" style="font-weight: 700; font-size: 0.85rem; color: var(--text-primary);">
-                                Сообщение для ОТКЛОНЕННЫХ (Не поступивших) студентов
-                            </label>
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <label for="settings-rejected-msg-drawer" style="font-weight: 700; font-size: 0.85rem; color: var(--text-primary); margin: 0;">
+                                    Сообщение для ОТКЛОНЕННЫХ (Не поступивших) студентов
+                                </label>
+                                <button type="button" class="btn-preview-msg" data-target="settings-rejected-msg-drawer" style="background: transparent; border: none; color: var(--primary); font-size: 0.75rem; cursor: pointer; padding: 2px 0; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; outline: none;">
+                                    <i data-lucide="eye" style="width: 12px; height: 12px;"></i> Предпросмотр
+                                </button>
+                            </div>
                             <textarea id="settings-rejected-msg-drawer" rows="3" placeholder="К сожалению, ваш конкурсный балл ниже требуемого..." style="width: 100%; box-sizing: border-box;"></textarea>
+                            
+                            <!-- Inline message preview block -->
+                            <div id="preview-box-settings-rejected-msg-drawer" style="display: none; margin-top: 0.5rem; background: var(--bg-accent); padding: 0.85rem 1rem; border-radius: 8px; border: 1px solid var(--card-border);">
+                                <h5 style="margin: 0 0 0.35rem 0; font-size: 0.82rem; font-weight: 700; color: var(--text-primary);">
+                                    <span style="color: var(--danger); font-weight: bold; margin-right: 4px;">●</span> Сообщение в паспорте (Отклонен):
+                                </h5>
+                                <p class="preview-text" style="font-size: 0.82rem; color: var(--text-secondary); margin: 0; white-space: pre-line; line-height: 1.4;"></p>
+                            </div>
                         </div>
 
                         <div class="form-group">
@@ -1846,28 +1881,10 @@
                             <input type="text" id="settings-telegram-contact-drawer" placeholder="https://t.me/uni_admissions" style="width: 100%; box-sizing: border-box;">
                         </div>
 
-                        <button type="submit" class="btn btn-primary" style="align-self: flex-start;">
+                        <button type="submit" id="settings-save-admissions-btn" class="btn btn-primary" style="align-self: flex-start;">
                             Сохранить настройки
                         </button>
                     </form>
-
-                    <!-- Template help box for accepted/rejected messages -->
-                    <div style="margin-top: 1.5rem; background: rgba(102, 2, 60, 0.03); border: 1px solid var(--card-border); border-radius: 12px; padding: 1.25rem; font-size: 0.85rem; line-height: 1.45; color: var(--text-secondary);">
-                        <strong style="display: block; margin-bottom: 0.5rem; color: var(--text-primary); font-size: 0.9rem;">
-                            <i data-lucide="info" style="width: 16px; height: 16px; display: inline-block; vertical-align: middle; margin-right: 4px; color: var(--primary);"></i>Шаблоны сообщений для студентов
-                        </strong>
-                        <p style="margin: 0 0 0.75rem 0;">Эти сообщения будут отображаться в личном кабинете абитуриента после обработки его заявки:</p>
-                        
-                        <div style="margin-bottom: 0.75rem; padding-left: 0.75rem; border-left: 2px solid var(--success);">
-                            <strong style="color: var(--success); font-size: 0.78rem; text-transform: uppercase; display: block; margin-bottom: 2px;">Для одобренных (принятых):</strong>
-                            "Поздравляем с успешным зачислением! Пожалуйста, свяжитесь с приёмной комиссией для оформления документов и договора."
-                        </div>
-                        
-                        <div style="padding-left: 0.75rem; border-left: 2px solid var(--danger);">
-                            <strong style="color: var(--danger); font-size: 0.78rem; text-transform: uppercase; display: block; margin-bottom: 2px;">Для отклоненных:</strong>
-                            "К сожалению, ваша заявка отклонена, так как ваш конкурсный балл ниже проходного порога по данному направлению. Желаем удачи!"
-                        </div>
-                    </div>
                 </div>
                 
                 <!-- Panel 3: Verification status & requisites -->

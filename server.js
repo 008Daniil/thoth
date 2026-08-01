@@ -1532,29 +1532,50 @@ app.get('/api/v1/dashboard/:uni_id/stats', (req, res) => {
 
     const period = req.query.period || '7d';
     let daysCount = 7;
-    if (period === '30d') daysCount = 30;
-    if (period === '90d') daysCount = 90;
+    let startDate = new Date();
+    let endDate = new Date();
 
-    const now = new Date();
-    const startDate = new Date();
-    startDate.setDate(now.getDate() - daysCount + 1);
+    if (period === '30d') {
+        daysCount = 30;
+        startDate.setDate(endDate.getDate() - daysCount + 1);
+    } else if (period === '90d') {
+        daysCount = 90;
+        startDate.setDate(endDate.getDate() - daysCount + 1);
+    } else if (period === 'custom') {
+        const sD = req.query.start_date;
+        const eD = req.query.end_date;
+        if (sD && eD) {
+            startDate = new Date(sD);
+            endDate = new Date(eD);
+            const diffTime = Math.abs(endDate - startDate);
+            daysCount = Math.max(1, Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1);
+        } else {
+            daysCount = 14;
+            startDate.setDate(endDate.getDate() - daysCount + 1);
+        }
+    } else {
+        daysCount = 7;
+        startDate.setDate(endDate.getDate() - daysCount + 1);
+    }
+
     startDate.setHours(0, 0, 0, 0);
+    endDate.setHours(23, 59, 59, 999);
 
     // Filter applications within selected timeframe
     const uniApps = db.applications.filter(a => {
         if (a.university_id !== req.params.uni_id) return false;
         const appDate = new Date(a.created_at || a.date);
-        return appDate >= startDate;
+        return appDate >= startDate && appDate <= endDate;
     });
 
     const appsCount = uniApps.length;
 
-    // Scale views relative to period (7d: 20%, 30d: 60%, 90d/all: 100%)
-    let viewsScale = 0.2;
-    if (period === '30d') viewsScale = 0.6;
-    if (period === '90d') viewsScale = 1.0;
+    // Scale views dynamically based on days count
+    let viewsScale = Math.min(1.0, Math.max(0.1, daysCount / 90));
 
-    const totalViewsAllTime = Math.max(uni.views || 0, db.applications.filter(a => a.university_id === req.params.uni_id).length);
+    // Fallback: simulated real views should always be significantly larger than appsCount (e.g. appsCount * 5 + 12)
+    const uniAppsAllTime = db.applications.filter(a => a.university_id === req.params.uni_id);
+    const totalViewsAllTime = Math.max(uni.views || 0, uniAppsAllTime.length * 5 + 12);
     const views = Math.max(Math.round(totalViewsAllTime * viewsScale), appsCount);
     const conv = views > 0 ? parseFloat(((appsCount / views) * 100).toFixed(2)) : 0.00;
 
@@ -1564,8 +1585,8 @@ app.get('/api/v1/dashboard/:uni_id/stats', (req, res) => {
     const remainder = views % daysCount;
 
     for (let i = 0; i < daysCount; i++) {
-        const date = new Date();
-        date.setDate(now.getDate() - (daysCount - 1 - i));
+        const date = new Date(startDate);
+        date.setDate(startDate.getDate() + i);
         const dateStr = date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
 
         const dayApps = uniApps.filter(a => {

@@ -3486,6 +3486,46 @@ body.dark-theme .step-connector {
     background: #ec4899;
 }
 
+/* Timeframe Selector & Buttons styling for light and dark themes */
+.timeframe-selector {
+    display: flex;
+    gap: 0.25rem;
+    background: var(--bg-accent);
+    border: 1px solid var(--card-border);
+    padding: 3px;
+    border-radius: 8px;
+    align-items: center;
+}
+.timeframe-btn {
+    padding: 0.35rem 0.75rem;
+    font-size: 0.8rem;
+    border-radius: 6px;
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    outline: none;
+}
+.timeframe-btn:hover {
+    color: var(--text-primary);
+}
+.timeframe-btn.active {
+    background: var(--primary) !important;
+    color: #FFFFFF !important;
+}
+body.dark-theme .timeframe-btn {
+    color: #A396A6;
+}
+body.dark-theme .timeframe-btn:hover {
+    color: #FFFFFF;
+}
+body.dark-theme .timeframe-btn.active {
+    background: var(--primary) !important;
+    color: #000000 !important;
+}
+
 
 
 
