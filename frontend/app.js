@@ -3780,7 +3780,8 @@ function openLeadStudentModal(lead) {
     
     const tgHandle = (lead.student && lead.student.telegram) ? lead.student.telegram : "";
     const tgDisplay = tgHandle ? (tgHandle.startsWith("@") ? tgHandle : `@${tgHandle}`) : "не указан";
-    document.getElementById("lead-modal-telegram").textContent = tgDisplay;
+    const tgElem = document.getElementById("lead-modal-telegram");
+    if (tgElem) tgElem.textContent = tgDisplay;
 
     const specName = (lead.specialty && lead.specialty.name) ? lead.specialty.name : "Общее направление";
     const specCode = (lead.specialty && lead.specialty.code) ? lead.specialty.code : "";
