@@ -1,3 +1,15 @@
+// Safe fallback for Lucide Icons CDN if it fails to load or resolves slow
+if (typeof window !== "undefined" && !window.lucide) {
+    window.lucide = {
+        createIcons: () => {
+            console.warn("Lucide library was not loaded or is offline. Icons could not be initialized.");
+        }
+    };
+}
+if (typeof lucide === "undefined") {
+    var lucide = window.lucide;
+}
+
 // --- GLOBAL CONSTANTS & CONFIG ---
 const API_BASE = window.location.origin;
 // Fixed UUID for default university
