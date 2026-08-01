@@ -155,6 +155,7 @@ let wizardBannerBase64 = ""; // Base64 string for university header banner
 let wizardCampusPhotos = []; // Array of Base64 strings for campus presentation slides
 let loadedLeads = []; // Store currently fetched applications for sorting
 let currentAdvantages = []; // Store current university profile advantages (0-3)
+let myUniversity = null; // Store current partner university profile data globally
 
 // Image Scaling & Crop Editor State
 let cropState = {
@@ -1430,7 +1431,24 @@ function setupEventListeners() {
     if (partnerCustomSettingsFormDrawer) {
         partnerCustomSettingsFormDrawer.addEventListener("submit", async (e) => {
             e.preventDefault();
-            if (!myUniversity) return;
+            
+            if (!myUniversity) {
+                if (currentPartner) {
+                    try {
+                        const profileRes = await fetch(`${API_BASE}/api/v1/universities/my-profile/${currentPartner.id}`);
+                        if (profileRes.ok) {
+                            myUniversity = await profileRes.json();
+                        }
+                    } catch (err) {
+                        console.error("Self-healing myUniversity failed:", err);
+                    }
+                }
+            }
+
+            if (!myUniversity || !myUniversity.id) {
+                showToast("Ошибка: Профиль университета не найден. Пожалуйста, сначала заполните профиль ВУЗа.", "danger");
+                return;
+            }
 
             const acceptedMsg = document.getElementById("settings-accepted-msg-drawer").value.trim();
             const rejectedMsg = document.getElementById("settings-rejected-msg-drawer").value.trim();
@@ -1468,7 +1486,24 @@ function setupEventListeners() {
     if (settingsVerificationFormDrawer) {
         settingsVerificationFormDrawer.addEventListener("submit", async (e) => {
             e.preventDefault();
-            if (!myUniversity) return;
+            
+            if (!myUniversity) {
+                if (currentPartner) {
+                    try {
+                        const profileRes = await fetch(`${API_BASE}/api/v1/universities/my-profile/${currentPartner.id}`);
+                        if (profileRes.ok) {
+                            myUniversity = await profileRes.json();
+                        }
+                    } catch (err) {
+                        console.error("Self-healing myUniversity failed:", err);
+                    }
+                }
+            }
+
+            if (!myUniversity || !myUniversity.id) {
+                showToast("Ошибка: Профиль университета не найден. Пожалуйста, сначала заполните профиль ВУЗа.", "danger");
+                return;
+            }
 
             const licenseVal = document.getElementById("settings-license-number-drawer").value.trim();
             const requisitesVal = document.getElementById("settings-org-requisites-drawer").value.trim();
