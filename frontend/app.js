@@ -3504,6 +3504,10 @@ async function renderPartnerCabinet() {
             document.getElementById("partner-wizard-view").style.display = "none";
             document.getElementById("partner-dashboard-view").style.display = "block";
             document.getElementById("partner-sidebar-name").textContent = myUniversity.name;
+            const dashUniNameElem = document.getElementById("dash-uni-name");
+            if (dashUniNameElem) {
+                dashUniNameElem.textContent = myUniversity.name;
+            }
             
             const logoElem = document.getElementById("partner-sidebar-logo");
             if (logoElem) {
