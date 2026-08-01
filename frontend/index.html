@@ -824,8 +824,7 @@
             <!-- 4.2 PARTNER LOGGED CABINET BLOCK -->
             <div id="partner-cabinet-block" style="display: none;">
                 <div class="partner-layout">
-                    <!-- Left Sidebar Menu -->
-                    <div class="partner-sidebar">
+                    <div class="partner-sidebar" style="display: none;">
                         <div style="display: flex; align-items: center; gap: 0.75rem; padding-bottom: 1rem; border-bottom: 1px solid var(--card-border);">
                             <div id="partner-sidebar-logo" style="width: 40px; height: 40px; border-radius: 8px; background-size: cover; background-position: center; background-color: var(--bg-accent); display: flex; align-items: center; justify-content: center; font-weight: 700; color: var(--primary); border: 1px solid var(--card-border); flex-shrink: 0;">UNI</div>
                             <div style="min-width: 0; flex: 1;">
@@ -1755,7 +1754,7 @@
                             <label style="font-weight: 700; font-size: 0.85rem; color: var(--text-secondary);">
                                 Электронная почта учетной записи
                             </label>
-                            <input type="email" id="settings-account-email-drawer" readonly style="background: var(--bg-accent); cursor: not-allowed; font-weight: 600; width: 100%; box-sizing: border-box;">
+                            <input type="email" id="settings-account-email-drawer" readonly style="background: var(--bg-accent); cursor: default; color: var(--text-primary) !important; font-weight: 600; width: 100%; box-sizing: border-box;">
                         </div>
                         
                         <div class="form-group">
@@ -1763,7 +1762,7 @@
                                 Текущий пароль
                             </label>
                             <div style="position: relative; width: 100%;">
-                                <input type="password" id="settings-account-password-drawer" readonly style="background: var(--bg-accent); cursor: not-allowed; font-weight: 600; width: 100%; box-sizing: border-box; padding-right: 2.75rem;">
+                                <input type="password" id="settings-account-password-drawer" readonly style="background: var(--bg-accent); cursor: default; color: var(--text-primary) !important; font-weight: 600; width: 100%; box-sizing: border-box; padding-right: 2.75rem;">
                                 <button type="button" class="toggle-password-btn" data-target="settings-account-password-drawer" style="position: absolute; right: 0.75rem; top: 50%; transform: translateY(-50%); background: none; border: none; padding: 4px; cursor: pointer; color: var(--text-secondary); display: flex; align-items: center; justify-content: center; outline: none;">
                                     <i data-lucide="eye" style="width: 18px; height: 18px;"></i>
                                 </button>
@@ -1844,6 +1843,24 @@
                             Сохранить настройки
                         </button>
                     </form>
+
+                    <!-- Template help box for accepted/rejected messages -->
+                    <div style="margin-top: 1.5rem; background: rgba(102, 2, 60, 0.03); border: 1px solid var(--card-border); border-radius: 12px; padding: 1.25rem; font-size: 0.85rem; line-height: 1.45; color: var(--text-secondary);">
+                        <strong style="display: block; margin-bottom: 0.5rem; color: var(--text-primary); font-size: 0.9rem;">
+                            <i data-lucide="info" style="width: 16px; height: 16px; display: inline-block; vertical-align: middle; margin-right: 4px; color: var(--primary);"></i>Шаблоны сообщений для студентов
+                        </strong>
+                        <p style="margin: 0 0 0.75rem 0;">Эти сообщения будут отображаться в личном кабинете абитуриента после обработки его заявки:</p>
+                        
+                        <div style="margin-bottom: 0.75rem; padding-left: 0.75rem; border-left: 2px solid var(--success);">
+                            <strong style="color: var(--success); font-size: 0.78rem; text-transform: uppercase; display: block; margin-bottom: 2px;">Для одобренных (принятых):</strong>
+                            "Поздравляем с успешным зачислением! Пожалуйста, свяжитесь с приёмной комиссией для оформления документов и договора."
+                        </div>
+                        
+                        <div style="padding-left: 0.75rem; border-left: 2px solid var(--danger);">
+                            <strong style="color: var(--danger); font-size: 0.78rem; text-transform: uppercase; display: block; margin-bottom: 2px;">Для отклоненных:</strong>
+                            "К сожалению, ваша заявка отклонена, так как ваш конкурсный балл ниже проходного порога по данному направлению. Желаем удачи!"
+                        </div>
+                    </div>
                 </div>
                 
                 <!-- Panel 3: Verification status & requisites -->
