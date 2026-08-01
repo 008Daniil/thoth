@@ -1531,8 +1531,19 @@ function setupEventListeners() {
                 currentPartner.password = newPassword;
                 localStorage.setItem("currentPartner", JSON.stringify(currentPartner));
 
+                // Update current password field value
+                const passInput = document.getElementById("settings-account-password-drawer");
+                if (passInput) passInput.value = newPassword;
+
                 document.getElementById("settings-old-password-drawer").value = "";
                 document.getElementById("settings-new-password-drawer").value = "";
+
+                // Collapse form back
+                if (changePassForm) changePassForm.style.display = "none";
+                if (toggleChangePassBtn) {
+                    toggleChangePassBtn.innerHTML = '<i data-lucide="key" class="btn-icon"></i>Сменить пароль';
+                    lucide.createIcons();
+                }
 
                 showToast("Пароль успешно изменен!", "success");
             } catch (err) {
@@ -1541,15 +1552,38 @@ function setupEventListeners() {
         });
     }
 
-    // Toggle password fields visibility in the sliding drawer using robust setAttribute
-    const toggleSettingsPasswordDrawer = document.getElementById("toggle-settings-password-drawer");
-    if (toggleSettingsPasswordDrawer) {
-        toggleSettingsPasswordDrawer.addEventListener("change", () => {
-            const oldPassInput = document.getElementById("settings-old-password-drawer");
-            const newPassInput = document.getElementById("settings-new-password-drawer");
-            const type = toggleSettingsPasswordDrawer.checked ? "text" : "password";
-            if (oldPassInput) oldPassInput.setAttribute("type", type);
-            if (newPassInput) newPassInput.setAttribute("type", type);
+    // Toggle password fields visibility in the sliding drawer using modern eye icons
+    document.querySelectorAll(".toggle-password-btn").forEach(btn => {
+        btn.addEventListener("click", (e) => {
+            e.preventDefault();
+            const targetId = btn.getAttribute("data-target");
+            const input = document.getElementById(targetId);
+            if (input) {
+                const isPass = input.getAttribute("type") === "password";
+                input.setAttribute("type", isPass ? "text" : "password");
+                
+                // Toggle Lucide icon
+                const icon = btn.querySelector("i");
+                if (icon) {
+                    icon.setAttribute("data-lucide", isPass ? "eye-off" : "eye");
+                }
+                lucide.createIcons();
+            }
+        });
+    });
+
+    // Expand/collapse Change Password form fields inside settings drawer
+    const toggleChangePassBtn = document.getElementById("toggle-change-password-fields-btn");
+    const changePassForm = document.getElementById("settings-password-form-drawer");
+    if (toggleChangePassBtn && changePassForm) {
+        toggleChangePassBtn.addEventListener("click", (e) => {
+            e.preventDefault();
+            const isHidden = changePassForm.style.display === "none" || !changePassForm.style.display;
+            changePassForm.style.display = isHidden ? "flex" : "none";
+            toggleChangePassBtn.innerHTML = isHidden 
+                ? '<i data-lucide="x" class="btn-icon"></i>Отмена'
+                : '<i data-lucide="key" class="btn-icon"></i>Сменить пароль';
+            lucide.createIcons();
         });
     }
 
@@ -3381,6 +3415,8 @@ async function renderPartnerCabinet() {
             if (licenseInput) licenseInput.value = myUniversity.license_number || "";
             if (reqInput) reqInput.value = myUniversity.org_requisites || "";
             if (emailInput) emailInput.value = currentPartner.personal_email || currentPartner.email || "";
+            const passInput = document.getElementById("settings-account-password-drawer");
+            if (passInput) passInput.value = currentPartner.password || "";
             renderVerificationStatus(myUniversity.status);
             loadPartnerDashboardData(myUniversity.id);
         }

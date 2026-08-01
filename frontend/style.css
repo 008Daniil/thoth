@@ -3408,7 +3408,7 @@ body.dark-theme .step-connector {
     overflow-y: auto;
     padding: 2rem;
     display: grid;
-    grid-template-columns: 240px 1fr;
+    grid-template-columns: 1fr 240px;
     gap: 2rem;
 }
 @media (max-width: 768px) {
@@ -3418,8 +3418,10 @@ body.dark-theme .step-connector {
     }
     .settings-tab-menu {
         border-right: none !important;
+        border-left: none !important;
         border-bottom: 1px solid var(--card-border);
         padding-right: 0 !important;
+        padding-left: 0 !important;
         padding-bottom: 1rem;
         flex-direction: row !important;
         overflow-x: auto;
@@ -3430,8 +3432,8 @@ body.dark-theme .step-connector {
     display: flex;
     flex-direction: column;
     gap: 1.25rem;
-    padding-right: 1.5rem;
-    border-right: 1px solid var(--card-border);
+    padding-left: 1.5rem;
+    border-left: 1px solid var(--card-border);
 }
 .settings-tab-item {
     display: flex;
