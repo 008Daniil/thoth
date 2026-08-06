@@ -17,7 +17,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <!-- Main Style Sheet -->
-    <link rel="stylesheet" href="/frontend/style.css?v=62.0">
+    <link rel="stylesheet" href="/frontend/style.css?v=74.0">
 </head>
 <body>
 
@@ -476,6 +476,8 @@
                 </div>
             </div>
 
+            </div>
+
             <!-- Photos Tab Panel -->
             <div id="uni-details-tab-photos" class="uni-details-tab-panel" style="display: none;">
                 <div class="glass-card" style="padding: 2.25rem; border-radius: 20px; border: 1px solid var(--card-border); background: var(--card-bg);">
@@ -488,16 +490,37 @@
         </section>
 
         <!-- 3. STUDENT PROFILE / PASSPORT PAGE -->
-        <section id="page-profile" class="page-section">
-            <button class="btn btn-back back-to-home-btn" style="margin-bottom: 2rem;">
-                <i data-lucide="arrow-left"></i> Назад
-            </button>
-            <div class="hero-section text-left" style="margin-top: 0.5rem;">
-                <h1 class="page-title">Профиль абитуриента</h1>
-                <p class="hero-subtitle">Ваши личные данные, академические достижения и поданные заявки в едином защищенном профиле.</p>
+        <section id="page-profile" class="page-section" style="position: relative;">
+            <!-- Top Actions (Edit Profile + Settings) aligned under theme toggle -->
+            <div id="sp-top-actions" style="position: absolute; top: 0; right: 0; display: none; gap: 0.75rem; z-index: 100;">
+                <!-- Edit Profile Button -->
+                <button class="sp-edit-profile-btn" id="sp-edit-profile-btn" style="padding: 0.6rem 1.2rem; border-radius: 12px; background: var(--card-bg); border: 1px solid var(--card-border); color: var(--text-primary); font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; transition: border-color 0.2s;">
+                    <i data-lucide="edit-3" style="width: 16px; height: 16px;"></i>
+                    Редактировать профиль
+                </button>
+                <!-- Settings Button -->
+                <button class="sp-settings-btn" id="sp-settings-btn" style="padding: 0.6rem 1.2rem; border-radius: 12px; background: var(--card-bg); border: 1px solid var(--card-border); color: var(--text-primary); font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; transition: border-color 0.2s;">
+                    <i data-lucide="settings" style="width: 16px; height: 16px;"></i>
+                    Настройки
+                </button>
             </div>
 
-            <!-- Login Check Area (hidden to prevent JS breaking, but removed from UI layout) -->
+            <!-- Student Profile Edit Mode Top Bar -->
+            <div class="editor-mode-bar" id="student-editor-mode-bar" style="display: none; margin: 0 4% 2rem 4%;">
+                <div class="editor-mode-bar-left">
+                    <i data-lucide="edit-3" style="width:18px;height:18px;color:var(--primary);"></i>
+                    <span>Режим редактирования профиля — изменения видны только вам</span>
+                </div>
+                <div class="editor-mode-bar-right" style="display: flex; gap: 0.75rem;">
+                    <button class="btn btn-outline btn-sm" id="student-editor-cancel-btn" style="height: 38px; display: inline-flex; align-items: center; justify-content: center; padding: 0 1rem; border-radius: 8px;">Отмена</button>
+                    <button class="btn btn-primary btn-sm" id="student-editor-save-btn" style="height: 38px; display: inline-flex; align-items: center; justify-content: center; padding: 0 1.25rem; border-radius: 8px;">Сохранить изменения</button>
+                </div>
+            </div>
+            <button class="btn btn-back back-to-home-btn" style="margin-bottom: 2rem; display: none;">
+                <i data-lucide="arrow-left"></i> Назад
+            </button>
+
+            <!-- Auth Bar (hidden, used for JS login flow) -->
             <div class="auth-bar glass-card" style="display: none;">
                 <div class="auth-bar-inputs">
                     <i data-lucide="smartphone" class="input-icon"></i>
@@ -512,219 +535,207 @@
                 </div>
             </div>
 
-            <!-- Dedicated Full-Width AI Career Orientation Hub -->
-            <div class="glass-card ai-profile-card" style="margin-bottom: 2.5rem; border: 1px solid var(--card-border); padding: 1.75rem; border-radius: 20px; width: 100%;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
-                    <div style="display: flex; align-items: center; gap: 0.75rem;">
-                        <div style="width: 40px; height: 40px; border-radius: 12px; background: var(--text-primary); color: var(--bg); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1rem;">
-                            ТОТ
+            <!-- Not Logged In View -->
+            <div id="sp-logged-out-view" class="glass-card" style="max-width: 500px; margin: 4rem auto; padding: 3rem 2rem; text-align: center; border-radius: 20px; border: 1px solid var(--card-border); display: none;">
+                <i data-lucide="lock" style="width: 48px; height: 48px; color: var(--text-secondary); margin-bottom: 1.5rem; display: inline-block;"></i>
+                <h3 style="font-family: var(--font-heading); font-size: 1.5rem; color: var(--text-primary); margin-bottom: 0.75rem;">Доступ ограничен</h3>
+                <p style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.5; margin-bottom: 2rem;">Пожалуйста, войдите в свой профиль или создайте новый, чтобы получить доступ к цифровому паспорту абитуриента, профориентации и поданным заявкам.</p>
+                <button class="btn btn-primary" id="sp-logged-out-login-btn" style="width: 100%; height: 48px; font-weight: 600;">
+                    Войти в профиль
+                </button>
+            </div>
+
+            <!-- Student Profile Layout -->
+            <div class="student-profile-layout" id="student-profile-content" style="display: none;">
+                <!-- LEFT SIDEBAR -->
+                <div class="sp-sidebar">
+                    <!-- Profile Card -->
+                    <div class="sp-profile-card">
+                        <div class="sp-avatar" id="sp-avatar">
+                            <span id="sp-avatar-letter">Д</span>
                         </div>
-                        <div>
-                            <h3 style="margin: 0; font-size: 1.2rem; font-weight: 700; color: var(--text-primary);">
-                                ИИ-Профориентатор ТОТ
-                            </h3>
-                            <span style="font-size: 0.82rem; color: var(--text-secondary);">Персональный интерактивный подбор профессии и университета</span>
+                        <h3 class="sp-name" id="sp-name">Новый абитуриент</h3>
+                        <p class="sp-meta" id="sp-meta">—</p>
+                        <button class="sp-share-btn" id="sp-share-btn">Поделиться</button>
+                    </div>
+
+                    <!-- Hard Skills Card -->
+                    <div class="sp-skills-card">
+                        <h4>Hard Skills</h4>
+                        <ul class="sp-skills-list" id="sp-skills-list">
+                            <li><span class="sp-skill-num">—</span> Навыки не указаны</li>
+                        </ul>
+                    </div>
+
+                    <!-- Applications Status Card (Clickable to show history modal) -->
+                    <div class="sp-apps-card" id="sp-apps-card" style="cursor: pointer; transition: border-color 0.2s; border: 1px solid var(--card-border);" onmouseover="this.style.borderColor='var(--text-muted)'" onmouseout="this.style.borderColor='var(--card-border)'">
+                        <div class="sp-apps-icon">
+                            <i data-lucide="file-text" style="width: 20px; height: 20px; color: var(--text-secondary);"></i>
+                        </div>
+                        <div class="sp-apps-count">
+                            <span id="sp-apps-count-num">0</span> Активных заявок
+                            <small id="sp-apps-action-text">Нет решений</small>
                         </div>
                     </div>
-                    <button class="btn btn-outline btn-sm" id="reset-ai-chat-btn" style="font-size: 0.8rem; padding: 0.4rem 0.85rem;">
-                        <i data-lucide="rotate-ccw" class="btn-icon"></i>Сбросить чат
-                    </button>
                 </div>
 
-                <!-- Auth Lock notice if student is not authorized -->
-                <div id="ai-auth-locked-notice" style="display: none; padding: 3rem 1.5rem; text-align: center; background: var(--bg-accent); border-radius: 16px; border: 1px dashed var(--card-border);">
-                    <i data-lucide="lock" style="width: 40px; height: 40px; color: var(--text-muted); margin-bottom: 0.75rem;"></i>
-                    <h4 style="font-size: 1.1rem; margin-bottom: 0.35rem; color: var(--text-primary); font-weight: 700;">Доступно только авторизованным пользователям</h4>
-                    <p style="font-size: 0.88rem; color: var(--text-secondary); max-width: 460px; margin: 0 auto 1.25rem auto; line-height: 1.45;">Пожалуйста, войдите в свой профиль или пройдите регистрацию, чтобы получить профориентацию от ИИ.</p>
-                    <button class="btn btn-primary btn-sm" id="ai-lock-login-btn">Войти в профиль</button>
-                </div>
+                <!-- RIGHT MAIN CONTENT -->
+                <div class="sp-main">
 
-                <!-- Active Chat Container (visible when authorized) -->
-                <div id="ai-profile-chat-wrapper" style="display: flex; flex-direction: column; height: 460px; background: var(--card-bg); border-radius: 16px; border: 1px solid var(--card-border); overflow: hidden;">
-                    <!-- Messages Area -->
-                    <div id="ai-chat-messages" style="flex: 1; padding: 1.5rem; overflow-y: auto; display: flex; flex-direction: column; gap: 1rem; background: var(--card-bg);">
-                        <!-- Dynamic Bubbles loaded by JS -->
-                    </div>
-
-                    <!-- Quick Action Choice Buttons -->
-                    <div id="ai-quick-buttons" style="padding: 0.65rem 1.5rem; display: flex; gap: 0.65rem; flex-wrap: wrap; background: var(--card-bg);">
-                        <!-- Dynamic Quick Action Buttons -->
-                    </div>
-
-                    <!-- Footer / Input Bar -->
-                    <div style="padding: 1rem 1.5rem; background: var(--bg-accent); border-top: 1px solid var(--card-border);">
-                        <div style="position: relative;">
-                            <textarea id="ai-chat-input" rows="2" maxlength="2000" placeholder="Например: Люблю математику, монтирую видео и хочу работать удаленно" style="width: 100%; padding: 0.85rem 3.5rem 0.85rem 1rem; font-size: 0.92rem; border-radius: 12px; border: 1px solid var(--card-border); background: var(--card-bg); color: var(--text-primary); resize: none; outline: none; line-height: 1.4;"></textarea>
-                            <button id="ai-chat-send-btn" style="position: absolute; right: 0.75rem; bottom: 0.85rem; background: var(--text-primary); color: var(--bg); border: none; width: 36px; height: 36px; border-radius: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: opacity 0.2s ease;">
-                                <i data-lucide="send" style="width: 17px; height: 17px;"></i>
-                            </button>
+                    <!-- Merits Section -->
+                    <div class="sp-merits-section">
+                        <h2>Заслуги</h2>
+                        <div class="sp-merits-grid" id="sp-merits-container">
+                            <!-- Populated dynamically by JS -->
                         </div>
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.4rem; padding: 0 0.2rem;">
-                            <span style="font-size: 0.75rem; color: var(--text-muted);">Лимит ответа — 2000 символов</span>
-                            <span id="ai-char-counter" style="font-size: 0.78rem; color: var(--text-muted); font-weight: 600;">0/2000</span>
+                    </div>
+
+                    <!-- Achievements Section -->
+                    <div class="sp-achievements-section">
+                        <h2>Достижения</h2>
+                        <div class="sp-achievements-list" id="sp-achievements-list">
+                            <div class="sp-achievement-row">
+                                <span class="sp-ach-title">Достижения не указаны</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Portfolio Section -->
+                    <div class="sp-portfolio-section">
+                        <h2>Портфолио</h2>
+                        <div class="sp-portfolio-grid" id="sp-portfolio-grid">
+                            <div class="sp-portfolio-add" id="sp-add-portfolio-btn">
+                                <i data-lucide="plus" style="width: 18px; height: 18px;"></i>
+                                Добавить проект
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="profile-grid">
-                <!-- Left: Digital Passport Info -->
-                <div class="profile-info-column">
-                    <div class="glass-card passport-card">
-                        <div class="passport-header">
-                            <div class="avatar-wrapper">
-                                <div class="avatar-placeholder" id="pass-avatar-letter">Д</div>
-                            </div>
-                            <div class="passport-name-wrapper" style="position: relative; width: 100%;">
-                                <h3 id="pass-fullname">Новый абитуриент</h3>
-                                <p class="passport-phone" id="pass-phone">Номер не указан</p>
-                                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.5rem; width: 100%;">
-                                    <span class="passport-badge">Профиль абитуриента</span>
-                                    <button class="btn btn-outline btn-sm" id="student-logout-btn" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; border-color: rgba(102, 2, 60, 0.2); color: var(--primary);">Выйти</button>
-                                </div>
-                            </div>
+            <!-- Student Profile Layout (Edit Mode) -->
+            <div class="student-profile-layout" id="student-profile-edit-content" style="display: none;">
+                <!-- LEFT SIDEBAR -->
+                <div class="sp-sidebar">
+                    <!-- Profile Card (Edit Mode) -->
+                    <div class="sp-profile-card">
+                        <div class="sp-avatar">
+                            <span id="sp-edit-avatar-letter">Д</span>
                         </div>
-
-                        <div class="passport-details">
-                            <div class="detail-item">
-                                <span class="detail-label">Языковой сертификат (IELTS)</span>
-                                <span class="detail-value" id="pass-ielts">—</span>
-                            </div>
-                            <div class="detail-item">
-                                <span class="detail-label">Академический тест (SAT)</span>
-                                <span class="detail-value" id="pass-sat">—</span>
-                            </div>
-                            <div class="detail-item">
-                                <span class="detail-label">Средний балл (GPA)</span>
-                                <span class="detail-value" id="pass-gpa">—</span>
-                            </div>
-                            <div class="detail-item">
-                                <span class="detail-label">Дата рождения</span>
-                                <span class="detail-value" id="pass-birthday">—</span>
-                            </div>
-                            <div class="detail-item bio-item">
-                                <span class="detail-label">О себе</span>
-                                <p class="detail-value-text" id="pass-bio">Информация не заполнена.</p>
-                            </div>
-                            <div class="detail-item achievements-item">
-                                <span class="detail-label">Дополнительные достижения</span>
-                                <p class="detail-value-text" id="pass-achievements">Нет данных.</p>
-                            </div>
+                        <div class="form-group" style="margin-bottom: 1rem; text-align: left;">
+                            <label style="font-weight: 700; font-size: 0.8rem; color: var(--text-secondary); display: block; margin-bottom: 0.4rem;">ФИО полностью</label>
+                            <input type="text" id="ss-edit-fullname" placeholder="Имя Фамилия" style="width: 100%; font-weight: 600; font-size: 1rem; padding: 0.6rem 0.8rem; border-radius: 8px; border: 1px solid var(--card-border); background: var(--bg-accent); color: var(--text-primary); outline: none;">
                         </div>
-
-                        <div class="passport-footer">
-                            <i data-lucide="shield-check" class="success-icon"></i>
-                            <span>Защищено стандартом шифрования UniSafe</span>
+                        <div class="form-group" style="margin-bottom: 0; text-align: left;">
+                            <label style="font-weight: 700; font-size: 0.8rem; color: var(--text-secondary); display: block; margin-bottom: 0.4rem;">Дата рождения</label>
+                            <input type="date" id="ss-edit-birthday" style="width: 100%; padding: 0.6rem 0.8rem; border-radius: 8px; border: 1px solid var(--card-border); background: var(--bg-accent); color: var(--text-primary); outline: none;">
                         </div>
                     </div>
 
-                    <!-- Active Applications List -->
-                    <div class="glass-card profile-applications-card">
-                        <h3>Ваши заявки</h3>
-                        <div class="applications-timeline" id="profile-applications-list">
-                            <div class="no-applications">
-                                <i data-lucide="folder-open"></i>
-                                <p>У вас пока нет активных заявок. Заполните форму справа, чтобы подать первую заявку.</p>
-                            </div>
+                    <!-- Hard Skills Card (Edit Mode) -->
+                    <div class="sp-skills-card">
+                        <h4 style="margin-bottom: 0.5rem;">Hard Skills</h4>
+                        <p style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.75rem;">Введите навыки (каждый с новой строки):</p>
+                        <textarea id="ss-edit-skills" rows="6" placeholder="Python&#10;JavaScript&#10;HTML/CSS" style="width: 100%; padding: 0.6rem 0.8rem; border-radius: 8px; border: 1px solid var(--card-border); background: var(--bg-accent); color: var(--text-primary); resize: vertical; font-family: inherit; font-size: 0.9rem; line-height: 1.4; box-sizing: border-box; outline: none;"></textarea>
+                    </div>
+
+                    <!-- Applications Status Card (Read-Only in Edit Mode) -->
+                    <div class="sp-apps-card" style="opacity: 0.6; cursor: not-allowed; border: 1px solid var(--card-border);">
+                        <div class="sp-apps-icon">
+                            <i data-lucide="file-text" style="width: 20px; height: 20px; color: var(--text-secondary);"></i>
+                        </div>
+                        <div class="sp-apps-count">
+                            <span id="sp-edit-apps-count-num">0</span> Активных заявок
+                            <small>Не редактируется в режиме правки</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- RIGHT MAIN CONTENT -->
+                <div class="sp-main">
+                    <!-- Merits Section (Edit Mode) -->
+                    <div class="sp-merits-section">
+                        <div style="display: flex; align-items: center; margin-bottom: 1.5rem; justify-content: space-between;">
+                            <h2 style="margin: 0;">Заслуги</h2>
+                            <button type="button" class="btn btn-outline btn-sm" id="ss-edit-merits-btn" style="height: 36px; padding: 0 1rem; border-radius: 8px; font-size: 0.85rem; font-weight: 600; display: flex; align-items: center; gap: 0.4rem; cursor: pointer;">
+                                <i data-lucide="edit-2" style="width: 14px; height: 14px;"></i>
+                                Редактировать заслуги
+                            </button>
+                        </div>
+                        <div class="sp-merits-grid" id="sp-edit-merits-container">
+                            <!-- Populated dynamically by JS -->
                         </div>
                     </div>
 
-                    <!-- Logout button at the bottom of the left column -->
-                    <div style="margin-top: 1.5rem; width: 100%;">
-                        <button class="btn btn-outline" id="profile-logout-btn" style="border-color: rgba(220, 53, 69, 0.25); color: #dc3545; width: 100%; height: 48px; display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; font-weight: 500;">
-                            <i data-lucide="log-out" style="width: 18px; height: 18px;"></i> Выйти из аккаунта
+                    <!-- Details Section (Edit Mode - Bio) -->
+                    <div class="sp-achievements-section" style="margin-bottom: 2rem;">
+                        <h2>О себе</h2>
+                        <textarea id="ss-edit-bio" rows="4" placeholder="Ваши академические интересы, увлечения..." style="width: 100%; padding: 0.75rem 1rem; border-radius: 12px; border: 1px solid var(--card-border); background: var(--bg-accent); color: var(--text-primary); resize: vertical; font-family: inherit; font-size: 0.95rem; line-height: 1.5; box-sizing: border-box; outline: none;"></textarea>
+                    </div>
+
+                    <!-- Achievements Section (Edit Mode) -->
+                    <div class="sp-achievements-section" style="margin-bottom: 2rem;">
+                        <h2>Достижения</h2>
+                        <p style="font-size: 0.78rem; color: var(--text-secondary); margin-bottom: 0.75rem;">Введите ваши достижения (каждое с новой строки):</p>
+                        <textarea id="ss-edit-achievements" rows="5" placeholder="Победитель олимпиады по физике 2024&#10;Капитан футбольной команды" style="width: 100%; padding: 0.75rem 1rem; border-radius: 12px; border: 1px solid var(--card-border); background: var(--bg-accent); color: var(--text-primary); resize: vertical; font-family: inherit; font-size: 0.95rem; line-height: 1.5; box-sizing: border-box; outline: none;"></textarea>
+                    </div>
+
+                    <!-- Portfolio Section (Edit Mode) -->
+                    <div class="sp-portfolio-section">
+                        <h2>Портфолио</h2>
+                        <p style="font-size: 0.78rem; color: var(--text-secondary); margin-bottom: 0.75rem;">Введите проекты (каждый с новой строки в формате: Название проекта | Описание):</p>
+                        <textarea id="ss-edit-portfolio" rows="6" placeholder="Мой веб-сайт | Адаптивный концепт на HTML/CSS&#10;Анализ данных | Скрипты анализа данных на Python" style="width: 100%; padding: 0.75rem 1rem; border-radius: 12px; border: 1px solid var(--card-border); background: var(--bg-accent); color: var(--text-primary); resize: vertical; font-family: inherit; font-size: 0.95rem; line-height: 1.5; box-sizing: border-box; outline: none;"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI Proforientator Floating Action Button -->
+            <button class="sp-ai-fab" id="sp-ai-fab" style="display: none;">
+                <i data-lucide="sparkles" style="width: 16px; height: 16px; display: inline-block; vertical-align: middle; margin-right: 4px;"></i>
+                ИИ-Профориентатор
+            </button>
+
+            <!-- Applications Timeline Modal -->
+            <div id="sp-apps-modal-backdrop" class="sp-edit-modal-backdrop" onclick="closeAppsModal();">
+                <div class="sp-edit-modal" style="width: 600px; max-width: 95%;" onclick="event.stopPropagation();">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; border-bottom: 1px solid var(--card-border); padding-bottom: 1rem;">
+                        <h3 style="margin: 0; font-family: var(--font-heading); font-size: 1.4rem; color: var(--text-primary);">История ваших заявок</h3>
+                        <button class="close-btn" onclick="closeAppsModal();" style="width: 36px; height: 36px; border-radius: 10px; border: 1px solid var(--card-border); background: var(--card-bg); color: var(--text-primary); cursor: pointer; display: flex; align-items: center; justify-content: center;">
+                            <i data-lucide="x" style="width: 18px; height: 18px;"></i>
                         </button>
                     </div>
-                </div>
-
-                <!-- Right: Application Form -->
-                <div class="profile-form-column">
-                    <div class="glass-card form-card">
-                        <h3>Редактирование профиля</h3>
-                        <p class="form-sub" id="profile-form-subtitle">Заполните поля ниже, чтобы обновить ваши данные.</p>
-                        
-                        <div id="target-university-banner" class="glass-card" style="display: none; padding: 1rem; border-color: rgba(102, 2, 60, 0.15); margin-bottom: 1.5rem; background: rgba(102, 2, 60, 0.03);">
-                            <p style="margin: 0; font-weight: 500; font-size: 0.95rem; color: var(--primary);">
-                                <i data-lucide="graduation-cap" style="width:16px; height:16px; display:inline-block; vertical-align:middle; margin-right:6px;"></i>
-                                Вы подаете документы в: <span id="banner-uni-name" style="font-weight: 600;">—</span>
-                            </p>
-                            <p style="margin: 0.25rem 0 0 0; font-size: 0.85rem; color: var(--text-secondary);">
-                                Специальность: <span id="banner-spec-name">—</span>
-                            </p>
-                        </div>
-                        
-                        <form id="apply-form" class="custom-form" enctype="multipart/form-data">
-                            <div class="form-group">
-                                <label for="form-fullname">ФИО полностью <span class="required">*</span></label>
-                                <input type="text" id="form-fullname" placeholder="Иванов Иван Иванович" required>
-                            </div>
-
-                            <div class="form-group">
-                                <label for="form-phone">Телефон для связи <span class="required">*</span></label>
-                                <input type="tel" id="form-phone" placeholder="Ваш номер телефона" required>
-                            </div>
-
-                            <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem;">
-                                <div class="form-group">
-                                    <label for="form-ielts">Балл IELTS (если есть)</label>
-                                    <input type="number" id="form-ielts" step="0.5" min="0" max="9" placeholder="6.5">
-                                </div>
-                                <div class="form-group">
-                                    <label for="form-sat">Балл SAT (если есть)</label>
-                                    <input type="number" id="form-sat" min="400" max="1600" placeholder="1250">
-                                </div>
-                                <div class="form-group">
-                                    <label for="form-gpa">Балл GPA (если есть)</label>
-                                    <input type="number" id="form-gpa" step="0.01" min="0" max="5" placeholder="4.8">
-                                </div>
-                            </div>
-
-                            <!-- Hidden university select inputs -->
-                            <div class="form-group" style="display: none;">
-                                <label for="form-university">Выбор университета</label>
-                                <select id="form-university">
-                                    <option value="" disabled selected>Выберите университет...</option>
-                                    <!-- Populated by JS -->
-                                </select>
-                            </div>
-
-                            <div class="form-group" id="form-specialty-group" style="display: none;">
-                                <label for="form-specialty">Выбор специальности <span class="required">*</span></label>
-                                <select id="form-specialty" disabled>
-                                    <option value="" disabled selected>Сначала выберите университет...</option>
-                                    <!-- Populated by JS dynamically based on selected university -->
-                                </select>
-                            </div>
-
-                            <div class="form-group">
-                                <label for="form-bio">Расскажите о себе</label>
-                                <textarea id="form-bio" rows="3" placeholder="Ваши академические интересы, увлечения..."></textarea>
-                            </div>
-
-                            <div class="form-group">
-                                <label for="form-achievements">Особые достижения / Олимпиады</label>
-                                <textarea id="form-achievements" rows="2" placeholder="Призер олимпиады по математике, публикации..."></textarea>
-                            </div>
-
-                            <div class="form-group" style="display: none !important;">
-                                <label for="form-file">Сертификат / Аттестат (PDF или Картинка)</label>
-                                <div class="file-upload-wrapper">
-                                    <input type="file" id="form-file" class="file-upload-input" accept=".pdf,image/*">
-                                    <div class="file-upload-design">
-                                        <i data-lucide="cloud-upload" class="upload-icon"></i>
-                                        <span class="upload-text">Нажмите для выбора файла или перетащите сюда</span>
-                                        <span class="file-selected-name" id="file-name-preview">Файл не выбран</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <button type="submit" class="btn btn-primary btn-full" id="submit-application-btn">
-                                <i data-lucide="send" class="btn-icon"></i>Подать заявку в университет
-                            </button>
-                        </form>
+                    <div class="applications-timeline" id="profile-applications-list" style="max-height: 60vh; overflow-y: auto; padding-right: 0.5rem;">
+                        <!-- Populated dynamically by JS -->
                     </div>
                 </div>
             </div>
+
+            <!-- Hidden form for profile editing (used by existing apply logic) -->
+            <div style="display: none;">
+                <form id="apply-form" class="custom-form" enctype="multipart/form-data">
+                    <input type="text" id="form-fullname" placeholder="Иванов Иван Иванович" required>
+                    <input type="tel" id="form-phone" placeholder="Ваш номер телефона" required>
+                    <input type="number" id="form-ielts" step="0.5" min="0" max="9" placeholder="6.5">
+                    <input type="number" id="form-sat" min="400" max="1600" placeholder="1250">
+                    <input type="number" id="form-gpa" step="0.01" min="0" max="5" placeholder="4.8">
+                    <select id="form-university">
+                        <option value="" disabled selected>Выберите университет...</option>
+                    </select>
+                    <div id="form-specialty-group" style="display: none;">
+                        <select id="form-specialty" disabled>
+                            <option value="" disabled selected>Сначала выберите университет...</option>
+                        </select>
+                    </div>
+                    <textarea id="form-bio" rows="3" placeholder="Ваши академические интересы, увлечения..."></textarea>
+                    <textarea id="form-achievements" rows="2" placeholder="Призер олимпиады по математике, публикации..."></textarea>
+                    <div style="display: none;">
+                        <input type="file" id="form-file" class="file-upload-input" accept=".pdf,image/*">
+                    </div>
+                    <button type="submit" id="submit-application-btn" style="display: none;">Подать заявку</button>
+                </form>
+                <div id="target-university-banner"></div>
+            </div>
+
         </section>
 
         <!-- 4. PARTNERS (UNIVERSITY CABINET & ONBOARDING WIZARD) PAGE -->
@@ -1524,9 +1535,7 @@
 </div>
 
     <!-- Floating AI Orientation Trigger Button -->
-    <button id="ai-orientation-fab" style="position: fixed; bottom: 2rem; right: 2rem; z-index: 999; background: var(--text-primary); color: var(--bg); border: 1px solid var(--card-border); padding: 0.85rem 1.4rem; border-radius: 50px; font-weight: 700; font-size: 0.95rem; cursor: pointer; box-shadow: 0 8px 30px rgba(0,0,0,0.25); display: flex; align-items: center; gap: 0.6rem; transition: transform 0.2s ease, box-shadow 0.2s ease;">
-        <i data-lucide="sparkles" style="width: 18px; height: 18px;"></i> ИИ-Профориентатор
-    </button>
+    
 
     <!-- AI Orientation Chat Modal -->
     <div id="ai-orientation-modal" class="modal-overlay" style="display: none;">
@@ -1729,7 +1738,7 @@
     <script src="/frontend/grainient.js"></script>
     
     <!-- App Logic Script -->
-    <script src="/frontend/app.js?v=62.0"></script>
+    <script src="/frontend/app.js?v=74.0"></script>
 
     <!-- ====== PARTNER SETTINGS SLIDING DRAWER ====== -->
     <div id="partner-settings-drawer-backdrop" class="settings-drawer-backdrop" onclick="closePartnerSettingsDrawer();"></div>
@@ -1918,6 +1927,84 @@
 
         </div>
     </div>
+
+    <!-- Student Settings Drawer (Full Screen) -->
+    <div id="student-settings-backdrop" class="student-settings-backdrop" onclick="closeStudentSettings();"></div>
+    <div id="student-settings-drawer" class="student-settings-drawer">
+        <div class="settings-drawer-header">
+            <div>
+                <h3 style="font-family: var(--font-heading); font-size: 1.5rem; color: var(--primary); margin: 0;">Настройки аккаунта</h3>
+                <p style="color: var(--text-secondary); font-size: 0.8rem; margin: 2px 0 0 0;">Управление личными данными, безопасностью и сессией</p>
+            </div>
+            <button onclick="closeStudentSettings();" style="background: transparent; border: none; font-size: 2rem; color: var(--text-secondary); cursor: pointer; transition: color 0.2s ease; outline: none; line-height: 1;" onmouseover="this.style.color='var(--primary)'" onmouseout="this.style.color='var(--text-secondary)'">&times;</button>
+        </div>
+        <div class="settings-drawer-body">
+            
+            <!-- Left Side Content Panels -->
+            <div class="settings-tab-content" style="display: flex; flex-direction: column; gap: 1.5rem; min-width: 0; flex: 1;">
+                <!-- Panel 1: Security -->
+                <div id="student-settings-panel-security" class="settings-panel">
+                    <h4 style="font-family: var(--font-heading); font-size: 1.15rem; color: var(--primary); margin: 0 0 1rem 0;">Безопасность</h4>
+                    <div class="custom-form" style="display: flex; flex-direction: column; gap: 1.25rem; margin-top: 0.5rem;">
+                        <div class="form-group">
+                            <label style="font-weight: 700; font-size: 0.85rem; color: var(--text-secondary);">Номер телефона</label>
+                            <input type="text" id="ss-phone" readonly style="background: var(--bg-accent); cursor: default; color: var(--text-primary) !important; font-weight: 600; width: 100%;">
+                        </div>
+                        <div class="form-group">
+                            <label style="font-weight: 700; font-size: 0.85rem; color: var(--text-secondary);">ФИО</label>
+                            <input type="text" id="ss-fullname" readonly style="background: var(--bg-accent); cursor: default; color: var(--text-primary) !important; font-weight: 600; width: 100%;">
+                        </div>
+                        <div class="form-group">
+                            <label style="font-weight: 700; font-size: 0.85rem; color: var(--text-secondary);">Дата рождения</label>
+                            <input type="text" id="ss-birthday" readonly style="background: var(--bg-accent); cursor: default; color: var(--text-primary) !important; font-weight: 600; width: 100%;">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Danger Zone -->
+                <div class="ss-section" style="margin-top: 2rem; border-top: 1px solid var(--card-border); padding-top: 1.5rem;">
+                    <button class="btn btn-outline" id="ss-logout-btn" style="width: 100%; border-color: rgba(220, 53, 69, 0.25); color: #dc3545;">
+                        <i data-lucide="log-out" style="width: 16px; height: 16px;"></i>
+                        Выйти из аккаунта
+                    </button>
+                </div>
+            </div>
+
+            <!-- Right Side Menu -->
+            <div class="settings-tab-menu">
+                <button class="settings-tab-item active" onclick="event.preventDefault();">
+                    Безопасность
+                </button>
+            </div>
+        </div>
+    </div>
+    
+
+    <!-- ====== STUDENT EDIT MERITS MODAL ====== -->
+    <div id="sp-edit-merits-modal-backdrop" class="sp-edit-modal-backdrop" onclick="closeEditMeritsModal();" style="z-index: 10001;">
+        <div class="sp-edit-modal" style="width: 500px; max-width: 95%;" onclick="event.stopPropagation();">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; border-bottom: 1px solid var(--card-border); padding-bottom: 1rem;">
+                <h3 style="margin: 0; font-family: var(--font-heading); font-size: 1.3rem; color: var(--text-primary);">Редактирование заслуг</h3>
+                <button class="close-btn" onclick="closeEditMeritsModal();" style="width: 36px; height: 36px; border-radius: 10px; border: 1px solid var(--card-border); background: var(--card-bg); color: var(--text-primary); cursor: pointer; display: flex; align-items: center; justify-content: center;">
+                    <i data-lucide="x" style="width: 18px; height: 18px;"></i>
+                </button>
+            </div>
+            
+            <div id="student-merits-edit-list" style="display: flex; flex-direction: column; gap: 1rem; max-height: 50vh; overflow-y: auto; padding-right: 0.5rem; margin-bottom: 1.5rem;">
+                <!-- Populated dynamically by JS -->
+            </div>
+
+            <div style="display: flex; justify-content: space-between; gap: 1rem;">
+                <button type="button" class="btn btn-outline" id="student-add-merit-btn" style="flex: 1; height: 44px; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+                    <i data-lucide="plus" style="width: 16px; height: 16px;"></i>
+                    Добавить заслугу
+                </button>
+                <button type="button" class="btn btn-primary" id="student-confirm-merits-btn" style="flex: 1; height: 44px;">
+                    Применить
+                </button>
+            </div>
+        </div>
+    </div>
+    
 </body>
 </html>
-

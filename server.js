@@ -1057,6 +1057,18 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage: storage });
 
+// POST: Upload merit verification document
+app.post('/api/v1/students/merit-document', upload.single('file'), (req, res) => {
+    if (!req.file) {
+        return res.status(400).json({ detail: "No file uploaded" });
+    }
+    res.json({
+        filename: req.file.filename,
+        original_name: req.file.originalname,
+        size: req.file.size
+    });
+});
+
 // --- 5. API ROUTES ---
 
 // GET: Approved Universities
@@ -1094,6 +1106,23 @@ app.get('/api/v1/universities/my-profile/:partner_id', (req, res) => {
     res.json({ ...uni, specialties: specs });
 });
 
+// GET: Fetch partner account details (including password)
+app.get('/api/v1/partners/account/:partner_id', (req, res) => {
+    const db = loadDB();
+    const acc = db.partner_accounts.find(a => a.id === req.params.partner_id);
+    if (!acc) {
+        return res.status(404).json({ detail: 'Account not found' });
+    }
+    res.json({
+        id: acc.id,
+        email: acc.personal_email,
+        contact_name: acc.contact_name,
+        university_email: acc.university_email,
+        password: acc.password,
+        status: acc.status
+    });
+});
+
 // POST: Login representative
 app.post('/api/v1/partners/login', (req, res) => {
     const { email, password } = req.body;
@@ -1120,6 +1149,7 @@ app.post('/api/v1/partners/login', (req, res) => {
         email: acc.personal_email,
         contact_name: acc.contact_name,
         university_email: acc.university_email,
+        password: acc.password,
         status: acc.status
     });
 });
@@ -1180,7 +1210,7 @@ app.post('/api/v1/universities/register', (req, res) => {
 
 // POST: Create or Update Student Profile (from Onboarding Intro Wizard)
 app.post('/api/v1/students/profile', (req, res) => {
-    const { full_name, phone, telegram, birthday, gpa, ielts_score, sat_score } = req.body;
+    const { full_name, phone, telegram, birthday, gpa, ielts_score, sat_score, bio, extra_achievements, hard_skills, achievements, portfolio, merits } = req.body;
     if (!phone || !full_name) {
         return res.status(400).json({ detail: 'Необходимы ФИО и номер телефона' });
     }
@@ -1192,9 +1222,15 @@ app.post('/api/v1/students/profile', (req, res) => {
         student.full_name = full_name;
         if (telegram !== undefined) student.telegram = telegram;
         student.birthday = birthday || student.birthday || null;
-        student.gpa = gpa ? parseFloat(gpa) : (student.gpa || null);
-        if (ielts_score !== undefined) student.ielts_score = ielts_score ? parseFloat(ielts_score) : student.ielts_score;
-        if (sat_score !== undefined) student.sat_score = sat_score ? parseInt(sat_score) : student.sat_score;
+        student.gpa = gpa !== undefined && gpa !== null ? parseFloat(gpa) : (student.gpa || null);
+        if (ielts_score !== undefined) student.ielts_score = ielts_score !== null ? parseFloat(ielts_score) : student.ielts_score;
+        if (sat_score !== undefined) student.sat_score = sat_score !== null ? parseInt(sat_score) : student.sat_score;
+        if (bio !== undefined) student.bio = bio;
+        if (extra_achievements !== undefined) student.extra_achievements = extra_achievements;
+        if (hard_skills !== undefined) student.hard_skills = hard_skills;
+        if (achievements !== undefined) student.achievements = achievements;
+        if (portfolio !== undefined) student.portfolio = portfolio;
+        if (merits !== undefined) student.merits = merits;
     } else {
         student = {
             id: crypto.randomUUID(),
@@ -1205,8 +1241,12 @@ app.post('/api/v1/students/profile', (req, res) => {
             gpa: gpa ? parseFloat(gpa) : null,
             ielts_score: ielts_score ? parseFloat(ielts_score) : null,
             sat_score: sat_score ? parseInt(sat_score) : null,
-            bio: null,
-            extra_achievements: null,
+            bio: bio || null,
+            extra_achievements: extra_achievements || null,
+            hard_skills: hard_skills || [],
+            achievements: achievements || [],
+            portfolio: portfolio || [],
+            merits: merits || [],
             created_at: new Date().toISOString()
         };
         db.students.push(student);
@@ -1215,7 +1255,7 @@ app.post('/api/v1/students/profile', (req, res) => {
     saveDB(db);
     res.json({
         status: 'success',
-        message: 'Цифровой паспорт успешно обновлен/создан',
+        message: 'Профиль успешно обновлен/создан',
         profile: student
     });
 });

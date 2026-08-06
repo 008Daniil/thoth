@@ -691,13 +691,9 @@ function handleRoute() {
         }
     });
 
-    // Show/hide AI orientation FAB ONLY on the profile page
+    // Always hide old global AI orientation FAB (we use the new draggable one)
     const aiFab = document.getElementById("ai-orientation-fab");
-    if (page === "profile") {
-        if (aiFab) aiFab.style.display = "flex";
-    } else {
-        if (aiFab) aiFab.style.display = "none";
-    }
+    if (aiFab) aiFab.style.display = "none";
     document.body.classList.remove("show-mobile-nav"); // Remove mobile nav class everywhere
 
     // Load specific pages
@@ -1708,6 +1704,66 @@ function setupEventListeners() {
         });
     });
 
+    // NEW: Student Profile Event Listeners
+    const spEditProfileBtn = document.getElementById("sp-edit-profile-btn");
+    if (spEditProfileBtn) {
+        spEditProfileBtn.addEventListener("click", () => enterStudentEditMode());
+    }
+
+    const spEditCancelBtn = document.getElementById("student-editor-cancel-btn");
+    if (spEditCancelBtn) {
+        spEditCancelBtn.addEventListener("click", () => exitStudentEditMode(false));
+    }
+
+    const spEditSaveBtn = document.getElementById("student-editor-save-btn");
+    if (spEditSaveBtn) {
+        spEditSaveBtn.addEventListener("click", () => saveStudentProfileFromSettings());
+    }
+
+    const spSettingsBtn = document.getElementById("sp-settings-btn");
+    if (spSettingsBtn) {
+        spSettingsBtn.addEventListener("click", () => openStudentSettings());
+    }
+
+    const spShareBtn = document.getElementById("sp-share-btn");
+    if (spShareBtn) {
+        spShareBtn.addEventListener("click", () => shareStudentProfile());
+    }
+
+    const spLogoutBtn = document.getElementById("ss-logout-btn");
+    if (spLogoutBtn) {
+        spLogoutBtn.addEventListener("click", () => {
+            closeStudentSettings();
+            localStorage.removeItem("currentStudentPhone");
+            resetPassportCard("");
+            const authInput = document.getElementById("auth-phone-input");
+            if (authInput) authInput.value = "";
+            showToast("Вы вышли из профиля", "success");
+            showOnboardingOverlay();
+        });
+    }
+
+    // Applications card → open applications history modal
+    const spAppsCard = document.getElementById("sp-apps-card");
+    if (spAppsCard) {
+        spAppsCard.addEventListener("click", () => openAppsModal());
+    }
+
+    const spEditMeritsBtn = document.getElementById("ss-edit-merits-btn");
+    if (spEditMeritsBtn) {
+        spEditMeritsBtn.addEventListener("click", () => openEditMeritsModal());
+    }
+
+    const spAddMeritBtn = document.getElementById("student-add-merit-btn");
+    if (spAddMeritBtn) {
+        spAddMeritBtn.addEventListener("click", () => addEditingMerit());
+    }
+
+    const spConfirmMeritsBtn = document.getElementById("student-confirm-merits-btn");
+    if (spConfirmMeritsBtn) {
+        spConfirmMeritsBtn.addEventListener("click", () => confirmEditMerits());
+    }
+
     // Global drawer helper functions
     window.openPartnerSettingsDrawer = () => {
         const drawer = document.getElementById("partner-settings-drawer");
@@ -1922,12 +1978,16 @@ function renderEditorCampusPhotos() {
     // Handled by global document click delegation to prevent duplicate listener/scope issues
 
     // AI Orientation Modal Event Listeners
-    const aiFab = document.getElementById("ai-orientation-fab");
+    const aiFab = document.getElementById("sp-ai-fab");
     const aiModal = document.getElementById("ai-orientation-modal");
     const closeAiModalBtn = document.getElementById("close-ai-modal-btn");
 
     if (aiFab && aiModal) {
-        aiFab.addEventListener("click", () => {
+        aiFab.addEventListener("click", (e) => {
+            if (window.spAiFabHasMoved) {
+                window.spAiFabHasMoved = false; // Reset
+                return;
+            }
             aiModal.style.display = "flex";
             setTimeout(() => aiModal.classList.add("show"), 10);
             if (aiChatHistory.length === 0) {
@@ -2884,7 +2944,7 @@ async function loadStudentProfile(phone, notifyUser = true) {
         
         if (res.status === 404) {
             if (notifyUser) {
-                showToast("Цифровой паспорт по этому номеру телефона отсутствует. Заполните анкету справа.", "danger");
+                showToast("Цифровой паспорт по этому номеру телефона отсутствует.", "danger");
             }
             resetPassportCard(phone);
             return;
@@ -2893,41 +2953,100 @@ async function loadStudentProfile(phone, notifyUser = true) {
         if (!res.ok) throw new Error("Server error loading profile");
 
         const data = await res.json();
-        
-        // Populate Passport details in UI
         const profile = data.profile;
-        document.getElementById("pass-fullname").textContent = profile.full_name;
-        document.getElementById("pass-phone").textContent = profile.phone;
-        document.getElementById("pass-ielts").textContent = profile.ielts_score !== null ? profile.ielts_score : "—";
-        document.getElementById("pass-sat").textContent = profile.sat_score !== null ? profile.sat_score : "—";
-        document.getElementById("pass-gpa").textContent = profile.gpa !== null ? profile.gpa : "—";
-        document.getElementById("pass-birthday").textContent = profile.birthday ? formatDate(profile.birthday) : "—";
-        document.getElementById("pass-bio").textContent = profile.bio || "О себе: информация отсутствует.";
-        document.getElementById("pass-achievements").textContent = profile.extra_achievements || "Дополнительные достижения не указаны.";
-        
-        // Auto-fill apply form fields from loaded passport data
-        document.getElementById("form-fullname").value = profile.full_name || "";
-        document.getElementById("form-phone").value = profile.phone || "";
-        document.getElementById("form-ielts").value = profile.ielts_score !== null ? profile.ielts_score : "";
-        document.getElementById("form-sat").value = profile.sat_score !== null ? profile.sat_score : "";
-        document.getElementById("form-gpa").value = profile.gpa !== null ? profile.gpa : "";
-        document.getElementById("form-bio").value = profile.bio || "";
-        document.getElementById("form-achievements").value = profile.extra_achievements || "";
+
+        // Show student profile content
+        const loggedOutView = document.getElementById("sp-logged-out-view");
+        const profileContent = document.getElementById("student-profile-content");
+        const topActions = document.getElementById("sp-top-actions");
+        const aiFab = document.getElementById("sp-ai-fab");
+        if (loggedOutView) loggedOutView.style.display = "none";
+        if (profileContent) profileContent.style.display = "grid";
+        if (topActions) topActions.style.display = "flex";
+        if (aiFab) aiFab.style.display = "block";
 
         // Save active student session
         localStorage.setItem("currentStudentPhone", profile.phone);
-        localStorage.removeItem("currentPartner");
         window.currentStudentProfile = profile;
 
-        // Avatar Initial
-        const firstLetter = profile.full_name ? profile.full_name[0].toUpperCase() : "Д";
-        document.getElementById("pass-avatar-letter").textContent = firstLetter;
+        // Avatar
+        const firstLetter = profile.full_name ? profile.full_name[0].toUpperCase() : "?";
+        const avatarEl = document.getElementById("sp-avatar-letter");
+        if (avatarEl) avatarEl.textContent = firstLetter;
 
-        // Render applicant timeline
+        // Name
+        const nameEl = document.getElementById("sp-name");
+        if (nameEl) nameEl.textContent = profile.full_name || "Новый абитуриент";
+
+        // Meta (age)
+        const metaEl = document.getElementById("sp-meta");
+        if (metaEl) {
+            let metaText = "";
+            if (profile.birthday) {
+                const birthDate = new Date(profile.birthday);
+                const today = new Date();
+                let age = today.getFullYear() - birthDate.getFullYear();
+                const m = today.getMonth() - birthDate.getMonth();
+                if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) age--;
+                metaText = `${age} лет`;
+            }
+            metaEl.textContent = metaText || "—";
+        }
+
+        // Hard Skills
+        const skillsList = document.getElementById("sp-skills-list");
+        if (skillsList) {
+            const skills = profile.hard_skills || [];
+            if (skills.length > 0) {
+                skillsList.innerHTML = skills.map((s, idx) => `<li><span class="sp-skill-num">${idx + 1}</span> ${s}</li>`).join("");
+            } else {
+                skillsList.innerHTML = '<li><span class="sp-skill-num">—</span> Навыки не указаны</li>';
+            }
+        }
+
+        // Dynamic merits
+        renderStudentMerits(profile);
+
+        // Achievements
+        const achievementsList = document.getElementById("sp-achievements-list");
+        if (achievementsList) {
+            const achs = profile.achievements || [];
+            if (achs.length > 0) {
+                achievementsList.innerHTML = achs.map(a => `
+                    <div class="sp-achievement-row">
+                        <span class="sp-ach-title">${a}</span>
+                    </div>
+                `).join("");
+            } else {
+                achievementsList.innerHTML = `
+                    <div class="sp-achievement-row">
+                        <span class="sp-ach-title">Достижения не указаны</span>
+                    </div>
+                `;
+            }
+        }
+
+        // Portfolio
+        const portfolioGrid = document.getElementById("sp-portfolio-grid");
+        if (portfolioGrid) {
+            const portfolio = profile.portfolio || [];
+            let html = "";
+            portfolio.forEach(p => {
+                html += `
+                    <div class="sp-portfolio-card">
+                        <div class="sp-port-icon"><i data-lucide="folder"></i></div>
+                        <h3>${p.name}</h3>
+                        <p>${p.description || ""}</p>
+                    </div>
+                `;
+            });
+            // Keep the "Add project" card at the end
+            html += `<div class="sp-portfolio-add" id="sp-add-portfolio-btn" onclick="enterStudentEditMode();"><i data-lucide="plus" style="width: 18px; height: 18px;"></i> Добавить проект</div>`;
+            portfolioGrid.innerHTML = html;
+        }
+
+        // Applications
         renderStudentApplications(data.applications);
-
-        // Sync form button and banner styles
-        updateProfileFormUI();
 
         // Sync AI Orientation widget auth state
         if (typeof checkAiAuthStatus === "function") checkAiAuthStatus();
@@ -2938,113 +3057,124 @@ async function loadStudentProfile(phone, notifyUser = true) {
     } catch (err) {
         console.error("Profile load err:", err);
         if (notifyUser) {
-            showToast("Не удалось связаться с сервером для загрузки профиля", "danger");
+            showToast("Не удалось загрузить профиль", "danger");
         }
     }
 }
 
-// Resets passport visual card to default state
 function resetPassportCard(phone = "") {
-    document.getElementById("pass-fullname").textContent = "Новый абитуриент";
-    document.getElementById("pass-phone").textContent = phone || "Номер не указан";
-    document.getElementById("pass-ielts").textContent = "—";
-    document.getElementById("pass-sat").textContent = "—";
-    document.getElementById("pass-gpa").textContent = "—";
-    document.getElementById("pass-birthday").textContent = "—";
-    document.getElementById("pass-bio").textContent = "Информация не заполнена.";
-    document.getElementById("pass-achievements").textContent = "Нет данных.";
-    document.getElementById("pass-avatar-letter").textContent = "?";
+    const loggedOutView = document.getElementById("sp-logged-out-view");
+    const profileContent = document.getElementById("student-profile-content");
+    const topActions = document.getElementById("sp-top-actions");
+    const aiFab = document.getElementById("sp-ai-fab");
+    if (loggedOutView) loggedOutView.style.display = "block";
+    if (profileContent) profileContent.style.display = "none";
+    if (topActions) topActions.style.display = "none";
+    if (aiFab) aiFab.style.display = "none";
+
+    // Reset sidebar
+    const avatarEl = document.getElementById("sp-avatar-letter");
+    if (avatarEl) avatarEl.textContent = "?";
+    const nameEl = document.getElementById("sp-name");
+    if (nameEl) nameEl.textContent = "Новый абитуриент";
+    const metaEl = document.getElementById("sp-meta");
+    if (metaEl) metaEl.textContent = "—";
+
+    // Reset merits
+    const meritsContainer = document.getElementById("sp-merits-container");
+    if (meritsContainer) meritsContainer.innerHTML = "";
+
+    // Reset skills
+    const skillsList = document.getElementById("sp-skills-list");
+    if (skillsList) skillsList.innerHTML = '<li><span class="sp-skill-num">—</span> Навыки не указаны</li>';
+
+    // Reset achievements
+    const achList = document.getElementById("sp-achievements-list");
+    if (achList) achList.innerHTML = '<div class="sp-achievement-row"><span class="sp-ach-title">Достижения не указаны</span></div>';
+
+    // Reset portfolio
+    const portGrid = document.getElementById("sp-portfolio-grid");
+    if (portGrid) portGrid.innerHTML = '<div class="sp-portfolio-add" id="sp-add-portfolio-btn" onclick="enterStudentEditMode();"><i data-lucide="plus" style="width: 18px; height: 18px;"></i> Добавить проект</div>';
+
+    // Reset apps count
+    const appsCountEl = document.getElementById("sp-apps-count-num");
+    if (appsCountEl) appsCountEl.textContent = "0";
     
-    const appsList = document.getElementById("profile-applications-list");
-    appsList.innerHTML = `
-        <div class="no-applications">
-            <i data-lucide="folder-open"></i>
-            <p>У вас пока нет активных заявок. Заполните форму справа, чтобы подать первую заявку.</p>
-        </div>
-    `;
+    const appsActionEl = document.getElementById("sp-apps-action-text");
+    if (appsActionEl) appsActionEl.textContent = "Нет активных";
+
     window.currentStudentProfile = null;
-    updateProfileFormUI();
     if (typeof checkAiAuthStatus === "function") checkAiAuthStatus();
     lucide.createIcons();
 }
 
-// Render student timeline applications list
 function renderStudentApplications(apps) {
-    const list = document.getElementById("profile-applications-list");
-    
+    const timeline = document.getElementById("profile-applications-list");
+    const countNum = document.getElementById("sp-apps-count-num");
+    const countAction = document.getElementById("sp-apps-action-text");
+
+    if (!timeline) return;
+
     if (!apps || apps.length === 0) {
-        list.innerHTML = `
-            <div class="no-applications">
-                <i data-lucide="folder-open"></i>
-                <p>Пока нет поданных заявок.</p>
+        timeline.innerHTML = `
+            <div class="no-applications" style="text-align: center; padding: 2rem; color: var(--text-secondary);">
+                <i data-lucide="folder-open" style="width: 32px; height: 32px; margin-bottom: 0.5rem; display: inline-block;"></i>
+                <p>У вас пока нет активных заявок.</p>
             </div>
         `;
-        lucide.createIcons();
+        if (countNum) countNum.textContent = "0";
+        if (countAction) countAction.textContent = "Нет решений";
         return;
     }
 
-    list.innerHTML = "";
+    // Set count
+    if (countNum) countNum.textContent = apps.length;
+    
+    // Check decisions
+    let pendingCount = 0;
+    let approvedCount = 0;
+    let rejectedCount = 0;
+    apps.forEach(a => {
+        if (a.status === "approved" || a.status === "accepted") approvedCount++;
+        else if (a.status === "rejected" || a.status === "declined") rejectedCount++;
+        else pendingCount++;
+    });
+
+    if (countAction) {
+        if (approvedCount > 0) countAction.textContent = `${approvedCount} Одобрено`;
+        else if (pendingCount > 0) countAction.textContent = `В рассмотрении`;
+        else countAction.textContent = `Решения вынесены`;
+    }
+
+    let html = "";
     apps.forEach(app => {
-        const item = document.createElement("div");
-        item.className = "app-timeline-item";
-        
-        const dateObj = new Date(app.created_at);
-        const formattedDate = dateObj.toLocaleDateString("ru-RU", { day: "numeric", month: "long" });
-        
-        let statusText = "На модерации";
-        if (app.status === "under_review") statusText = "На рассмотрении";
-        if (app.status === "accepted") statusText = "Принят";
-        if (app.status === "rejected") statusText = "Отклонен";
-
-        let appTypeBadge = `<span style="font-size: 0.72rem; color: var(--text-secondary); background: var(--bg-accent); border: 1px solid var(--card-border); padding: 0.15rem 0.45rem; border-radius: 4px; display: inline-block; margin-left: 0.35rem;">Контракт</span>`;
-        if (app.app_type === "grant") {
-            appTypeBadge = `<span style="font-size: 0.72rem; color: var(--text-primary); background: var(--card-bg); border: 1px solid var(--card-border); padding: 0.15rem 0.45rem; border-radius: 4px; font-weight: 700; display: inline-block; margin-left: 0.35rem;">Грант</span>`;
-        } else if (app.app_type === "scholarship") {
-            appTypeBadge = `<span style="font-size: 0.72rem; color: var(--text-primary); background: var(--card-bg); border: 1px solid var(--card-border); padding: 0.15rem 0.45rem; border-radius: 4px; font-weight: 700; display: inline-block; margin-left: 0.35rem;">Стипендия</span>`;
+        let statusBadge = "";
+        if (app.status === "approved" || app.status === "accepted") {
+            statusBadge = '<span style="color: #10b981; font-weight: 600;">Одобрена</span>';
+        } else if (app.status === "rejected" || app.status === "declined") {
+            statusBadge = '<span style="color: #ef4444; font-weight: 600;">Отклонена</span>';
+        } else {
+            statusBadge = '<span style="color: #f59e0b; font-weight: 600;">В рассмотрении</span>';
         }
 
-        let contactBoxHtml = "";
-        if (app.status === "accepted" || app.status === "approved") {
-            const accMsg = (app.accepted_message && app.accepted_message.trim())
-                ? app.accepted_message
-                : ((app.university_contact_info && app.university_contact_info.trim()) ? app.university_contact_info : `Поздравляем с зачислением! Пожалуйста, свяжитесь с приёмной комиссией для предоставления документов.`);
-            const phoneText = app.admissions_phone ? `\nТелефон приёмной комиссии: ${app.admissions_phone}` : "";
-            
-            contactBoxHtml = `
-                <div style="width: 100%; margin-top: 0.75rem; background: var(--bg-accent); padding: 0.85rem 1rem; border-radius: 8px; border: 1px solid var(--card-border);">
-                    <h5 style="margin: 0 0 0.35rem 0; font-size: 0.85rem; font-weight: 700; color: var(--text-primary);">
-                        Сообщение приемной комиссии (Поступление):
-                    </h5>
-                    <p style="font-size: 0.82rem; color: var(--text-secondary); margin: 0; white-space: pre-line; line-height: 1.4;">${accMsg}${phoneText}</p>
+        html += `
+            <div style="display: flex; gap: 1rem; border-bottom: 1px solid var(--card-border); padding: 1rem 0;">
+                <div style="width: 48px; height: 48px; border-radius: 10px; background: var(--bg-accent); display: flex; align-items: center; justify-content: center; font-weight: bold; border: 1px solid var(--card-border);">
+                    ${app.university_name ? app.university_name[0] : "У"}
                 </div>
-            `;
-        } else if (app.status === "rejected" && app.rejected_message && app.rejected_message.trim()) {
-            contactBoxHtml = `
-                <div style="width: 100%; margin-top: 0.75rem; background: var(--bg-accent); padding: 0.85rem 1rem; border-radius: 8px; border: 1px solid var(--card-border);">
-                    <h5 style="margin: 0 0 0.35rem 0; font-size: 0.85rem; font-weight: 700; color: var(--text-primary);">
-                        Сообщение приемной комиссии:
-                    </h5>
-                    <p style="font-size: 0.82rem; color: var(--text-secondary); margin: 0; white-space: pre-line; line-height: 1.4;">${app.rejected_message}</p>
+                <div style="flex: 1;">
+                    <h4 style="margin: 0 0 0.25rem 0; font-family: var(--font-heading); font-size: 1rem; color: var(--text-primary);">${app.university_name}</h4>
+                    <p style="margin: 0; font-size: 0.85rem; color: var(--text-secondary);">Специальность: ${app.specialty_name || "Не указана"}</p>
+                    <small style="color: var(--text-muted);">Подано: ${formatDate(app.applied_at || new Date())}</small>
                 </div>
-            `;
-        }
-
-        item.innerHTML = `
-            <div style="display: flex; justify-content: space-between; align-items: flex-start; width: 100%;">
-                <div class="app-time-info">
-                    <h4>${app.university_name} ${appTypeBadge}</h4>
-                    <p>${app.specialty_name}</p>
-                    <p style="font-size:0.75rem; color:var(--text-muted); margin-top:0.25rem;"><i data-lucide="file" style="width:12px; height:12px; display:inline-block; vertical-align:middle; margin-right:4px;"></i> ${app.document_name}</p>
-                </div>
-                <div>
-                    <span class="status-badge status-${app.status}">${statusText}</span>
-                    <p style="font-size:0.75rem; color:var(--text-muted); text-align:right; margin-top:0.4rem;">${formattedDate}</p>
+                <div style="text-align: right; font-size: 0.9rem;">
+                    ${statusBadge}
                 </div>
             </div>
-            ${contactBoxHtml}
         `;
-        list.appendChild(item);
     });
+
+    timeline.innerHTML = html;
     lucide.createIcons();
 }
 
@@ -3137,17 +3267,12 @@ async function handleApplicationSubmit(e) {
             throw new Error(data.detail || "Error submitting documents");
         }
 
-        // Show green toast notification (requested explicitly in the prompt)
         showToast("Документы успешно переданы в приемную комиссию", "success");
-        
-        // Reload student profile to display new application in timeline
         await loadStudentProfile(phone, false);
         
-        // Reset selected university and specialty after successful application
         document.getElementById("form-university").value = "";
         document.getElementById("form-specialty").value = "";
 
-        // Reset file preview
         document.getElementById("form-file").value = "";
         document.getElementById("file-name-preview").textContent = "Файл не выбран";
         document.getElementById("file-name-preview").style.color = "";
@@ -3179,9 +3304,6 @@ async function handlePartnerLoginSubmit(e) {
         }
 
         localStorage.setItem("currentPartner", JSON.stringify(data));
-        localStorage.removeItem("currentStudentPhone");
-        localStorage.removeItem("currentStudentName");
-        window.currentStudentProfile = null;
         showToast("Успешный вход в кабинет!", "success");
         document.getElementById("partner-login-form").reset();
         
@@ -3225,20 +3347,15 @@ async function handlePartnerSignupSubmit(e) {
             throw new Error(data.detail || "Ошибка регистрации");
         }
 
-        localStorage.removeItem("currentStudentPhone");
-        localStorage.removeItem("currentStudentName");
-        window.currentStudentProfile = null;
         showToast("Аккаунт успешно создан и отправлен на модерацию в Telegram. После одобрения вы сможете войти.", "success");
         document.getElementById("partner-signup-form").reset();
         
-        // Switch tab back to login
         document.getElementById("tab-login-btn").click();
     } catch (err) {
         showToast(err.message || "Ошибка регистрации", "danger");
     }
 }
 
-// 8. Open wizard (creating or editing university profile)
 function openWizard(isEdit = false) {
     document.getElementById("partner-no-profile-view").style.display = "none";
     document.getElementById("partner-dashboard-view").style.display = "none";
@@ -4520,15 +4637,9 @@ function hideOnboardingOverlay() {
     overlay.style.opacity = "0";
     overlay.style.display = "none";
 
-    // Restore AI fab ONLY if we ended up on the profile page
-    const hash = window.location.hash.substring(1) || "home";
-    const page = hash.split("/")[0];
+    // Restore AI fab (always hide old global AI orientation FAB)
     const aiFab = document.getElementById("ai-orientation-fab");
-    if (page === "profile") {
-        if (aiFab) aiFab.style.display = "flex";
-    } else {
-        if (aiFab) aiFab.style.display = "none";
-    }
+    if (aiFab) aiFab.style.display = "none";
 }
 
 function initStudentSession() {
@@ -5690,3 +5801,531 @@ async function saveWYSIWYGData() {
 }
 
 
+
+
+// ========== STUDENT DYNAMIC MERITS LOGIC ==========
+function ensureMeritsArray(profile) {
+    if (!profile.merits) {
+        const merits = [];
+        if (profile.ielts_score !== null && profile.ielts_score !== undefined && profile.ielts_score !== "") {
+            merits.push({ type: "IELTS", value: String(profile.ielts_score), status: "not-verified" });
+        }
+        if (profile.sat_score !== null && profile.sat_score !== undefined && profile.sat_score !== "") {
+            merits.push({ type: "SAT", value: String(profile.sat_score), status: "not-verified" });
+        }
+        if (profile.gpa !== null && profile.gpa !== undefined && profile.gpa !== "") {
+            merits.push({ type: "GPA", value: String(profile.gpa), status: "not-verified" });
+        }
+        profile.merits = merits;
+    }
+    return profile.merits;
+}
+
+function renderStudentMerits(profile) {
+    const container = document.getElementById("sp-merits-container");
+    if (!container) return;
+    container.innerHTML = "";
+
+    const merits = ensureMeritsArray(profile);
+
+    if (!merits || merits.length === 0) {
+        container.innerHTML = `
+            <div class="sp-merit-card" style="justify-content: center; align-items: center; border-style: dashed; opacity: 0.6; flex: 1;">
+                <span style="font-size: 0.95rem; color: var(--text-secondary);">Заслуги не указаны</span>
+            </div>
+        `;
+        return;
+    }
+
+    merits.forEach(merit => {
+        const card = document.createElement("div");
+        card.className = "sp-merit-card";
+        const hasDoc = merit.document_file ? true : false;
+        const statusClass = merit.status === 'verified' ? 'verified' : 'not-verified';
+        const statusText = merit.status === 'verified' ? 'Подтверждено' : 'Не подтверждено';
+        const docIndicator = hasDoc ? '<span class="merit-doc-attached" title="Документ отправлен на проверку"><i data-lucide="paperclip" style="width:12px;height:12px;"></i></span>' : '';
+        card.innerHTML = `
+            <span class="sp-merit-label">${merit.type}</span>
+            <span class="sp-merit-value">${merit.value}</span>
+            <span class="sp-merit-status ${statusClass}">
+                <span class="status-dot"></span> ${statusText} ${docIndicator}
+            </span>
+        `;
+        container.appendChild(card);
+    });
+}
+
+function renderEditModeMerits(merits) {
+    const container = document.getElementById("sp-edit-merits-container");
+    if (!container) return;
+    container.innerHTML = "";
+
+    if (!merits || merits.length === 0) {
+        container.innerHTML = `
+            <div class="sp-merit-card" style="justify-content: center; align-items: center; border-style: dashed; opacity: 0.6; flex: 1;">
+                <span style="font-size: 0.95rem; color: var(--text-secondary);">Нет добавленных заслуг</span>
+            </div>
+        `;
+        return;
+    }
+
+    merits.forEach(merit => {
+        const card = document.createElement("div");
+        card.className = "sp-merit-card";
+        const statusClass = merit.status === 'verified' ? 'verified' : 'not-verified';
+        const statusText = merit.status === 'verified' ? 'Подтверждено' : 'Не подтверждено';
+        const hasDoc = merit.document_file ? true : false;
+        const docIndicator = hasDoc ? '<span class="merit-doc-attached" title="Документ отправлен"><i data-lucide="paperclip" style="width:12px;height:12px;"></i></span>' : '';
+        card.innerHTML = `
+            <span class="sp-merit-label">${merit.type}</span>
+            <span class="sp-merit-value">${merit.value}</span>
+            <span class="sp-merit-status ${statusClass}">
+                <span class="status-dot"></span> ${statusText} ${docIndicator}
+            </span>
+        `;
+        container.appendChild(card);
+    });
+}
+
+// Edit Merits Modal Actions
+function openEditMeritsModal() {
+    const backdrop = document.getElementById("sp-edit-merits-modal-backdrop");
+    if (!backdrop) return;
+
+    // Load active temp list to editing array
+    window.editingMeritsArray = JSON.parse(JSON.stringify(window.tempMeritsList || []));
+    
+    renderMeritsEditList();
+    
+    backdrop.classList.add("show");
+    document.body.style.overflow = "hidden";
+    lucide.createIcons();
+}
+
+function closeEditMeritsModal() {
+    const backdrop = document.getElementById("sp-edit-merits-modal-backdrop");
+    if (backdrop) {
+        backdrop.classList.remove("show");
+        document.body.style.overflow = "";
+    }
+}
+
+function renderMeritsEditList() {
+    const listContainer = document.getElementById("student-merits-edit-list");
+    if (!listContainer) return;
+    listContainer.innerHTML = "";
+
+    if (window.editingMeritsArray.length === 0) {
+        listContainer.innerHTML = `
+            <p style="text-align: center; color: var(--text-secondary); font-size: 0.92rem; margin: 1rem 0;">
+                Список заслуг пуст. Нажмите «Добавить заслугу».
+            </p>
+        `;
+        return;
+    }
+
+    const meritTypes = ["IELTS", "SAT", "GPA", "TOEFL", "Duolingo", "ACT", "Другое"];
+
+    window.editingMeritsArray.forEach((merit, index) => {
+        const row = document.createElement("div");
+        row.style.display = "flex";
+        row.style.gap = "0.75rem";
+        row.style.alignItems = "center";
+        row.style.background = "var(--card-bg)";
+        row.style.border = "1px solid var(--card-border)";
+        row.style.padding = "0.75rem 1rem";
+        row.style.borderRadius = "12px";
+
+        // Select Menu
+        let optionsHTML = "";
+        meritTypes.forEach(t => {
+            const selected = merit.type === t ? "selected" : "";
+            optionsHTML += `<option value="${t}" ${selected}>${t}</option>`;
+        });
+
+        const hasDoc = merit.document_file ? true : false;
+        const docLabel = hasDoc ? 'Файл прикреплён ✓' : 'Прикрепить документ';
+        const docColor = hasDoc ? 'color: #10b981;' : 'color: var(--text-secondary);';
+
+        row.innerHTML = `
+            <div style="display: flex; flex-direction: column; gap: 0.5rem; flex: 1;">
+                <div style="display: flex; gap: 0.75rem; align-items: center;">
+                    <select class="merit-type-select" style="padding: 0.5rem; border-radius: 8px; border: 1px solid var(--card-border); background: var(--bg-accent); color: var(--text-primary); outline: none; font-weight: 600; width: 140px;" onchange="updateEditingMeritType(${index}, this.value);">
+                        ${optionsHTML}
+                    </select>
+                    <input type="text" value="${merit.value || ""}" placeholder="Результат (например, 7.5)" style="flex: 1; padding: 0.5rem; border-radius: 8px; border: 1px solid var(--card-border); background: var(--bg-accent); color: var(--text-primary); outline: none; font-weight: 500;" oninput="updateEditingMeritValue(${index}, this.value);" />
+                    <button type="button" onclick="removeEditingMerit(${index});" style="width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border-radius: 8px; border: 1px solid rgba(220, 53, 69, 0.15); background: rgba(220, 53, 69, 0.05); color: #dc3545; cursor: pointer; transition: background 0.2s; flex-shrink: 0;">
+                        <i data-lucide="trash-2" style="width: 16px; height: 16px;"></i>
+                    </button>
+                </div>
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <input type="file" id="merit-file-${index}" accept=".pdf,.jpg,.jpeg,.png" style="display: none;" onchange="handleMeritFileUpload(${index}, this);" />
+                    <button type="button" onclick="document.getElementById('merit-file-${index}').click();" style="padding: 0.35rem 0.75rem; border-radius: 8px; border: 1px solid var(--card-border); background: var(--bg-accent); cursor: pointer; font-size: 0.8rem; font-weight: 600; ${docColor} display: flex; align-items: center; gap: 0.4rem; transition: border-color 0.2s;">
+                        <i data-lucide="${hasDoc ? 'check-circle' : 'upload'}" style="width: 14px; height: 14px;"></i>
+                        ${docLabel}
+                    </button>
+                    ${hasDoc ? '<span style="font-size: 0.75rem; color: var(--text-muted);">' + (merit.document_name || '') + '</span>' : '<span style="font-size: 0.75rem; color: var(--text-muted);">PDF, JPG или PNG</span>'}
+                </div>
+            </div>
+        `;
+        listContainer.appendChild(row);
+    });
+
+    lucide.createIcons();
+}
+
+function updateEditingMeritType(index, value) {
+    if (window.editingMeritsArray[index]) {
+        window.editingMeritsArray[index].type = value;
+    }
+}
+
+function updateEditingMeritValue(index, value) {
+    if (window.editingMeritsArray[index]) {
+        window.editingMeritsArray[index].value = value;
+    }
+}
+
+function removeEditingMerit(index) {
+    window.editingMeritsArray.splice(index, 1);
+    renderMeritsEditList();
+}
+
+function addEditingMerit() {
+    window.editingMeritsArray.push({ type: "IELTS", value: "", status: "not-verified" });
+    renderMeritsEditList();
+}
+
+function confirmEditMerits() {
+    window.tempMeritsList = JSON.parse(JSON.stringify(window.editingMeritsArray));
+    renderEditModeMerits(window.tempMeritsList);
+    closeEditMeritsModal();
+}
+
+// Handle file upload for individual merit document
+async function handleMeritFileUpload(index, inputEl) {
+    const file = inputEl.files[0];
+    if (!file) return;
+
+    const merit = window.editingMeritsArray[index];
+    if (!merit) return;
+
+    // Upload the file to server
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("merit_type", merit.type);
+
+    try {
+        const res = await fetch(`${API_BASE}/api/v1/students/merit-document`, {
+            method: "POST",
+            body: formData
+        });
+
+        if (!res.ok) throw new Error("Upload failed");
+
+        const data = await res.json();
+
+        // Store file reference in the merit object
+        window.editingMeritsArray[index].document_file = data.filename;
+        window.editingMeritsArray[index].document_name = file.name;
+        window.editingMeritsArray[index].status = "not-verified"; // stays unverified until admin approves
+
+        showToast(`Документ для ${merit.type} загружен`, "success");
+        renderMeritsEditList();
+    } catch (err) {
+        console.error("Merit document upload error:", err);
+        showToast("Ошибка загрузки файла", "danger");
+    }
+}
+
+// ========== APPLICATIONS MODAL ==========
+function openAppsModal() {
+    const backdrop = document.getElementById("sp-apps-modal-backdrop");
+    if (backdrop) {
+        backdrop.classList.add("show");
+        document.body.style.overflow = "hidden";
+    }
+}
+
+function closeAppsModal() {
+    const backdrop = document.getElementById("sp-apps-modal-backdrop");
+    if (backdrop) {
+        backdrop.classList.remove("show");
+        document.body.style.overflow = "";
+    }
+}
+
+// ========== STUDENT SETTINGS DRAWER ==========
+function openStudentSettings() {
+    const backdrop = document.getElementById("student-settings-backdrop");
+    const drawer = document.getElementById("student-settings-drawer");
+    if (!backdrop || !drawer) return;
+
+    // Pre-fill security fields from current profile
+    const profile = window.currentStudentProfile;
+    if (profile) {
+        const ssPhone = document.getElementById("ss-phone");
+        const ssFullname = document.getElementById("ss-fullname");
+        const ssBirthday = document.getElementById("ss-birthday");
+        if (ssPhone) ssPhone.value = profile.phone || "";
+        if (ssFullname) ssFullname.value = profile.full_name || "";
+        if (ssBirthday) ssBirthday.value = profile.birthday ? formatDate(profile.birthday) : "—";
+    }
+
+    backdrop.classList.add("show");
+    drawer.classList.add("show");
+    document.body.style.overflow = "hidden";
+    lucide.createIcons();
+}
+
+function closeStudentSettings() {
+    const backdrop = document.getElementById("student-settings-backdrop");
+    const drawer = document.getElementById("student-settings-drawer");
+    if (backdrop) backdrop.classList.remove("show");
+    if (drawer) drawer.classList.remove("show");
+    document.body.style.overflow = "";
+}
+
+// ========== STUDENT PROFILE IN-PLACE EDIT MODE ==========
+function enterStudentEditMode() {
+    const profile = window.currentStudentProfile;
+    if (!profile) return;
+
+    // Fill fields (In-Place Edit Mode)
+    const editFullname = document.getElementById("ss-edit-fullname");
+    const editBirthday = document.getElementById("ss-edit-birthday");
+    const editBio = document.getElementById("ss-edit-bio");
+    const editAch = document.getElementById("ss-edit-achievements");
+    const editSkills = document.getElementById("ss-edit-skills");
+    const editPortfolio = document.getElementById("ss-edit-portfolio");
+
+    if (editFullname) editFullname.value = profile.full_name || "";
+    if (editBirthday) editBirthday.value = profile.birthday || "";
+    if (editBio) editBio.value = profile.bio || "";
+    if (editAch) editAch.value = (profile.achievements || []).join("\n") || profile.extra_achievements || "";
+    if (editSkills) editSkills.value = (profile.hard_skills || []).join("\n");
+    if (editPortfolio) editPortfolio.value = (profile.portfolio || []).map(p => `${p.name} | ${p.description || ""}`).join("\n");
+
+    // Initialize temporary merits list for edit mode
+    window.tempMeritsList = JSON.parse(JSON.stringify(ensureMeritsArray(profile)));
+    renderEditModeMerits(window.tempMeritsList);
+
+    const editAvatarLetter = document.getElementById("sp-edit-avatar-letter");
+    if (editAvatarLetter) editAvatarLetter.textContent = profile.full_name ? profile.full_name[0].toUpperCase() : "?";
+
+    const editAppsCount = document.getElementById("sp-edit-apps-count-num");
+    const appsCountEl = document.getElementById("sp-apps-count-num");
+    if (editAppsCount && appsCountEl) editAppsCount.textContent = appsCountEl.textContent;
+
+    // Hide read-only content & action buttons
+    const profileContent = document.getElementById("student-profile-content");
+    const topActions = document.getElementById("sp-top-actions");
+    const aiFab = document.getElementById("sp-ai-fab");
+    if (profileContent) profileContent.style.display = "none";
+    if (topActions) topActions.style.display = "none";
+    if (aiFab) aiFab.style.display = "none";
+
+    // Show edit content & edit mode top bar
+    const editContent = document.getElementById("student-profile-edit-content");
+    const editorModeBar = document.getElementById("student-editor-mode-bar");
+    if (editContent) editContent.style.display = "grid";
+    if (editorModeBar) editorModeBar.style.display = "flex";
+
+    lucide.createIcons();
+}
+
+function exitStudentEditMode(didSave = false) {
+    // Hide edit content & edit mode top bar
+    const editContent = document.getElementById("student-profile-edit-content");
+    const editorModeBar = document.getElementById("student-editor-mode-bar");
+    if (editContent) editContent.style.display = "none";
+    if (editorModeBar) editorModeBar.style.display = "none";
+
+    // Show read-only content & action buttons
+    const profileContent = document.getElementById("student-profile-content");
+    const topActions = document.getElementById("sp-top-actions");
+    const aiFab = document.getElementById("sp-ai-fab");
+    if (profileContent) profileContent.style.display = "grid";
+    if (topActions) topActions.style.display = "flex";
+    if (aiFab) aiFab.style.display = "block";
+
+    if (!didSave) {
+        // Clear input values
+        if (document.getElementById("ss-edit-fullname")) document.getElementById("ss-edit-fullname").value = "";
+        if (document.getElementById("ss-edit-birthday")) document.getElementById("ss-edit-birthday").value = "";
+        if (document.getElementById("ss-edit-bio")) document.getElementById("ss-edit-bio").value = "";
+        if (document.getElementById("ss-edit-achievements")) document.getElementById("ss-edit-achievements").value = "";
+        if (document.getElementById("ss-edit-skills")) document.getElementById("ss-edit-skills").value = "";
+        if (document.getElementById("ss-edit-portfolio")) document.getElementById("ss-edit-portfolio").value = "";
+        
+        window.tempMeritsList = [];
+        const editMeritsContainer = document.getElementById("sp-edit-merits-container");
+        if (editMeritsContainer) editMeritsContainer.innerHTML = "";
+    }
+}
+
+// Student Settings: Save Profile
+async function saveStudentProfileFromSettings() {
+    const profile = window.currentStudentProfile;
+    if (!profile) {
+        showToast("Профиль не загружен", "danger");
+        return;
+    }
+
+    const fullName = (document.getElementById("ss-edit-fullname")?.value || "").trim();
+    const birthday = document.getElementById("ss-edit-birthday")?.value || profile.birthday;
+    const bio = (document.getElementById("ss-edit-bio")?.value || "").trim();
+    const achievementsText = (document.getElementById("ss-edit-achievements")?.value || "").trim();
+    const skillsText = (document.getElementById("ss-edit-skills")?.value || "").trim();
+    const portfolioText = (document.getElementById("ss-edit-portfolio")?.value || "").trim();
+
+    // Map legacy score values for database compatibility
+    const ieltsVal = window.tempMeritsList.find(m => m.type === 'IELTS')?.value;
+    const satVal = window.tempMeritsList.find(m => m.type === 'SAT')?.value;
+    const gpaVal = window.tempMeritsList.find(m => m.type === 'GPA')?.value;
+
+    const ielts = ieltsVal ? parseFloat(ieltsVal) : null;
+    const sat = satVal ? parseInt(satVal) : null;
+    const gpa = gpaVal ? parseFloat(gpaVal) : null;
+
+    // Parse skills and portfolio
+    const hardSkills = skillsText ? skillsText.split("\n").map(s => s.trim()).filter(s => s) : [];
+    const achievements = achievementsText ? achievementsText.split("\n").map(a => a.trim()).filter(a => a) : [];
+    const portfolio = portfolioText ? portfolioText.split("\n").map(line => {
+        const parts = line.split("|").map(p => p.trim());
+        return { name: parts[0] || "", description: parts[1] || "" };
+    }).filter(p => p.name) : [];
+
+    try {
+        const res = await fetch(`${API_BASE}/api/v1/students/profile`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                full_name: fullName || profile.full_name,
+                phone: profile.phone,
+                birthday: birthday,
+                gpa: gpa,
+                ielts_score: ielts,
+                sat_score: sat,
+                bio: bio,
+                extra_achievements: achievementsText,
+                hard_skills: hardSkills,
+                achievements: achievements,
+                portfolio: portfolio,
+                merits: window.tempMeritsList
+            })
+        });
+
+        if (!res.ok) throw new Error("Failed to save profile");
+
+        showToast("Профиль успешно сохранён!", "success");
+        exitStudentEditMode(true);
+
+        // Reload profile to refresh UI
+        await loadStudentProfile(profile.phone, false);
+    } catch (err) {
+        console.error("Save profile error:", err);
+        showToast("Ошибка при сохранении профиля", "danger");
+    }
+}
+
+// Share profile (copy link to clipboard)
+function shareStudentProfile() {
+    const profileUrl = window.location.origin + window.location.pathname + "#profile";
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(profileUrl).then(() => {
+            showToast("Ссылка на профиль скопирована!", "success");
+        }).catch(() => {
+            showToast("Не удалось скопировать ссылку", "danger");
+        });
+    } else {
+        const tempInput = document.createElement("input");
+        tempInput.value = profileUrl;
+        document.body.appendChild(tempInput);
+        tempInput.select();
+        document.execCommand("copy");
+        document.body.removeChild(tempInput);
+        showToast("Ссылка на профиль скопирована!", "success");
+    }
+}
+
+// Setup precise draggable FAB logic
+function initStudentFabDragging() {
+    const spAiFab = document.getElementById("sp-ai-fab");
+    if (!spAiFab) return;
+
+    let isDragging = false;
+    window.spAiFabHasMoved = false;
+    let dragStartX = 0;
+    let dragStartY = 0;
+    let buttonStartX = 0;
+    let buttonStartY = 0;
+
+    const onStart = (clientX, clientY) => {
+        isDragging = true;
+        window.spAiFabHasMoved = false;
+        dragStartX = clientX;
+        dragStartY = clientY;
+        const rect = spAiFab.getBoundingClientRect();
+        buttonStartX = rect.left;
+        buttonStartY = rect.top;
+        
+        // Immediately assign style values to prevent positioning jumps
+        spAiFab.style.left = `${buttonStartX}px`;
+        spAiFab.style.top = `${buttonStartY}px`;
+        spAiFab.style.right = "auto";
+        spAiFab.style.bottom = "auto";
+        spAiFab.style.transition = "none";
+    };
+
+    const onMove = (clientX, clientY) => {
+        if (!isDragging) return;
+        const dx = clientX - dragStartX;
+        const dy = clientY - dragStartY;
+        // Raise threshold to 12px to prevent accidental drag detection on normal clicks
+        if (Math.abs(dx) > 12 || Math.abs(dy) > 12) {
+            window.spAiFabHasMoved = true;
+        }
+        spAiFab.style.left = `${buttonStartX + dx}px`;
+        spAiFab.style.top = `${buttonStartY + dy}px`;
+        spAiFab.style.right = "auto";
+        spAiFab.style.bottom = "auto";
+    };
+
+    const onEnd = () => {
+        if (isDragging) {
+            isDragging = false;
+            spAiFab.style.transition = "";
+        }
+    };
+
+    spAiFab.addEventListener("mousedown", (e) => {
+        onStart(e.clientX, e.clientY);
+        e.preventDefault();
+    });
+
+    document.addEventListener("mousemove", (e) => {
+        onMove(e.clientX, e.clientY);
+    });
+
+    document.addEventListener("mouseup", onEnd);
+
+    spAiFab.addEventListener("touchstart", (e) => {
+        const touch = e.touches[0];
+        onStart(touch.clientX, touch.clientY);
+    });
+
+    document.addEventListener("touchmove", (e) => {
+        const touch = e.touches[0];
+        onMove(touch.clientX, touch.clientY);
+    });
+
+    document.addEventListener("touchend", onEnd);
+}
+
+// Bind dragging helper in initAIOrientation
+const originalInitAIOrientation = initAIOrientation;
+initAIOrientation = function() {
+    originalInitAIOrientation();
+    initStudentFabDragging();
+};
