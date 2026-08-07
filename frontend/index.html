@@ -17,7 +17,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <!-- Main Style Sheet -->
-    <link rel="stylesheet" href="/frontend/style.css?v=74.0">
+    <link rel="stylesheet" href="/frontend/style.css?v=79.0">
 </head>
 <body>
 
@@ -601,12 +601,15 @@
                     </div>
 
                     <!-- Portfolio Section -->
-                    <div class="sp-portfolio-section">
+                    <div class="sp-portfolio-section" id="sp-portfolio-section" style="display: none;">
                         <h2>Портфолио</h2>
-                        <div class="sp-portfolio-grid" id="sp-portfolio-grid">
-                            <div class="sp-portfolio-add" id="sp-add-portfolio-btn">
-                                <i data-lucide="plus" style="width: 18px; height: 18px;"></i>
-                                Добавить проект
+                        <div class="sp-apps-card" style="border: 1px solid var(--card-border); max-width: 320px; background: var(--card-bg); border-radius: 20px; padding: 1.25rem 1.5rem; display: flex; align-items: center; gap: 1rem;">
+                            <div class="sp-apps-icon" style="width: 44px; height: 44px; border-radius: 50%; background: var(--bg-accent); display: flex; align-items: center; justify-content: center;">
+                                <i data-lucide="folder" style="width: 20px; height: 20px; color: var(--text-secondary);"></i>
+                            </div>
+                            <div class="sp-apps-count">
+                                <span id="sp-portfolio-count-num">0</span> Проектов загружено
+                                <small>Проекты и файлы портфолио</small>
                             </div>
                         </div>
                     </div>
@@ -682,9 +685,16 @@
 
                     <!-- Portfolio Section (Edit Mode) -->
                     <div class="sp-portfolio-section">
-                        <h2>Портфолио</h2>
-                        <p style="font-size: 0.78rem; color: var(--text-secondary); margin-bottom: 0.75rem;">Введите проекты (каждый с новой строки в формате: Название проекта | Описание):</p>
-                        <textarea id="ss-edit-portfolio" rows="6" placeholder="Мой веб-сайт | Адаптивный концепт на HTML/CSS&#10;Анализ данных | Скрипты анализа данных на Python" style="width: 100%; padding: 0.75rem 1rem; border-radius: 12px; border: 1px solid var(--card-border); background: var(--bg-accent); color: var(--text-primary); resize: vertical; font-family: inherit; font-size: 0.95rem; line-height: 1.5; box-sizing: border-box; outline: none;"></textarea>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                            <h2 style="margin: 0;">Портфолио</h2>
+                            <button type="button" class="btn btn-outline btn-sm" id="student-add-portfolio-item-btn" style="height: 36px; padding: 0 1rem; border-radius: 8px; font-size: 0.85rem; font-weight: 600; display: flex; align-items: center; gap: 0.4rem; cursor: pointer;">
+                                <i data-lucide="plus" style="width: 14px; height: 14px;"></i>
+                                Добавить проект
+                            </button>
+                        </div>
+                        <div id="student-portfolio-edit-list" style="display: flex; flex-direction: column; gap: 1rem; margin-bottom: 1.5rem;">
+                            <!-- Populated dynamically by JS -->
+                        </div>
                     </div>
                 </div>
             </div>

@@ -1057,6 +1057,18 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage: storage });
 
+// POST: Upload portfolio file
+app.post('/api/v1/students/portfolio-file', upload.single('file'), (req, res) => {
+    if (!req.file) {
+        return res.status(400).json({ detail: "No file uploaded" });
+    }
+    res.json({
+        filename: req.file.filename,
+        original_name: req.file.originalname,
+        size: req.file.size
+    });
+});
+
 // POST: Upload merit verification document
 app.post('/api/v1/students/merit-document', upload.single('file'), (req, res) => {
     if (!req.file) {

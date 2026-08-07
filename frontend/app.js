@@ -1754,6 +1754,11 @@ function setupEventListeners() {
         spEditMeritsBtn.addEventListener("click", () => openEditMeritsModal());
     }
 
+    const addPortfolioItemBtn = document.getElementById("student-add-portfolio-item-btn");
+    if (addPortfolioItemBtn) {
+        addPortfolioItemBtn.addEventListener("click", () => addEditingPortfolioItem());
+    }
+
     const spAddMeritBtn = document.getElementById("student-add-merit-btn");
     if (spAddMeritBtn) {
         spAddMeritBtn.addEventListener("click", () => addEditingMerit());
@@ -3026,23 +3031,19 @@ async function loadStudentProfile(phone, notifyUser = true) {
             }
         }
 
-        // Portfolio
-        const portfolioGrid = document.getElementById("sp-portfolio-grid");
-        if (portfolioGrid) {
+        // Portfolio Section rendering
+        const portfolioSection = document.getElementById("sp-portfolio-section");
+        const portfolioCountEl = document.getElementById("sp-portfolio-count-num");
+        if (portfolioSection) {
             const portfolio = profile.portfolio || [];
-            let html = "";
-            portfolio.forEach(p => {
-                html += `
-                    <div class="sp-portfolio-card">
-                        <div class="sp-port-icon"><i data-lucide="folder"></i></div>
-                        <h3>${p.name}</h3>
-                        <p>${p.description || ""}</p>
-                    </div>
-                `;
-            });
-            // Keep the "Add project" card at the end
-            html += `<div class="sp-portfolio-add" id="sp-add-portfolio-btn" onclick="enterStudentEditMode();"><i data-lucide="plus" style="width: 18px; height: 18px;"></i> Добавить проект</div>`;
-            portfolioGrid.innerHTML = html;
+            if (portfolio.length > 0) {
+                portfolioSection.style.display = "block";
+                if (portfolioCountEl) {
+                    portfolioCountEl.textContent = portfolio.length;
+                }
+            } else {
+                portfolioSection.style.display = "none";
+            }
         }
 
         // Applications
@@ -3093,8 +3094,8 @@ function resetPassportCard(phone = "") {
     if (achList) achList.innerHTML = '<div class="sp-achievement-row"><span class="sp-ach-title">Достижения не указаны</span></div>';
 
     // Reset portfolio
-    const portGrid = document.getElementById("sp-portfolio-grid");
-    if (portGrid) portGrid.innerHTML = '<div class="sp-portfolio-add" id="sp-add-portfolio-btn" onclick="enterStudentEditMode();"><i data-lucide="plus" style="width: 18px; height: 18px;"></i> Добавить проект</div>';
+    const portfolioSection = document.getElementById("sp-portfolio-section");
+    if (portfolioSection) portfolioSection.style.display = "none";
 
     // Reset apps count
     const appsCountEl = document.getElementById("sp-apps-count-num");
@@ -6097,14 +6098,15 @@ function enterStudentEditMode() {
     const editBio = document.getElementById("ss-edit-bio");
     const editAch = document.getElementById("ss-edit-achievements");
     const editSkills = document.getElementById("ss-edit-skills");
-    const editPortfolio = document.getElementById("ss-edit-portfolio");
-
     if (editFullname) editFullname.value = profile.full_name || "";
     if (editBirthday) editBirthday.value = profile.birthday || "";
     if (editBio) editBio.value = profile.bio || "";
     if (editAch) editAch.value = (profile.achievements || []).join("\n") || profile.extra_achievements || "";
     if (editSkills) editSkills.value = (profile.hard_skills || []).join("\n");
-    if (editPortfolio) editPortfolio.value = (profile.portfolio || []).map(p => `${p.name} | ${p.description || ""}`).join("\n");
+    
+    // Initialize portfolio array and list
+    window.editingPortfolioArray = JSON.parse(JSON.stringify(profile.portfolio || []));
+    renderPortfolioEditList();
 
     // Initialize temporary merits list for edit mode
     window.tempMeritsList = JSON.parse(JSON.stringify(ensureMeritsArray(profile)));
@@ -6156,7 +6158,9 @@ function exitStudentEditMode(didSave = false) {
         if (document.getElementById("ss-edit-bio")) document.getElementById("ss-edit-bio").value = "";
         if (document.getElementById("ss-edit-achievements")) document.getElementById("ss-edit-achievements").value = "";
         if (document.getElementById("ss-edit-skills")) document.getElementById("ss-edit-skills").value = "";
-        if (document.getElementById("ss-edit-portfolio")) document.getElementById("ss-edit-portfolio").value = "";
+        window.editingPortfolioArray = [];
+        const portEditList = document.getElementById("student-portfolio-edit-list");
+        if (portEditList) portEditList.innerHTML = "";
         
         window.tempMeritsList = [];
         const editMeritsContainer = document.getElementById("sp-edit-merits-container");
@@ -6177,8 +6181,6 @@ async function saveStudentProfileFromSettings() {
     const bio = (document.getElementById("ss-edit-bio")?.value || "").trim();
     const achievementsText = (document.getElementById("ss-edit-achievements")?.value || "").trim();
     const skillsText = (document.getElementById("ss-edit-skills")?.value || "").trim();
-    const portfolioText = (document.getElementById("ss-edit-portfolio")?.value || "").trim();
-
     // Map legacy score values for database compatibility
     const ieltsVal = window.tempMeritsList.find(m => m.type === 'IELTS')?.value;
     const satVal = window.tempMeritsList.find(m => m.type === 'SAT')?.value;
@@ -6191,10 +6193,7 @@ async function saveStudentProfileFromSettings() {
     // Parse skills and portfolio
     const hardSkills = skillsText ? skillsText.split("\n").map(s => s.trim()).filter(s => s) : [];
     const achievements = achievementsText ? achievementsText.split("\n").map(a => a.trim()).filter(a => a) : [];
-    const portfolio = portfolioText ? portfolioText.split("\n").map(line => {
-        const parts = line.split("|").map(p => p.trim());
-        return { name: parts[0] || "", description: parts[1] || "" };
-    }).filter(p => p.name) : [];
+    const portfolio = (window.editingPortfolioArray || []).filter(p => p.name && p.name.trim());
 
     try {
         const res = await fetch(`${API_BASE}/api/v1/students/profile`, {
@@ -6329,3 +6328,117 @@ initAIOrientation = function() {
     originalInitAIOrientation();
     initStudentFabDragging();
 };
+
+
+// ========== STUDENT INTERACTIVE PORTFOLIO EDITOR ==========
+window.editingPortfolioArray = [];
+
+function renderPortfolioEditList() {
+    const listContainer = document.getElementById("student-portfolio-edit-list");
+    if (!listContainer) return;
+    listContainer.innerHTML = "";
+
+    if (window.editingPortfolioArray.length === 0) {
+        listContainer.innerHTML = `
+            <div style="text-align: center; padding: 2rem; border: 1px dashed var(--card-border); border-radius: 12px; color: var(--text-secondary);">
+                <p style="margin: 0; font-size: 0.92rem;">Портфолио пусто. Нажмите «Добавить проект» выше.</p>
+            </div>
+        `;
+        return;
+    }
+
+    window.editingPortfolioArray.forEach((proj, index) => {
+        const card = document.createElement("div");
+        card.style.background = "var(--card-bg)";
+        card.style.border = "1px solid var(--card-border)";
+        card.style.padding = "1.25rem";
+        card.style.borderRadius = "16px";
+        card.style.display = "flex";
+        card.style.flexDirection = "column";
+        card.style.gap = "0.75rem";
+        card.style.position = "relative";
+
+        const hasFile = proj.file ? true : false;
+        const fileLabel = hasFile ? 'Файл загружен ✓' : 'Прикрепить файл';
+        const fileColor = hasFile ? 'color: #10b981;' : 'color: var(--text-secondary);';
+
+        card.innerHTML = `
+            <button type="button" onclick="removeEditingPortfolioItem(${index});" style="position: absolute; top: 1rem; right: 1rem; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 8px; border: 1px solid rgba(220, 53, 69, 0.15); background: rgba(220, 53, 69, 0.05); color: #dc3545; cursor: pointer; transition: background 0.2s;">
+                <i data-lucide="trash-2" style="width: 14px; height: 14px;"></i>
+            </button>
+
+            <div class="form-group" style="margin: 0; padding-right: 2.5rem;">
+                <label style="font-weight: 700; font-size: 0.8rem; color: var(--text-secondary); display: block; margin-bottom: 0.35rem;">Название проекта</label>
+                <input type="text" value="${proj.name || ""}" placeholder="Например: Мой веб-сайт, Скрипт на Python..." style="width: 100%; padding: 0.55rem 0.75rem; border-radius: 8px; border: 1px solid var(--card-border); background: var(--bg-accent); color: var(--text-primary); outline: none; font-size: 0.9rem; font-weight: 600;" oninput="updateEditingPortfolioName(${index}, this.value);" />
+            </div>
+
+            <div class="form-group" style="margin: 0;">
+                <label style="font-weight: 700; font-size: 0.8rem; color: var(--text-secondary); display: block; margin-bottom: 0.35rem;">Описание проекта</label>
+                <textarea rows="2" placeholder="Краткое описание проекта или вашей роли..." style="width: 100%; padding: 0.55rem 0.75rem; border-radius: 8px; border: 1px solid var(--card-border); background: var(--bg-accent); color: var(--text-primary); outline: none; font-size: 0.88rem; resize: vertical; line-height: 1.4; font-family: inherit;" oninput="updateEditingPortfolioDesc(${index}, this.value);">${proj.description || ""}</textarea>
+            </div>
+
+            <div style="display: flex; align-items: center; gap: 0.5rem; margin-top: 0.25rem;">
+                <input type="file" id="portfolio-file-${index}" style="display: none;" onchange="handlePortfolioFileUpload(${index}, this);" />
+                <button type="button" onclick="document.getElementById('portfolio-file-${index}').click();" style="padding: 0.45rem 1rem; border-radius: 8px; border: 1px solid var(--card-border); background: var(--bg-accent); cursor: pointer; font-size: 0.82rem; font-weight: 600; ${fileColor} display: flex; align-items: center; gap: 0.4rem; transition: border-color 0.2s;">
+                    <i data-lucide="${hasFile ? 'check-circle' : 'upload'}" style="width: 14px; height: 14px;"></i>
+                    ${fileLabel}
+                </button>
+                ${hasFile ? `<span style="font-size: 0.78rem; color: var(--text-muted); text-overflow: ellipsis; overflow: hidden; white-space: nowrap; max-width: 250px;">${proj.file_name || ''}</span>` : '<span style="font-size: 0.78rem; color: var(--text-muted);">Любой файл (архив, PDF, изображение...)</span>'}
+            </div>
+        `;
+        listContainer.appendChild(card);
+    });
+
+    lucide.createIcons();
+}
+
+function addEditingPortfolioItem() {
+    window.editingPortfolioArray.push({ name: "", description: "", file: "", file_name: "" });
+    renderPortfolioEditList();
+}
+
+function updateEditingPortfolioName(index, value) {
+    if (window.editingPortfolioArray[index]) {
+        window.editingPortfolioArray[index].name = value;
+    }
+}
+
+function updateEditingPortfolioDesc(index, value) {
+    if (window.editingPortfolioArray[index]) {
+        window.editingPortfolioArray[index].description = value;
+    }
+}
+
+function removeEditingPortfolioItem(index) {
+    window.editingPortfolioArray.splice(index, 1);
+    renderPortfolioEditList();
+}
+
+async function handlePortfolioFileUpload(index, inputEl) {
+    const file = inputEl.files[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+        const res = await fetch(`${API_BASE}/api/v1/students/portfolio-file`, {
+            method: "POST",
+            body: formData
+        });
+
+        if (!res.ok) throw new Error("Upload failed");
+
+        const data = await res.json();
+
+        // Store file reference in the portfolio item object
+        window.editingPortfolioArray[index].file = data.filename;
+        window.editingPortfolioArray[index].file_name = file.name;
+
+        showToast(`Файл "${file.name}" успешно прикреплен`, "success");
+        renderPortfolioEditList();
+    } catch (err) {
+        console.error("Portfolio file upload error:", err);
+        showToast("Ошибка при загрузке файла", "danger");
+    }
+}
