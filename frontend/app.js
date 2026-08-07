@@ -612,13 +612,78 @@ function setupPhoneInputs() {
     });
 }
 
+
+// ========== SYSTEM & THEME SELECTOR HANDLER ==========
+function setTheme(themeName) {
+    localStorage.setItem("theme", themeName);
+    
+    let isDark = false;
+    if (themeName === "dark") {
+        isDark = true;
+    } else if (themeName === "light") {
+        isDark = false;
+    } else {
+        // System preference detection
+        isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    }
+    
+    if (isDark) {
+        document.body.classList.add("dark-theme");
+    } else {
+        document.body.classList.remove("dark-theme");
+    }
+    
+    // Update chart colors
+    if (typeof updateChartColors === "function") {
+        updateChartColors(isDark);
+    }
+    
+    // Update WebGL canvas uniforms
+    if (window.bgGrainient) {
+        window.bgGrainient.updateUniforms(isDark ? {
+            color1: "#ff9ffc",
+            color2: "#5227ff",
+            color3: "#000000",
+            color4: "#10002b"
+        } : {
+            color1: "#fff0f5",
+            color2: "#fdfdbe",
+            color3: "#ffe4e1",
+            color4: "#faebd7"
+        });
+    }
+    
+    // Update the button icon in navbar
+    const themeToggle = document.getElementById("theme-toggle");
+    if (themeToggle) {
+        const icon = themeToggle.querySelector("i");
+        if (icon) {
+            icon.setAttribute("data-lucide", isDark ? "sun" : "moon");
+            lucide.createIcons();
+        }
+    }
+
+    // Sync all settings select elements if they are present in the DOM
+    const ssTheme = document.getElementById("ss-theme");
+    const psTheme = document.getElementById("ps-theme");
+    if (ssTheme) ssTheme.value = themeName;
+    if (psTheme) psTheme.value = themeName;
+}
+
+// Listen to OS theme changes if theme option is "system"
+if (window.matchMedia) {
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+        if (localStorage.getItem("theme") === "system" || !localStorage.getItem("theme")) {
+            setTheme("system");
+        }
+    });
+}
+
 // --- DOM READY INITIALIZATION ---
 document.addEventListener("DOMContentLoaded", () => {
-    // Initialize Theme from localStorage
-    const savedTheme = localStorage.getItem("theme");
-    if (savedTheme === "dark") {
-        document.body.classList.add("dark-theme");
-    }
+    // Initialize Theme from localStorage with system preference support
+    const savedTheme = localStorage.getItem("theme") || "system";
+    setTheme(savedTheme);
     
     // Initialize WebGL shader background
     initBackground();
@@ -785,53 +850,17 @@ function setupEventListeners() {
         }
 
         themeToggle.addEventListener("click", () => {
-            document.body.classList.toggle("dark-theme");
-            const isDark = document.body.classList.contains("dark-theme");
-            localStorage.setItem("theme", isDark ? "dark" : "light");
-
-            const icon = themeToggle.querySelector("i");
-            if (icon) {
-                if (isDark) {
-                    icon.setAttribute("data-lucide", "sun");
-                } else {
-                    icon.setAttribute("data-lucide", "moon");
-                }
+            const currentTheme = localStorage.getItem("theme") || "system";
+            let targetTheme = "light";
+            
+            if (currentTheme === "system") {
+                const systemIsDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+                targetTheme = systemIsDark ? "light" : "dark";
+            } else {
+                targetTheme = currentTheme === "dark" ? "light" : "dark";
             }
-            lucide.createIcons();
-
-            if (chartInstance) {
-                updateChartColors(isDark);
-            }
-
-            if (bgGrainient) {
-                bgGrainient.updateUniforms(isDark ? {
-                    color1: "#ff9ffc",
-                    color2: "#5227ff",
-                    color3: "#b497cf",
-                    timeSpeed: 0.2,
-                    zoom: 0.65,
-                    grainAmount: 0.08,
-                    contrast: 1.4,
-                    saturation: 1.0,
-                    warpStrength: 1.0,
-                    warpFrequency: 6.1,
-                    warpSpeed: 2.3,
-                    warpAmplitude: 50.0
-                } : {
-                    color1: "#ffbbf8",
-                    color2: "#a08cff",
-                    color3: "#d5c2ff",
-                    timeSpeed: 0.15,
-                    zoom: 0.65,
-                    grainAmount: 0.05,
-                    contrast: 1.35,
-                    saturation: 1.3,
-                    warpStrength: 0.8,
-                    warpFrequency: 5.0,
-                    warpSpeed: 1.8,
-                    warpAmplitude: 40.0
-                });
-            }
+            
+            setTheme(targetTheme);
         });
     }
 
@@ -1029,13 +1058,24 @@ function setupEventListeners() {
         quickApplyForm.addEventListener("submit", async (e) => {
             e.preventDefault();
 
+            const profile = window.currentStudentProfile;
+            if (!profile) {
+                showToast("Пожалуйста, войдите в профиль абитуриента, чтобы подать документы", "warning");
+                closeQuickApplyModal();
+                showOnboardingOverlay();
+                return;
+            }
+
             const uniId = document.getElementById("quick-apply-uni-id").value;
             const specId = document.getElementById("quick-apply-spec").value;
-            const fullName = document.getElementById("quick-apply-name").value;
-            const phone = document.getElementById("quick-apply-phone").value;
-            const ielts = document.getElementById("quick-apply-ielts").value;
-            const gpa = document.getElementById("quick-apply-gpa").value;
-            const file = document.getElementById("quick-apply-file").files[0];
+            const fullName = profile.full_name || "Абитуриент";
+            const phone = profile.phone;
+            const ielts = profile.ielts_score;
+            const gpa = profile.gpa;
+            
+            // Check for file input safely if any
+            const fileInput = document.getElementById("quick-apply-file");
+            const file = fileInput && fileInput.files ? fileInput.files[0] : null;
             const uniName = document.getElementById("apply-modal-uni-name").textContent;
 
             const submitBtn = document.getElementById("quick-apply-submit-btn");
@@ -1743,10 +1783,26 @@ function setupEventListeners() {
         });
     }
 
+    const psLogoutBtn = document.getElementById("ps-logout-btn");
+    if (psLogoutBtn) {
+        psLogoutBtn.addEventListener("click", () => {
+            closePartnerSettingsDrawer();
+            localStorage.removeItem("currentPartner");
+            localStorage.removeItem("currentStudentPhone");
+            window.location.hash = "home";
+            showToast("Вы вышли из кабинета вуза", "info");
+            setTimeout(() => window.location.reload(), 300);
+        });
+    }
+
     // Applications card → open applications history modal
     const spAppsCard = document.getElementById("sp-apps-card");
     if (spAppsCard) {
-        spAppsCard.addEventListener("click", () => openAppsModal());
+        spAppsCard.addEventListener("click", () => {
+            localStorage.setItem("appsCardClicked", "true");
+            spAppsCard.classList.remove("sp-apps-card-glow");
+            openAppsModal();
+        });
     }
 
     const spEditMeritsBtn = document.getElementById("ss-edit-merits-btn");
@@ -1774,6 +1830,19 @@ function setupEventListeners() {
         const drawer = document.getElementById("partner-settings-drawer");
         const backdrop = document.getElementById("partner-settings-drawer-backdrop");
         if (drawer && backdrop) {
+            // Reset to first tab (Password/Privacy)
+            const firstTabBtn = document.querySelector("#partner-settings-drawer .settings-tab-menu .settings-tab-item");
+            if (firstTabBtn) {
+                const tabs = document.querySelectorAll("#partner-settings-drawer .settings-tab-menu .settings-tab-item");
+                tabs.forEach(t => t.classList.remove("active"));
+                firstTabBtn.classList.add("active");
+                
+                const panels = document.querySelectorAll("#partner-settings-drawer .settings-panel");
+                panels.forEach(p => p.style.display = "none");
+                const passPanel = document.getElementById("settings-panel-password");
+                if (passPanel) passPanel.style.display = "block";
+            }
+
             drawer.classList.add("show");
             backdrop.classList.add("show");
             document.body.style.overflow = "hidden"; // Prevent scrolling main page when drawer is open
@@ -2480,16 +2549,8 @@ async function openQuickApplyModal(uniId, uniName, preselectedSpecId = null, def
     const appTypeElem = document.getElementById("quick-apply-app-type");
     if (appTypeElem) appTypeElem.value = defaultAppType;
 
-    const savedName = localStorage.getItem("currentStudentName") || (window.currentStudentProfile ? window.currentStudentProfile.full_name : "");
+    // Read fields directly from active profile when submitting
     const savedPhone = localStorage.getItem("currentStudentPhone") || (window.currentStudentProfile ? window.currentStudentProfile.phone : "");
-    
-    if (savedName) document.getElementById("quick-apply-name").value = savedName;
-    if (savedPhone) document.getElementById("quick-apply-phone").value = savedPhone;
-
-    if (window.currentStudentProfile) {
-        if (window.currentStudentProfile.ielts_score) document.getElementById("quick-apply-ielts").value = window.currentStudentProfile.ielts_score;
-        if (window.currentStudentProfile.gpa) document.getElementById("quick-apply-gpa").value = window.currentStudentProfile.gpa;
-    }
 
     const filePreview = document.getElementById("quick-file-name-preview");
     if (filePreview) {
@@ -2507,6 +2568,41 @@ async function openQuickApplyModal(uniId, uniName, preselectedSpecId = null, def
         const res = await fetch(`${API_BASE}/api/v1/universities/${uniId}`);
         if (res.ok) {
             const data = await res.json();
+            
+            // Dynamically populate study basis options based on university settings
+            const appTypeElem = document.getElementById("quick-apply-app-type");
+            if (appTypeElem) {
+                appTypeElem.innerHTML = "";
+                
+                // Standard option is always available
+                const optStandard = document.createElement("option");
+                optStandard.value = "standard";
+                optStandard.textContent = "Платная основа (Контракт)";
+                appTypeElem.appendChild(optStandard);
+                
+                // Grant option (only if enabled by university)
+                if (data.has_grant === true) {
+                    const optGrant = document.createElement("option");
+                    optGrant.value = "grant";
+                    optGrant.textContent = "Грантовая основа (Грант)";
+                    appTypeElem.appendChild(optGrant);
+                }
+                
+                // Scholarship option (only if enabled by university)
+                if (data.has_scholarship === true) {
+                    const optScholarship = document.createElement("option");
+                    optScholarship.value = "scholarship";
+                    optScholarship.textContent = "Стипендиальная программа";
+                    appTypeElem.appendChild(optScholarship);
+                }
+                
+                // Set default selected value
+                appTypeElem.value = defaultAppType;
+                if (!appTypeElem.value) {
+                    appTypeElem.value = "standard";
+                }
+            }
+
             specSelect.innerHTML = `<option value="" disabled selected>Выберите специальность...</option>`;
             let specs = (data.specialties && data.specialties.length > 0) ? data.specialties : [
                 { id: `gen-${uniId}-1`, name: "Общий прием / Бакалавриат", tuition_fee: data.contract_price || 12000000 },
@@ -2557,11 +2653,7 @@ async function loadUniversityDetails(id) {
         window.currentLoadedUniversity = uni;
         
         // 1. Title, Alias & Slogan
-        if (uni.status === 'approved') {
-            document.getElementById("det-uni-name").innerHTML = `${uni.name} <i data-lucide="check-circle-2" style="color: #3b82f6; fill: rgba(59, 130, 246, 0.1); width: 22px; height: 22px; vertical-align: middle; margin-left: 0.5rem; display: inline-block;" title="Официальный профиль"></i>`;
-        } else {
-            document.getElementById("det-uni-name").textContent = uni.name;
-        }
+        document.getElementById("det-uni-name").textContent = uni.name;
 
         const backBtn = document.getElementById("back-to-home-btn");
         if (backBtn) {
@@ -3033,16 +3125,30 @@ async function loadStudentProfile(phone, notifyUser = true) {
 
         // Portfolio Section rendering
         const portfolioSection = document.getElementById("sp-portfolio-section");
-        const portfolioCountEl = document.getElementById("sp-portfolio-count-num");
-        if (portfolioSection) {
+        const portfolioContainer = document.getElementById("sp-portfolio-list-container");
+        if (portfolioSection && portfolioContainer) {
             const portfolio = profile.portfolio || [];
             if (portfolio.length > 0) {
                 portfolioSection.style.display = "block";
-                if (portfolioCountEl) {
-                    portfolioCountEl.textContent = portfolio.length;
-                }
+                
+                // Render project cards
+                portfolioContainer.innerHTML = portfolio.map((proj, idx) => {
+                    return `
+                        <div class="sp-portfolio-item-card" onclick="openPortfolioItemDetail(${idx});" style="background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 16px; padding: 1.25rem; display: flex; align-items: center; gap: 0.75rem; cursor: pointer; transition: all 0.2s ease;" onmouseover="this.style.borderColor='var(--text-muted)'; this.style.transform='translateY(-2px)';" onmouseout="this.style.borderColor='var(--card-border)'; this.style.transform='translateY(0)';">
+                            <div style="width: 40px; height: 40px; border-radius: 10px; background: var(--bg-accent); display: flex; align-items: center; justify-content: center; color: var(--text-secondary); flex-shrink: 0;">
+                                <i data-lucide="folder" style="width: 20px; height: 20px;"></i>
+                            </div>
+                            <div style="flex: 1; min-width: 0;">
+                                <h4 style="margin: 0; font-family: var(--font-heading); font-size: 0.95rem; color: var(--text-primary); text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">${proj.name}</h4>
+                                <p style="margin: 0.2rem 0 0 0; font-size: 0.78rem; color: var(--text-secondary); text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">${proj.description || "Описание проекта..."}</p>
+                            </div>
+                            <i data-lucide="chevron-right" style="width: 16px; height: 16px; color: var(--text-muted); flex-shrink: 0;"></i>
+                        </div>
+                    `;
+                }).join("");
             } else {
                 portfolioSection.style.display = "none";
+                portfolioContainer.innerHTML = "";
             }
         }
 
@@ -3095,7 +3201,9 @@ function resetPassportCard(phone = "") {
 
     // Reset portfolio
     const portfolioSection = document.getElementById("sp-portfolio-section");
+    const portfolioContainer = document.getElementById("sp-portfolio-list-container");
     if (portfolioSection) portfolioSection.style.display = "none";
+    if (portfolioContainer) portfolioContainer.innerHTML = "";
 
     // Reset apps count
     const appsCountEl = document.getElementById("sp-apps-count-num");
@@ -3103,6 +3211,9 @@ function resetPassportCard(phone = "") {
     
     const appsActionEl = document.getElementById("sp-apps-action-text");
     if (appsActionEl) appsActionEl.textContent = "Нет активных";
+
+    const appsCard = document.getElementById("sp-apps-card");
+    if (appsCard) appsCard.classList.remove("sp-apps-card-glow");
 
     window.currentStudentProfile = null;
     if (typeof checkAiAuthStatus === "function") checkAiAuthStatus();
@@ -3128,9 +3239,6 @@ function renderStudentApplications(apps) {
         return;
     }
 
-    // Set count
-    if (countNum) countNum.textContent = apps.length;
-    
     // Check decisions
     let pendingCount = 0;
     let approvedCount = 0;
@@ -3141,10 +3249,40 @@ function renderStudentApplications(apps) {
         else pendingCount++;
     });
 
+    // Set count to show ONLY active (pending) applications
+    if (countNum) countNum.textContent = pendingCount;
+
+    const appsCard = document.getElementById("sp-apps-card");
+    const editAppsCount = document.getElementById("sp-edit-apps-count-num");
+    if (editAppsCount) editAppsCount.textContent = pendingCount;
+
+    // Detect updates in decisions to reset the clicked state
+    const decisionState = apps.map(a => `${a.id}-${a.status}`).join(",");
+    const savedState = localStorage.getItem("appsDecisionState");
+    if (savedState !== decisionState) {
+        localStorage.setItem("appsDecisionState", decisionState);
+        localStorage.setItem("appsCardClicked", "false");
+    }
+
+    const hasDecisions = approvedCount > 0 || rejectedCount > 0;
+    const hasBeenClicked = localStorage.getItem("appsCardClicked") === "true";
+
     if (countAction) {
-        if (approvedCount > 0) countAction.textContent = `${approvedCount} Одобрено`;
-        else if (pendingCount > 0) countAction.textContent = `В рассмотрении`;
-        else countAction.textContent = `Решения вынесены`;
+        if (hasDecisions) {
+            const totalDecisions = approvedCount + rejectedCount;
+            countAction.textContent = `${totalDecisions} Решений вынесено`;
+            // Add glow animation to apps card ONLY if student hasn't clicked/viewed it yet
+            if (appsCard) {
+                if (!hasBeenClicked) {
+                    appsCard.classList.add("sp-apps-card-glow");
+                } else {
+                    appsCard.classList.remove("sp-apps-card-glow");
+                }
+            }
+        } else {
+            countAction.textContent = pendingCount > 0 ? "В рассмотрении" : "Нет активных";
+            if (appsCard) appsCard.classList.remove("sp-apps-card-glow");
+        }
     }
 
     let html = "";
@@ -3728,7 +3866,7 @@ function renderLeadsTable() {
     if (loadedLeads.length === 0) {
         tableBody.innerHTML = `
             <tr>
-                <td colspan="7" class="table-empty-row">
+                <td colspan="6" class="table-empty-row">
                     <i data-lucide="inbox" style="margin: 0 auto 0.5rem auto;"></i>
                     <p>Заявки на поступление отсутствуют.</p>
                 </td>
@@ -3757,7 +3895,7 @@ function renderLeadsTable() {
     if (filteredLeads.length === 0) {
         tableBody.innerHTML = `
             <tr>
-                <td colspan="7" class="table-empty-row">
+                <td colspan="6" class="table-empty-row">
                     <i data-lucide="search" style="margin: 0 auto 0.5rem auto;"></i>
                     <p>Ничего не найдено по запросу "${searchQuery}"</p>
                 </td>
@@ -3836,7 +3974,6 @@ function renderLeadsTable() {
 
         tr.innerHTML = `
             <td style="font-weight: 600; color: var(--primary);">${studentName}</td>
-            <td style="font-size: 0.85rem; color: var(--text-secondary);">${studentPhone}</td>
             <td>
                 <span style="font-weight:500;">${specName}</span>
                 <br>${appTypeBadge}
@@ -3891,30 +4028,165 @@ function openLeadStudentModal(lead) {
     const modal = document.getElementById("student-profile-modal");
     if (!modal) return;
 
-    const studentName = (lead.student && lead.student.full_name) ? lead.student.full_name : "Абитуриент";
+    const student = lead.student || {};
+    const studentName = student.full_name || "Абитуриент";
+    
+    // Top modal info
     document.getElementById("lead-modal-student-name").textContent = studentName;
+    document.getElementById("lead-modal-profile-name").textContent = studentName;
     
     const dateObj = new Date(lead.created_at);
     const dateStr = dateObj.toLocaleDateString("ru-RU", { day: "numeric", month: "long", year: "numeric" });
     document.getElementById("lead-modal-app-date").textContent = `Подано: ${dateStr}`;
 
-    document.getElementById("lead-modal-phone").textContent = (lead.student && lead.student.phone) ? lead.student.phone : "—";
-    
-    const tgHandle = (lead.student && lead.student.telegram) ? lead.student.telegram : "";
-    const tgDisplay = tgHandle ? (tgHandle.startsWith("@") ? tgHandle : `@${tgHandle}`) : "не указан";
-    const tgElem = document.getElementById("lead-modal-telegram");
-    if (tgElem) tgElem.textContent = tgDisplay;
-
+    // Specialty info
     const specName = (lead.specialty && lead.specialty.name) ? lead.specialty.name : "Общее направление";
     const specCode = (lead.specialty && lead.specialty.code) ? lead.specialty.code : "";
     document.getElementById("lead-modal-specialty").textContent = specCode ? `${specName} (${specCode})` : specName;
 
-    document.getElementById("lead-modal-ielts").textContent = (lead.student && lead.student.ielts_score !== null) ? lead.student.ielts_score : "—";
-    document.getElementById("lead-modal-sat").textContent = (lead.student && lead.student.sat_score !== null) ? lead.student.sat_score : "—";
-    document.getElementById("lead-modal-gpa").textContent = (lead.student && lead.student.gpa !== null) ? lead.student.gpa : "—";
-
+    // Document link
     document.getElementById("lead-modal-doc-name").textContent = lead.document_name || "Файл заявки";
     document.getElementById("lead-modal-doc-link").href = `${API_BASE}/api/v1/applications/download/${lead.id}`;
+
+    // Sidebar: Avatar letter
+    document.getElementById("lead-modal-avatar-letter").textContent = studentName ? studentName[0].toUpperCase() : "?";
+
+    // Sidebar: Age
+    const ageEl = document.getElementById("lead-modal-age");
+    if (ageEl) {
+        let ageText = "";
+        if (student.birthday) {
+            const birthDate = new Date(student.birthday);
+            const today = new Date();
+            let age = today.getFullYear() - birthDate.getFullYear();
+            const m = today.getMonth() - birthDate.getMonth();
+            if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) age--;
+            ageText = `${age} лет`;
+        }
+        ageEl.textContent = ageText || "Возраст не указан";
+    }
+
+    // Sidebar: Hard Skills
+    const skillsList = document.getElementById("lead-modal-skills-list");
+    if (skillsList) {
+        const skills = student.hard_skills || [];
+        if (skills.length > 0) {
+            skillsList.innerHTML = skills.map((s, idx) => `<li><span class="sp-skill-num">${idx + 1}</span> ${s}</li>`).join("");
+        } else {
+            skillsList.innerHTML = `
+                <div style="color: var(--text-secondary); font-size: 0.82rem; font-style: italic; background: var(--bg-accent); padding: 0.85rem; border-radius: 12px; border: 1px dashed var(--card-border); text-align: center; margin-top: 0.5rem;">
+                    Навыки не указаны
+                </div>
+            `;
+        }
+    }
+
+    // Call ensureMeritsArray to load merits array correctly from student object fields
+    const merits = ensureMeritsArray(student);
+    const achs = student.achievements || [];
+    const portfolio = student.portfolio || [];
+
+    const meritsSection = document.querySelector("#student-profile-modal .sp-merits-section");
+    const achievementsSection = document.querySelector("#student-profile-modal .sp-achievements-section");
+    const portfolioSection = document.getElementById("lead-modal-portfolio-section");
+    const portfolioContainer = document.getElementById("lead-modal-portfolio-container");
+    const meritsContainer = document.getElementById("lead-modal-merits-container");
+    const achievementsList = document.getElementById("lead-modal-achievements-list");
+
+    // Unified empty state check
+    let placeholder = document.getElementById("lead-modal-empty-profile-placeholder");
+    if (merits.length === 0 && achs.length === 0 && portfolio.length === 0) {
+        // Render unified profile empty state
+        if (meritsSection) meritsSection.style.display = "none";
+        if (achievementsSection) achievementsSection.style.display = "none";
+        if (portfolioSection) portfolioSection.style.display = "none";
+
+        if (!placeholder) {
+            placeholder = document.createElement("div");
+            placeholder.id = "lead-modal-empty-profile-placeholder";
+            placeholder.style.cssText = "display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 4rem 2rem; background: var(--bg-accent); border: 1px dashed var(--card-border); border-radius: 20px; text-align: center; color: var(--text-secondary); gap: 0.75rem; width: 100%; box-sizing: border-box;";
+            const mainCol = document.querySelector("#student-profile-modal .sp-main");
+            if (mainCol) mainCol.appendChild(placeholder);
+        }
+        placeholder.innerHTML = `
+            <i data-lucide="inbox" style="width: 48px; height: 48px; opacity: 0.5; color: var(--primary);"></i>
+            <h3 style="margin: 0; font-size: 1rem; color: var(--text-primary); font-weight: 700;">Профиль не заполнен</h3>
+            <p style="margin: 0; font-size: 0.8rem; color: var(--text-secondary); max-width: 280px; line-height: 1.4;">Абитуриент подал заявку, но еще не заполнил данные своего цифрового паспорта.</p>
+        `;
+        placeholder.style.display = "flex";
+    } else {
+        // Hide unified placeholder if present
+        if (placeholder) placeholder.style.display = "none";
+
+        // Main: Merits Grid (IELTS / SAT / GPA etc.)
+        if (meritsContainer && meritsSection) {
+            if (merits.length > 0) {
+                meritsSection.style.display = "block";
+                meritsContainer.innerHTML = merits.map(m => {
+                    const hasDoc = m.document ? true : false;
+                    const statusText = "Не верифицировано";
+                    const statusClass = "not-verified";
+                    
+                    const docButton = hasDoc ? `
+                        <a href="${API_BASE}/uploads/${m.document}" target="_blank" style="margin-top: 0.5rem; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; font-size: 0.78rem; color: var(--primary); font-weight: 600;">
+                            <i data-lucide="file" style="width: 12px; height: 12px;"></i> Открыть док
+                        </a>
+                    ` : '';
+
+                    return `
+                        <div class="sp-merit-card" style="padding: 1rem 1.25rem; min-width: 130px; flex: 1;">
+                            <span class="sp-merit-label">${m.type}</span>
+                            <span class="sp-merit-value" style="font-size: 2.2rem; margin: 0.15rem 0;">${m.value}</span>
+                            <div class="sp-merit-status ${statusClass}">
+                                <span class="status-dot"></span>
+                                ${statusText}
+                            </div>
+                            ${docButton}
+                        </div>
+                    `;
+                }).join("");
+            } else {
+                meritsSection.style.display = "none";
+            }
+        }
+
+        // Main: Achievements List
+        if (achievementsList && achievementsSection) {
+            if (achs.length > 0) {
+                achievementsSection.style.display = "block";
+                achievementsList.innerHTML = achs.map(a => `
+                    <div class="sp-achievement-row">
+                        <span class="sp-ach-title">${a}</span>
+                    </div>
+                `).join("");
+            } else {
+                achievementsSection.style.display = "none";
+            }
+        }
+
+        // Main: Portfolio Grid
+        if (portfolioSection && portfolioContainer) {
+            if (portfolio.length > 0) {
+                portfolioSection.style.display = "block";
+                portfolioContainer.innerHTML = portfolio.map(proj => {
+                    const fileLink = proj.file ? `
+                        <a href="${API_BASE}/uploads/${proj.file}" target="_blank" style="margin-top: 0.5rem; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; font-size: 0.78rem; color: var(--primary); font-weight: 600;">
+                            <i data-lucide="file" style="width: 12px; height: 12px;"></i> Открыть проект
+                        </a>
+                    ` : '';
+                    return `
+                        <div class="sp-portfolio-item-card" style="background: var(--bg); border: 1px solid var(--card-border); border-radius: 12px; padding: 1rem; display: flex; flex-direction: column; gap: 0.35rem;">
+                            <h4 style="margin: 0; font-size: 0.9rem; color: var(--text-primary);">${proj.name}</h4>
+                            <p style="margin: 0; font-size: 0.78rem; color: var(--text-secondary); line-height: 1.4;">${proj.description || "Описание проекта..."}</p>
+                            ${fileLink}
+                        </div>
+                    `;
+                }).join("");
+            } else {
+                portfolioSection.style.display = "none";
+            }
+        }
+    }
 
     const badge = document.getElementById("lead-modal-status-badge");
     if (lead.status === "accepted" || lead.status === "approved") {
@@ -6073,6 +6345,20 @@ function openStudentSettings() {
         if (ssBirthday) ssBirthday.value = profile.birthday ? formatDate(profile.birthday) : "—";
     }
 
+    // Reset to first tab (Security)
+    const firstTabBtn = document.querySelector("#student-settings-drawer .settings-tab-menu .settings-tab-item");
+    if (firstTabBtn) {
+        // Temporary remove active classes and set first active
+        const tabs = document.querySelectorAll("#student-settings-drawer .settings-tab-menu .settings-tab-item");
+        tabs.forEach(t => t.classList.remove("active"));
+        firstTabBtn.classList.add("active");
+        
+        const panels = document.querySelectorAll("#student-settings-drawer .settings-panel");
+        panels.forEach(p => p.style.display = "none");
+        const secPanel = document.getElementById("student-settings-panel-security");
+        if (secPanel) secPanel.style.display = "block";
+    }
+
     backdrop.classList.add("show");
     drawer.classList.add("show");
     document.body.style.overflow = "hidden";
@@ -6440,5 +6726,49 @@ async function handlePortfolioFileUpload(index, inputEl) {
     } catch (err) {
         console.error("Portfolio file upload error:", err);
         showToast("Ошибка при загрузке файла", "danger");
+    }
+}
+
+
+// ========== PORTFOLIO ITEM VIEW MODAL ==========
+function openPortfolioItemDetail(index) {
+    const profile = window.currentStudentProfile;
+    if (!profile || !profile.portfolio || !profile.portfolio[index]) return;
+
+    const proj = profile.portfolio[index];
+
+    const backdrop = document.getElementById("sp-portfolio-detail-modal-backdrop");
+    const nameEl = document.getElementById("sp-portfolio-detail-name");
+    const descEl = document.getElementById("sp-portfolio-detail-desc");
+    const fileBox = document.getElementById("sp-portfolio-detail-file-box");
+    const filenameEl = document.getElementById("sp-portfolio-detail-filename");
+    const downloadLink = document.getElementById("sp-portfolio-detail-download");
+
+    if (!backdrop) return;
+
+    if (nameEl) nameEl.textContent = proj.name;
+    if (descEl) descEl.textContent = proj.description || "Описание проекта отсутствует";
+
+    if (proj.file) {
+        if (fileBox) fileBox.style.display = "flex";
+        if (filenameEl) filenameEl.textContent = proj.file_name || proj.file;
+        if (downloadLink) {
+            downloadLink.href = `${API_BASE}/uploads/${proj.file}`;
+            downloadLink.setAttribute("download", proj.file_name || proj.file);
+        }
+    } else {
+        if (fileBox) fileBox.style.display = "none";
+    }
+
+    backdrop.classList.add("show");
+    document.body.style.overflow = "hidden";
+    lucide.createIcons();
+}
+
+function closePortfolioItemDetail() {
+    const backdrop = document.getElementById("sp-portfolio-detail-modal-backdrop");
+    if (backdrop) {
+        backdrop.classList.remove("show");
+        document.body.style.overflow = "";
     }
 }
